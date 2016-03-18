@@ -10,6 +10,8 @@
 #include "DataFormats/ParticleFlowReco/interface/PFRecHit.h"
 #include "DataFormats/ParticleFlowReco/interface/PFRecTrack.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/HGCRecHit/interface/HGCUncalibratedRecHit.h"
+#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
 
 // We probably don't need all of these
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
@@ -49,6 +51,8 @@ private:
     unsigned int GetHGCLayer(const DetId& detid, const ForwardSubdetector& subdet) const;
 
     //    EDGetTokenT<View<PFRecHit> > tokenHGCRecHit_;
+    //EDGetTokenT<HGCUncalibratedRecHitCollection> uncalibRHit_;
+    std::vector<edm::InputTag> uncalibRHit_;
     std::vector<edm::InputTag> inputRecHits_;
     EDGetTokenT<View<GenParticle> > tokenGenParticle_;
     EDGetTokenT<View<Barcode_t> > tokenGenBarcode_;
@@ -71,14 +75,13 @@ private:
 };
 
 HydraProducer::HydraProducer( const ParameterSet &iConfig ) :
-    //    tokenHGCRecHit_( consumes<View<PFRecHit> >( iConfig.getParameter<InputTag> ( "HGCRecHitCollection" ) ) ),
     tokenGenParticle_( consumes<View<GenParticle> >( iConfig.getParameter<InputTag> ( "GenParticleCollection" ) ) ),
     tokenGenBarcode_( consumes<View<Barcode_t> >( iConfig.getParameter<InputTag> ( "GenParticleCollection" ) ) ),
     tokenPFRecTrack_( consumes<View<PFRecTrack> >( iConfig.getParameter<InputTag> ("RecTrackCollection") ) ),
     tokenSimTrack_( consumes<View<SimTrack> >( iConfig.getParameter<InputTag> ("SimTrackCollection") ) ),
     tokenSimVertex_( consumes<View<SimVertex> >( iConfig.getParameter<InputTag> ("SimVertexCollection") ) )
-    //    tokenRecoToSim_( consumes<RecoToSimCollection>( iConfig.getParameter<InputTag> ("RecoToSimCollection") ) )
 {
+
     inputSimHits_ = iConfig.getParameter<std::vector<InputTag> >("SimHitCollection");
     for( const auto& tag : inputSimHits_ ) {
         consumes<View<PCaloHit> >(tag);
@@ -87,7 +90,12 @@ HydraProducer::HydraProducer( const ParameterSet &iConfig ) :
     for( const auto& tag : inputRecHits_ ) {
         consumes<View<PFRecHit> >(tag);
     }
-    debug_ = iConfig.getUntrackedParameter<bool>("Debug",false);
+    uncalibRHit_ = iConfig.getParameter<std::vector<InputTag> >("HGCalUncalibRecHitCollection");
+    for( const auto& tag : uncalibRHit_ ) {
+        consumes<HGCUncalibratedRecHitCollection>(tag);
+    }
+    
+    debug_ = iConfig.getUntrackedParameter<bool>("Debug",true);
 
     produces<std::vector<Hydra> >();
 }
@@ -104,8 +112,7 @@ void HydraProducer::produce( Event &iEvent, const EventSetup & )
     auto_ptr<std::vector<Hydra> > output( new std::vector<Hydra> );
     output->emplace_back(); // constructs an empty object
 
-    //    Handle<View<PFRecHit> > HGCRecHitHandle;
-    //    iEvent.getByToken(tokenHGCRecHit_, HGCRecHitHandle);
+
     Handle<View<GenParticle> > GenParticleHandle;
     iEvent.getByToken(tokenGenParticle_, GenParticleHandle);
     Handle<View<Barcode_t> > GenBarcodeHandle;
@@ -116,13 +123,22 @@ void HydraProducer::produce( Event &iEvent, const EventSetup & )
     iEvent.getByToken(tokenSimTrack_, SimTrackHandle);
     Handle<View<SimVertex> > SimVertexHandle;
     iEvent.getByToken(tokenSimVertex_, SimVertexHandle);
-    //    Handle<RecoToSimCollection > RecoToSimHandle;
-    //    iEvent.getByToken(tokenRecoToSim_,RecoToSimHandle);
+
+
     vector<Handle<View<PCaloHit> > > simHits;  
     for( const auto& tag : inputSimHits_ ) {
         std::cout << tag << std::endl;
         simHits.emplace_back( Handle<View<PCaloHit> >() );
         iEvent.getByLabel(tag,simHits.back());
+    }
+
+
+    vector<Handle<HGCUncalibratedRecHitCollection>> uncalibRecHits;
+    for( const auto& tag : uncalibRHit_ ) {
+        std::cout << tag << std::endl;
+		uncalibRecHits.emplace_back( Handle<HGCUncalibratedRecHitCollection>() );
+		iEvent.getByLabel(tag, uncalibRecHits.back());
+
     }
 
     vector<Handle<View<PFRecHit> > > recHits;
@@ -161,23 +177,6 @@ void HydraProducer::produce( Event &iEvent, const EventSetup & )
             int layer, cell, sec, subsec, zp;
             uint32_t intSimId = simId.rawId();
             uint32_t recoDetId = 0;
-//             if (dddConst.geomMode() == HGCalGeometryMode::Square) {
-//                 HGCalTestNumbering::unpackSquareIndex(intSimId, zp, layer, sec, subsec, cell);
-//                 if(!HGCalTestNumbering::isValidSquare(zp, layer, sec, subsec, layer)) {
-//                     throw cms::Exception("BadGeometry") << "Sim DetID -> Reco DetID transform was invalid!";
-//                 }
-//                 recoDetId = ( ( geom == hgceeGeoHandle_.product() ) ?
-//                               (uint32_t)HGCEEDetId(ForwardSubdetector(mysubdet),zp,layer,sec,subsec,cell) :
-//                               (uint32_t)HGCHEDetId(ForwardSubdetector(mysubdet),zp,layer,sec,subsec,cell)
-//                               );
-//             } else {
-//                 //HGCalTestNumbering::unpackHexagonIndex(simId, subdet, zp, layer, sec, subsec, cell); 
-//                 //sec is wafer and subsec is celltype
-//                 recoDetId = 0;
-//                 throw cms::Exception("NotSupported") << "Hex-Cell HGCal not-yet supported in HyDRA!";
-//             }
-//
-//
 
             if (dddConst.geomMode() == HGCalGeometryMode::Square) {
 				HGCalTestNumbering::unpackSquareIndex(intSimId, zp, layer, sec, subsec, cell);
@@ -210,30 +209,6 @@ void HydraProducer::produce( Event &iEvent, const EventSetup & )
               recoDetId = HGCalDetId(mysubdet,zp,layer,subsec,sec,cell);
             }
 
-
-
-
-
-// 
-// 			if (dddConst.geomMode() == HGCalGeometryMode::Square) {
-//                 HGCalTestNumbering::unpackSquareIndex(intSimId, zp, layer, sec, subsec, cell);
-//                 std::cout << "SQUARE" << std::endl;
-//                 if(!HGCalTestNumbering::isValidSquare(zp, layer, sec, subsec, layer)){
-//                     throw cms::Exception("BadGeometry") << "Sim DetID -> Reco DetID transform was invalid!";
-//                 }
-//                 recoDetId = ( ( geom == hgceeGeoHandle_.product() ) ?
-//                               (uint32_t)HGCEEDetId(ForwardSubdetector(mysubdet),zp,layer,sec,subsec,cell) :
-//                               (uint32_t)HGCHEDetId(ForwardSubdetector(mysubdet),zp,layer,sec,subsec,cell)
-//                               );
-//             }else{
-//                 std::cout << "Hexagonal" << std::endl;
-//                 //sec is wafer and subsec is celltype
-//                 int subdet;
-//                 HGCalTestNumbering::unpackHexagonIndex(simId, subdet, zp, layer, sec, subsec, cell); 
-//       			mysubdet = (ForwardSubdetector)(subdet);
-// 				recoDetId = (uint32_t)HGCalDetId(ForwardSubdetector(mysubdet),zp,layer,sec,subsec,cell);
-//                              
-//             }                      
             reco_detIds.insert(recoDetId); //unordered set with the detId values or the recHit
             temp_recoDetIdToSimHit.emplace(recoDetId,make_tuple(i,j,0.0f));
             unordered_multimap<uint32_t,tuple<unsigned,unsigned,float> >::const_iterator it;
@@ -276,20 +251,66 @@ void HydraProducer::produce( Event &iEvent, const EventSetup & )
     for(unsigned i=0; i<SimVertexHandle->size(); i++) {
         output->back().insertSimVertex(SimVertexHandle->ptrAt(i));
     }
+    
     for( unsigned i = 0; i < recHits.size(); ++i ) {
         for( unsigned j = 0; j < recHits[i]->size(); ++j ) {
             if (debug_)std::cout << " i=" << i << " j=" << j << " detId=" << recHits[i]->ptrAt(j)->detId() << " subdet=" << (ForwardSubdetector)(i+3) << std::endl;
+
+            
+            bool amplitudeSet = false;
+            double uncalibAmplitude = -10.;
             unsigned int layer = 999;
+            int det=-1;
             try {
                 DetId hitid(recHits[i]->ptrAt(j)->detId());
+                det = hitid.subdetId();
                 layer = GetHGCLayer( hitid, (ForwardSubdetector)hitid.subdetId() );
             } catch ( const cms::Exception& e ) {
                 if (debug_)std::cout << "   caught exception " << e.what() << " but moving on" << std::endl;
             }
-            if (debug_)std::cout << " Inserted recHit from detector " << i << " in layer " << layer << std::endl;
+            if (debug_)std::cout << " Inserted recHit from detector " << det << " in layer " << layer << std::endl;
+
+            //match recHit with uncalib
+            for(unsigned k = 0; k < uncalibRecHits.size(); ++k){
+            	std::cout << " k "<< k << std::endl; 
+            	for(HGCUncalibratedRecHitCollection::const_iterator itr = uncalibRecHits[k]->begin(); itr != uncalibRecHits[k]->end(); ++itr){
+					DetId uncDetId( DetId(itr->id()));
+					if(uncDetId == recHits[i]->ptrAt(j)->detId()){
+                    	uncalibAmplitude = double(itr->amplitude());
+                    	amplitudeSet = true;
+                    	break;
+                	}              
+            	}
+                
+            }
+
+
+            if(amplitudeSet){
+                //attempt to build a temp recHit with energy = amplitude
+            // edm::Ptr<reco::PFRecHit> myHit(recHits[i]->ptrAt(j)->detId(), layer, uncalibAmplitude, 
+            //                                double(recHits[i]->ptrAt(j)->position().x()), recHits[i]->ptrAt(j)->position().y(), recHits[i]->ptrAt(j)->position().z(), 
+            //                                recHits[i]->ptrAt(j)->getAxisXYZ().X(), recHits[i]->ptrAt(j)->getAxisXYZ().Y(), double(recHits[i]->ptrAt(j)->getAxisXYZ().Z()) );
+
+
+                
+            std::cout << " >>> PF = " << recHits[i]->ptrAt(j)->energy() << " detId = " << recHits[i]->ptrAt(j)->detId() << std::endl;
+            std::cout << " >>> Uncalib = " << uncalibAmplitude << " detId = " << std::endl;
+
+            std::cout << " px = " << recHits[i]->ptrAt(j)->position().x() 
+                      << " py = " << recHits[i]->ptrAt(j)->position().y()
+                      << " pz = " << recHits[i]->ptrAt(j)->position().z()
+                      << " Ax = " << recHits[i]->ptrAt(j)->getAxisXYZ().X() 
+                      << " Ay = " << recHits[i]->ptrAt(j)->getAxisXYZ().Y() 
+                      << " Az = " << recHits[i]->ptrAt(j)->getAxisXYZ().Z() << std::endl;
+            
+            //            output->back().insertRecHit(i,myHit);
+            }
             output->back().insertRecHit(i,recHits[i]->ptrAt(j));
         }
     }
+    
+
+
     for(unsigned i=0; i<GenParticleHandle->size(); i++) {
         output->back().insertGenParticle(GenBarcodeHandle->at(i),GenParticleHandle->ptrAt(i));
     }
@@ -310,20 +331,6 @@ void HydraProducer::produce( Event &iEvent, const EventSetup & )
 
     iEvent.put( output );
 }
-// 
-// unsigned int HydraProducer::GetHGCLayer(const DetId& detid, const ForwardSubdetector& subdet) const {
-//     unsigned int layer = 0;
-//     if(subdet==ForwardSubdetector::HGCEE) {
-//         layer = (unsigned int) ((HGCEEDetId)(detid)).layer() ;
-//     }
-//     else if(subdet==ForwardSubdetector::HGCHEF){
-//         layer = (unsigned int) ((HGCHEDetId)(detid)).layer() ;
-//     }
-//     else if(subdet==ForwardSubdetector::HGCHEB){
-//         layer = (unsigned int) ((HGCHEDetId)(detid)).layer() ;
-//     }
-//     return layer;
-// }
 
 
 unsigned int HydraProducer::GetHGCLayer(const DetId& detid, const ForwardSubdetector& subdet) const {
