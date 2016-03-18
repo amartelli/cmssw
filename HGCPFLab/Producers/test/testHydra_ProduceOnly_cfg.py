@@ -23,7 +23,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(5)
+    input = cms.untracked.int32(-1)
 )
 
 # Input source
@@ -63,14 +63,16 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
 
 process.Hydra = cms.EDProducer('HydraProducer',
+                               HGCalUncalibRecHitCollection=cms.VInputTag('HGCalUncalibRecHit:HGCEEUncalibRecHits',
+                                                                          'HGCalUncalibRecHit:HGCHEFUncalibRecHits'),
                                HGCRecHitCollection=cms.VInputTag("particleFlowRecHitHGC"),
                                GenParticleCollection=cms.InputTag("genParticles"),
                                RecTrackCollection=cms.InputTag("generalTracks"),
                                SimTrackCollection=cms.InputTag("g4SimHits"),
                                SimVertexCollection=cms.InputTag("g4SimHits"),
                                SimHitCollection = cms.VInputTag('g4SimHits:HGCHitsEE',
-                                                                'g4SimHits:HGCHitsHEfront',
-                                                                'g4SimHits:HGCHitsHEback')
+                                                                'g4SimHits:HGCHitsHEfront')
+                               #'g4SimHits:HGCHitsHEback')
                                )
 
 
@@ -82,6 +84,14 @@ process.L1Reco_step = cms.Path(process.L1Reco)
 process.reconstruction_step = cms.Path(process.Hydra)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RECOSIMoutput_step = cms.EndPath(process.RECOSIMoutput)
+
+
+
+process.TFileService = cms.Service("TFileService",
+                                   fileName = cms.string("produceO_Pho.root"),
+                                   closeFileFast = cms.untracked.bool(True)
+                                   )
+
 
 # Schedule definition
 process.schedule = cms.Schedule(process.reconstruction_step,process.RECOSIMoutput_step)
@@ -95,4 +105,5 @@ process.RECOSIMoutput.outputCommands =  cms.untracked.vstring("drop *",
                                                               "keep *_g4SimHits_HGCHits*_*",
                                                               "keep *SimTrack*_g4SimHits_*_*",
                                                               "keep *SimVertex*_g4SimHits_*_*",
-                                                              "keep *_generalTracks_*_*")
+                                                              "keep *_generalTracks_*_*", 
+                                                              "keep *_HGCalUncalibRecHit_*_*")
