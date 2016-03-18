@@ -11,8 +11,8 @@ process.load('Configuration.EventContent.EventContent_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.EventContent.EventContent_cff')
 process.load('SimGeneral.MixingModule.mixNoPU_cfi')
-process.load('Configuration.Geometry.GeometryExtended2023Reco_cff')
-process.load('Configuration.Geometry.GeometryExtended2023_cff')
+process.load('Configuration.Geometry.GeometryExtended2023DevReco_cff')
+process.load('Configuration.Geometry.GeometryExtended2023Dev_cff')
 process.load('Configuration.StandardSequences.MagneticField_38T_PostLS1_cff')
 process.load('Configuration.StandardSequences.Generator_cff')
 process.load('IOMC.EventVertexGenerators.VtxSmearedGauss_cfi')
@@ -44,7 +44,7 @@ process.load("RecoParticleFlow.PFClusterProducer.particleFlowRecHitHGC_cff")
 process.HGCalRecoLocal = cms.Sequence(process.HGCalUncalibRecHit +
                                       process.HGCalRecHit)
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(500)
 )
 
 # Input source
@@ -57,7 +57,7 @@ process.options = cms.untracked.PSet(
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
     version = cms.untracked.string('$Revision: 1.20 $'),
-    annotation = cms.untracked.string('SingleElectronPt10_cfi nevts:10'),
+    annotation = cms.untracked.string('SingleElectronPt60_cfi nevts:10'),
     name = cms.untracked.string('Applications')
 )
 
@@ -76,7 +76,7 @@ process.output = cms.OutputModule("PoolOutputModule",
         'keep *_HGCalRecHit_*_*',
         'keep *_particleFlowRecHitHGC_*_*'
         ),
-    fileName = cms.untracked.string('file:testHGCalLocalReco.root'),
+    fileName = cms.untracked.string('file:/tmp/amartell/testHGCalLocalReco.root'),
     dataset = cms.untracked.PSet(
         filterName = cms.untracked.string(''),
         dataTier = cms.untracked.string('GEN-SIM-DIGI-RAW-RECO')
@@ -95,16 +95,16 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
 
 process.generator = cms.EDProducer("FlatRandomPtGunProducer",
     PGunParameters = cms.PSet(
-        MaxPt = cms.double(35.0),
-        MinPt = cms.double(35.0),
-        PartID = cms.vint32(13),
+        MaxPt = cms.double(61.0),
+        MinPt = cms.double(59.0),
+        PartID = cms.vint32(11),
         MaxEta = cms.double(2.9),
         MaxPhi = cms.double(3.14159265359),
         MinEta = cms.double(1.6),
         MinPhi = cms.double(-3.14159265359)
     ),
     Verbosity = cms.untracked.int32(0),
-    psethack = cms.string('single electron pt 35'),
+    psethack = cms.string('single electron pt 60'),
     AddAntiParticle = cms.bool(True),
     firstRun = cms.untracked.uint32(1)
 )
