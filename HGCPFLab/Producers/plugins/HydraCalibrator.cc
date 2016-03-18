@@ -127,7 +127,7 @@ private:
 
     std::map<int, float> nMIP_layer;
     std::map<int, float> Energy_layer_act;
-    std::map<int, float> Energy_layer_abs;
+    std::map<int, float> Energy_layer_absW;
 
     //    CalibHGC m_calibEE, m_calibHEF, m_calibHEB;
     //    bool calibInitialized;
@@ -192,7 +192,7 @@ HydraCalibrator::HydraCalibrator( const ParameterSet &iConfig ) :
 
     nMIP_layer.clear();
     Energy_layer_act.clear();
-    Energy_layer_abs.clear();
+    Energy_layer_absW.clear();
 
     // //convecrt in GeV
     // for(unsigned int iC=0; iC<dEdX_abs.size(); ++iC) dEdX_abs[iC] = dEdX_abs[iC]/1000.;
@@ -275,7 +275,7 @@ void HydraCalibrator::produce( Event &iEvent, const EventSetup& iSetup)
 
         nMIP_layer.clear();
         Energy_layer_act.clear();
-        Energy_layer_abs.clear();
+        Energy_layer_absW.clear();
 
         auto simHits = hydraObj->simHitsFromSimTrack( i, true );
         for ( unsigned j = 0 ; j < hydraObj->recHitSize(); j++ ) {
@@ -381,11 +381,13 @@ void HydraCalibrator::produce( Event &iEvent, const EventSetup& iSetup)
 
                         if(amplitude != -10.){
                             //dEdX_act[detBlock] =  dedX in Si of correct thickness
-                            nMIP_layer[layer] += amplitude * mipCalib_.GetAct_fC2MIP(detBlock);
+                            float nMIPinTheLayer = amplitude * mipCalib_.GetAct_fC2MIP(detBlock);
+                            nMIP_layer[layer] += nMIPinTheLayer;
 
-                            float energyRecHit = amplitude * mipCalib_.GetAct_fC2MIP(detBlock) * mipCalib_.GetAct_MIP2keV(detBlock) * 1.e-06;  // in keV??? => * 1.e-6
+                            float energyRecHit = nMIPinTheLayer * mipCalib_.GetAct_MIP2keV(detBlock) * 1.e-06;  // in keV??? => * 1.e-6
                             Energy_layer_act[layer] += energyRecHit;
-
+                            float energyRecHitW = nMIPinTheLayer * mipCalib_.GetAbs_weightkeV(layer) * 1.e-06;  // in keV??? => * 1.e-6
+                            Energy_layer_absW[layer] += energyRecHitW;
                             //                            h_Mip_vsLayer_act->Fill(nL, nMIP_layer[nL]);
 
 
@@ -396,9 +398,9 @@ void HydraCalibrator::produce( Event &iEvent, const EventSetup& iSetup)
                             tp_energy_vs_recHE->Fill(currentRecHitRef->energy(), energyRecHit);
                         
                             h_amplitude_vsLayer->Fill(layer, amplitude);
-                            h_energy_vsLayer->Fill(layer, energyRecHit);
-
-                            //                            h_Mip_vsLayer_abs->Fill(layer, nMIP_layer[layer]);
+                            //                h_energy_vsLayer->Fill(layer, energyRecHit);
+                            //                h_absorberEnergy_vsLayer->Fill(layer, Energy_layer_absW[layer]);
+                            //                h_Mip_vsLayer_abs->Fill(layer, nMIP_layer[layer]);
                         }
                         else std::cout << " amplitude == 10 PROBLEM!!! " << std::endl;
 
@@ -471,26 +473,13 @@ void HydraCalibrator::produce( Event &iEvent, const EventSetup& iSetup)
         float sumCalibRecHit = 0.;   
         for(unsigned int nL=1; nL<(1+nMIP_layer.size()); ++nL){
             //            nMIP_layer[nL] = nMIP_layer[nL];
-            if(nL == 1) {
-                Energy_layer_abs[nL] = nMIP_layer[nL] * mipCalib_.GetAbs_MIP2keV(nL) * 1.e-03;   // in MeV
-                h_Mip_vsLayer_abs->Fill(nL, nMIP_layer[nL]);        
-                h_Mip_vsLayer_absP1->Fill(nL, nMIP_layer[nL+1]);        
-            }
-            else{
-                Energy_layer_abs[nL] = (nMIP_layer[nL-1]+nMIP_layer[nL])/2. * mipCalib_.GetAbs_MIP2keV(nL) * 1.e-03; // in MeV
-                h_Mip_vsLayer_abs->Fill(nL, (nMIP_layer[nL-1]+nMIP_layer[nL])/2.);        
-                h_Mip_vsLayer_absP1->Fill(nL, (nMIP_layer[nL-1]+nMIP_layer[nL])/2.);        
-            }
-            sumCalibRecHit += Energy_layer_abs[nL] + Energy_layer_act[nL];
-            h_absorberEnergy_vsLayer->Fill(nL, Energy_layer_abs[nL]);
-                        
-            //                h_Mip_vsLayer_abs->Fill(nL, nMIP_layer[nL]);
-            // if(nL != nMIP_layer.size()+1)            h_Mip_vsLayer_absP1->Fill(nL, nMIP_layer[nL+1]);
-            
+            sumCalibRecHit += Energy_layer_absW[nL] + Energy_layer_act[nL];
+            h_energy_vsLayer->Fill(nL, Energy_layer_act[nL]);             
+            h_absorberEnergy_vsLayer->Fill(nL, Energy_layer_absW[nL]);
             //std::cout << " nL = " << nL << " >>> nMIP_layer[layer] = " << nMIP_layer[nL] << std::endl;
-            h_Mip_vsLayer_abs->Fill(nL, nMIP_layer[nL]);
+            //h_Mip_vsLayer_abs->Fill(nL, nMIP_layer[nL]);
             h_Mip_vsLayer_act->Fill(nL, nMIP_layer[nL]);
-        }        
+        }   
         h_EoP_hitTrack->Fill(sumCalibRecHit / currentTrack->momentum().E());
         tp_EoP_hitTrack_vsP->Fill(currentTrack->momentum().E(), sumCalibRecHit / currentTrack->momentum().E());
         
@@ -499,9 +488,15 @@ void HydraCalibrator::produce( Event &iEvent, const EventSetup& iSetup)
     
     
     iEvent.put ( pfClusterCol );
-    
 
 
+    /*
+    for(unsigned int nL=1; nL<53; ++nL){    
+        //if(nL == 1) std::cout << "dEdX_absW["<< nL << "] = " << mipCalib_.GetAbs_MIP2keV(nL)+(0.5*mipCalib_.GetAbs_MIP2keV(nL+1)) << "; "<< std::endl;
+        if(nL != 52) std::cout << "dEdX_absW["<< nL << "] = " << 0.5*(mipCalib_.GetAbs_MIP2keV(nL)+mipCalib_.GetAbs_MIP2keV(nL+1)) << "; "<< std::endl;
+        else std::cout << "dEdX_absW["<< nL << "] = " << 0.5*(mipCalib_.GetAbs_MIP2keV(nL)) << "; "<< std::endl;
+    }
+    */
 }
 
 
