@@ -40,7 +40,6 @@ class HGCalClusterTestProducer : public edm::stream::EDProducer<> {
 
   edm::EDGetTokenT<HGCRecHitCollection> hits_ee_token;
   edm::EDGetTokenT<HGCRecHitCollection> hits_ef_token;
-  edm::EDGetTokenT<std::vector<reco::PFCluster> > hydraTokens[2];
   edm::EDGetTokenT<edm::View<reco::Candidate> > genParticlesToken;
 
   reco::CaloCluster::AlgoId algoId;
@@ -80,9 +79,6 @@ HGCalClusterTestProducer::HGCalClusterTestProducer(const edm::ParameterSet &ps) 
   }else{
     algo = new HGCalImagingAlgo(delta_c, kappa, ecut, 0, algoId, verbosity);
   }
-
-  hydraTokens[0] = consumes<std::vector<reco::PFCluster> >( edm::InputTag("FakeClusterGen") );
-  hydraTokens[1] = consumes<std::vector<reco::PFCluster> >( edm::InputTag("FakeClusterCaloFace") );
 
   genParticlesToken = consumes<edm::View<reco::Candidate> >( edm::InputTag("genParticles") );
 
@@ -141,15 +137,6 @@ void HGCalClusterTestProducer::produce(edm::Event& evt,
   std::cout << "Density based cluster size: " << clusters->size() << std::endl;
   if(doSharing)
     std::cout << "Sharing clusters size     : " << clusters_sharing->size() << std::endl;
-
-  edm::Handle<std::vector<reco::PFCluster> > hydra[2];
-  std::vector<std::string> names;
-  names.push_back(std::string("gen"));
-  names.push_back(std::string("calo_face"));
-  for( unsigned i = 0 ; i < 2; ++i ) {
-    evt.getByToken(hydraTokens[i],hydra[i]);
-    std::cout << "hydra " << names[i] << " size : " << hydra[i]->size() << std::endl;
-  }
 
   for(unsigned i = 0; i < genParticles.size(); ++i ) {
     std::cout << genParticles[i].pt() << ' ' << genParticles[i].eta() << ' ' << genParticles[i].phi() << std::endl;
