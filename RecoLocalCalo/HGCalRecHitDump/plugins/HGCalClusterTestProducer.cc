@@ -27,6 +27,21 @@
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 
+/*
+#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
+#include "Geometry/CaloGeometry/interface/TruncatedPyramid.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+
+#include "Geometry/EcalAlgo/interface/EcalEndcapGeometry.h"
+#include "Geometry/EcalAlgo/interface/EcalBarrelGeometry.h"
+#include "Geometry/CaloTopology/interface/EcalEndcapTopology.h"
+#include "Geometry/CaloTopology/interface/EcalBarrelTopology.h"
+#include "Geometry/CaloTopology/interface/EcalPreshowerTopology.h"
+#include "RecoCaloTools/Navigation/interface/CaloNavigator.h"
+*/
+
 #include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
 
 class HGCalClusterTestProducer : public edm::stream::EDProducer<> {
@@ -40,6 +55,7 @@ class HGCalClusterTestProducer : public edm::stream::EDProducer<> {
 
   edm::EDGetTokenT<HGCRecHitCollection> hits_ee_token;
   edm::EDGetTokenT<HGCRecHitCollection> hits_ef_token;
+  edm::EDGetTokenT<HGCRecHitCollection> hits_eb_token;
   edm::EDGetTokenT<edm::View<reco::Candidate> > genParticlesToken;
 
   reco::CaloCluster::AlgoId algoId;
@@ -56,21 +72,29 @@ DEFINE_FWK_MODULE(HGCalClusterTestProducer);
 HGCalClusterTestProducer::HGCalClusterTestProducer(const edm::ParameterSet &ps) :
   algoId(reco::CaloCluster::undefined),
   algo(0),doSharing(ps.getParameter<bool>("doSharing")),
-  detector(ps.getParameter<std::string >("detector")),              //one of EE, EF or "both"
+  detector(ps.getParameter<std::string >("detector")),              //one of EE, EF BH or "both" or "all"
   verbosity((HGCalImagingAlgo::VerbosityLevel)ps.getUntrackedParameter<unsigned int>("verbosity",3)){
   double ecut = ps.getParameter<double>("ecut");
   double delta_c = ps.getParameter<double>("deltac");
   double kappa = ps.getParameter<double>("kappa");
 
-  if(detector=="both"){
+  if(detector=="all"){
+    hits_ee_token = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit:HGCEERecHits"));
+    hits_ef_token = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit:HGCHEFRecHits"));
+    hits_eb_token = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit:HGCHEBRecHits"));
+    algoId = reco::CaloCluster::hgcal_mixed;
+  }if(detector=="both"){
     hits_ee_token = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit:HGCEERecHits"));
     hits_ef_token = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit:HGCHEFRecHits"));
     algoId = reco::CaloCluster::hgcal_mixed;
   }else if(detector=="EE"){
     hits_ee_token = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit:HGCEERecHits"));
     algoId = reco::CaloCluster::hgcal_em;
-  }else{
+  }else if(detector=="EF"){
     hits_ef_token = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit:HGCHEFRecHits"));
+    algoId = reco::CaloCluster::hgcal_had;
+  }else if(detector=="EB"){
+    hits_eb_token = consumes<HGCRecHitCollection>(edm::InputTag("HGCalRecHit:HGCHEBRecHits"));
     algoId = reco::CaloCluster::hgcal_had;
   }
   if(doSharing){
@@ -96,8 +120,12 @@ void HGCalClusterTestProducer::produce(edm::Event& evt,
   edm::ESHandle<HGCalGeometry> ef_geom;
   es.get<IdealGeometryRecord>().get("HGCalHESiliconSensitive",ef_geom);
 
+  edm::ESHandle<HGCalGeometry> eb_geom;
+  es.get<IdealGeometryRecord>().get("HGCalHEScintillatorSensitive",eb_geom);
+
   edm::Handle<HGCRecHitCollection> ee_hits;
   edm::Handle<HGCRecHitCollection> ef_hits;
+  edm::Handle<HGCRecHitCollection> eb_hits;
 
   edm::Handle<edm::View<reco::Candidate> > genParticlesH;
   evt.getByToken(genParticlesToken, genParticlesH);
@@ -107,6 +135,7 @@ void HGCalClusterTestProducer::produce(edm::Event& evt,
     clusters_sharing( new std::vector<reco::BasicCluster> );
 
   algo->reset();
+  //  switch(algoId){
   switch(algoId){
   case reco::CaloCluster::hgcal_em:
     evt.getByToken(hits_ee_token,ee_hits);
@@ -114,18 +143,40 @@ void HGCalClusterTestProducer::produce(edm::Event& evt,
     algo->populate(*ee_hits);
     break;
   case  reco::CaloCluster::hgcal_had:
-    evt.getByToken(hits_ef_token,ef_hits);
-    algo->setGeometry(ef_geom.product());
-    algo->populate(*ef_hits);
-    break;
+    if(detector=="EF"){
+      evt.getByToken(hits_ef_token,ef_hits);
+      algo->setGeometry(ef_geom.product());
+      algo->populate(*ef_hits);
+      break;
+    }
+    if(detector=="EB"){
+      evt.getByToken(hits_eb_token,ef_hits);
+      algo->setGeometry(eb_geom.product());
+      algo->populate(*eb_hits);
+      break;
+    }
   case reco::CaloCluster::hgcal_mixed:
-    evt.getByToken(hits_ee_token,ee_hits);
-    algo->setGeometry(ee_geom.product());
-    algo->populate(*ee_hits);
-    evt.getByToken(hits_ef_token,ef_hits);
-    algo->setGeometry(ef_geom.product());
-    algo->populate(*ef_hits);
-    break;
+    if(detector=="both"){
+      evt.getByToken(hits_ee_token,ee_hits);
+      algo->setGeometry(ee_geom.product());
+      algo->populate(*ee_hits);
+      evt.getByToken(hits_ef_token,ef_hits);
+      algo->setGeometry(ef_geom.product());
+      algo->populate(*ef_hits);
+      break;
+    }
+    if(detector=="all"){
+      evt.getByToken(hits_ee_token,ee_hits);
+      algo->setGeometry(ee_geom.product());
+      algo->populate(*ee_hits);
+      evt.getByToken(hits_ef_token,ef_hits);
+      algo->setGeometry(ef_geom.product());
+      algo->populate(*ef_hits);
+      evt.getByToken(hits_eb_token,eb_hits);
+      algo->setGeometry(eb_geom.product());
+      algo->populate(*eb_hits);
+      break;
+    }
   default:
     break;
   }

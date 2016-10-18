@@ -1,6 +1,7 @@
 <use   name="FWCore/MessageLogger"/>
 <use   name="FWCore/Framework"/>
 <use   name="Geometry/HGCalGeometry"/>
+<use   name="Geometry/Records"/>
 <use   name="DataFormats/CaloRecHit"/>
 <use name="DetectorDescription/Base"/>
 <use name="SimDataFormats/GeneratorProducts"/>
