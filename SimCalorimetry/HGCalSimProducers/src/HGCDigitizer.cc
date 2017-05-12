@@ -264,21 +264,21 @@ void HGCDigitizer::accumulate(edm::Handle<edm::PCaloHitContainer> const &hits,
   
   //configuration to apply for the computation of time-of-flight
   bool weightToAbyEnergy(false);
-  float tdcOnset(0.f),keV2fC(0.f);
+  float tdcForToaOnset(0.f),keV2fC(0.f);
   switch( mySubDet_ ) {
   case ForwardSubdetector::HGCEE:
     weightToAbyEnergy = theHGCEEDigitizer_->toaModeByEnergy();
-    tdcOnset          = theHGCEEDigitizer_->tdcOnset();
+    tdcForToaOnset    = theHGCEEDigitizer_->tdcForToaOnset();
     keV2fC            = theHGCEEDigitizer_->keV2fC();
     break;
   case ForwardSubdetector::HGCHEF:
     weightToAbyEnergy = theHGCHEfrontDigitizer_->toaModeByEnergy();
-    tdcOnset          = theHGCHEfrontDigitizer_->tdcOnset();
+    tdcForToaOnset    = theHGCHEfrontDigitizer_->tdcForToaOnset();
     keV2fC            = theHGCHEfrontDigitizer_->keV2fC();
     break;
   case ForwardSubdetector::HGCHEB:
     weightToAbyEnergy = theHGCHEbackDigitizer_->toaModeByEnergy();
-    tdcOnset          = theHGCHEbackDigitizer_->tdcOnset();
+    tdcForToaOnset    = theHGCHEbackDigitizer_->tdcForToaOnset();
     keV2fC            = theHGCHEbackDigitizer_->keV2fC();     
     break;
   default:
@@ -347,7 +347,7 @@ void HGCDigitizer::accumulate(edm::Handle<edm::PCaloHitContainer> const &hits,
     //time-of-arrival (check how to be used)
     if(weightToAbyEnergy) (simHitIt->second).hit_info[1][itime] += charge*tof;
     else if((simHitIt->second).hit_info[1][itime]==0) {	
-      if( accCharge>tdcOnset)
+      if( accCharge>tdcForToaOnset)
 	{
 	  //extrapolate linear using previous simhit if it concerns to the same DetId
 	  float fireTDC=tof;
@@ -359,7 +359,7 @@ void HGCDigitizer::accumulate(edm::Handle<edm::PCaloHitContainer> const &hits,
 		  float prev_toa    = std::get<2>(hitRefs[i-1]);
 		  float prev_tof(prev_toa-dist2center/refSpeed_+tofDelay_);
 		  //float prev_charge = std::get<3>(hitRefs[i-1]);
-		  float deltaQ2TDCOnset = tdcOnset-((simHitIt->second).hit_info[0][itime]-charge);
+		  float deltaQ2TDCOnset = tdcForToaOnset-((simHitIt->second).hit_info[0][itime]-charge);
 		  float deltaQ          = charge;
 		  float deltaT          = (tof-prev_tof);
 		  fireTDC               = deltaT*(deltaQ2TDCOnset/deltaQ)+prev_tof;

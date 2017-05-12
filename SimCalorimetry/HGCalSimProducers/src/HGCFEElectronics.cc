@@ -54,6 +54,7 @@ HGCFEElectronics<DFr>::HGCFEElectronics(const edm::ParameterSet &ps) :
     }
   if( ps.exists("adcThreshold_fC") )                adcThreshold_fC_                = ps.getParameter<double>("adcThreshold_fC");
   if( ps.exists("tdcOnset_fC") )                    tdcOnset_fC_                    = ps.getParameter<double>("tdcOnset_fC");
+  if( ps.exists("tdcForToaOnset_fC") )              tdcForToaOnset_fC_              = ps.getParameter<double>("tdcForToaOnset_fC");
   if( ps.exists("toaLSB_ns") )                      toaLSB_ns_                      = ps.getParameter<double>("toaLSB_ns");
   if( ps.exists("tdcChargeDrainParameterisation") ) {
     for( auto val : ps.getParameter< std::vector<double> >("tdcChargeDrainParameterisation") ) {
@@ -153,6 +154,7 @@ void HGCFEElectronics<DFr>::runShaperWithToT(DFr &dataFrame, HGCSimHitData& char
 {
   busyFlags.fill(false);
   totFlags.fill(false);
+  totForToaFlags.fill(false);
   newCharge.fill( 0.f );
   toaFromToT.fill( 0.f );
 
@@ -163,6 +165,8 @@ void HGCFEElectronics<DFr>::runShaperWithToT(DFr &dataFrame, HGCSimHitData& char
 #endif
 
   bool debug = debug_state;
+  float timeTOA = 0.;
+  bool timeFlags = false;
 
   //first identify bunches which will trigger ToT
   //if(debug_state) edm::LogVerbatim("HGCFE") << "[runShaperWithToT]" << std::endl;  
@@ -172,15 +176,23 @@ void HGCFEElectronics<DFr>::runShaperWithToT(DFr &dataFrame, HGCSimHitData& char
       //if already flagged as busy it can't be re-used to trigger the ToT
       if(busyFlags[it]) continue;
 
-      //if below TDC onset will be handled by SARS ADC later
+      //if below TDC onset will be handled by SARS ADC later                                              
+      //RA for charge computation only                                                                    
+      //RA raise TDC mode for timing estimate only                                                        
       float charge = chargeColl[it];
+      if(charge >= tdcForToaOnset_fC_ && !timeFlags){
+	timeTOA = toaColl[it];
+	toaFromToT[it] = CLHEP::RandGaussQ::shoot(engine,timeTOA,tdcResolutionInNs_);
+	timeFlags = true;
+	totForToaFlags[it] = true;
+      }
       if(charge < tdcOnset_fC_)  {
-        debug = false;
-        continue;
+	debug = false;
+	continue;
       }
 
-      //raise TDC mode
-      float toa    = toaColl[it];
+      //raise TDC mode                                                                                    
+      float toa = timeTOA;
       totFlags[it]=true;
 
       if(debug) edm::LogVerbatim("HGCFE") << "\t q=" << charge << " fC with <toa>=" << toa << " ns, triggers ToT @ " << it << std::endl;
@@ -311,6 +323,16 @@ void HGCFEElectronics<DFr>::runShaperWithToT(DFr &dataFrame, HGCSimHitData& char
   };
   runChargeSharing();
 
+  float finalToA(0.);
+  for(int it=0; it<(int)(newCharge.size()); it++){
+    if(totForToaFlags[it]){
+      finalToA = toaFromToT[it];
+      while(finalToA < 0.f)  finalToA+=25.f;
+      while(finalToA > 25.f) finalToA-=25.f;
+    }
+  }
+
+
   //set new ADCs and ToA
   if(debug) edm::LogVerbatim("HGCFE") << "\t final result : ";
   const float adj_thresh = thickness*adcThreshold_fC_;
@@ -323,10 +345,6 @@ void HGCFEElectronics<DFr>::runShaperWithToT(DFr &dataFrame, HGCSimHitData& char
 	{
 	  if(totFlags[it]) 
 	    {
-	      float finalToA(toaFromToT[it]);
-	      while(finalToA < 0.f)  finalToA+=25.f;
-	      while(finalToA > 25.f) finalToA-=25.f;
-
 	      //brute force saturation, maybe could to better with an exponential like saturation
 	      const float saturatedCharge(std::min(newCharge[it],tdcSaturation_fC_));	      
 	      newSample.set(true,true,(uint16_t)(finalToA/toaLSB_ns_),(uint16_t)(std::floor(saturatedCharge/tdcLSB_fC_)));
@@ -340,7 +358,7 @@ void HGCFEElectronics<DFr>::runShaperWithToT(DFr &dataFrame, HGCSimHitData& char
 	{
 	   //brute force saturation, maybe could to better with an exponential like saturation
           const float saturatedCharge(std::min(newCharge[it],adcSaturation_fC_));
-	  newSample.set(newCharge[it]>adj_thresh,false,(uint16_t)0,(uint16_t)(std::floor(saturatedCharge/adcLSB_fC_)));
+	  newSample.set(newCharge[it]>adj_thresh, false, (uint16_t)(finalToA/toaLSB_ns_), (uint16_t)(std::floor(saturatedCharge/adcLSB_fC_)));
 	}
       dataFrame.setSample(it,newSample);
     }

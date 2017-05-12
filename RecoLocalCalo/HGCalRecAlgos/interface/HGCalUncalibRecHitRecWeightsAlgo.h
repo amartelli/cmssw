@@ -76,6 +76,7 @@ template<class C> class HGCalUncalibRecHitRecWeightsAlgo
                                           << sample.toa() << ' ' << toaLSBToNS_ << ' '
                                           << " flag=" << flag << std::endl;
       } else {
+	if(double(sample.toa()) > 0.) jitter_    = double(sample.toa()) * toaLSBToNS_;
 	amplitude_ = double(sample.data()) * adcLSB_;
 	LogDebug("HGCUncalibratedRecHit") << "ADC+: set the charge to: " << amplitude_ << ' ' << sample.data() 
                                           << ' ' << adcLSB_ << ' ' << std::endl;

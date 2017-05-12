@@ -50,6 +50,7 @@ class HGCFEElectronics
   float getTDClsb()       { return tdcLSB_fC_;       }  
   float getADCThreshold() { return adcThreshold_fC_; }
   float getTDCOnset()     { return tdcOnset_fC_;     }
+  float getTDCForToaOnset()     { return tdcForToaOnset_fC_;     }
   void setADClsb(float newLSB) { adcLSB_fC_=newLSB; }
 
   /**
@@ -85,10 +86,10 @@ class HGCFEElectronics
   std::array<float,6> adcPulse_, pulseAvgT_;
   std::vector<float> tdcChargeDrainParameterisation_;
   float adcSaturation_fC_, adcLSB_fC_, tdcLSB_fC_, tdcSaturation_fC_,
-    adcThreshold_fC_, tdcOnset_fC_, toaLSB_ns_, tdcResolutionInNs_; 
+    adcThreshold_fC_, tdcForToaOnset_fC_, tdcOnset_fC_, toaLSB_ns_, tdcResolutionInNs_; 
   uint32_t toaMode_;
   //caches
-  std::array<bool,hgc::nSamples>  busyFlags, totFlags;
+  std::array<bool,hgc::nSamples>  busyFlags, totFlags, totForToaFlags;
   hgc::HGCSimHitData newCharge, toaFromToT;
 };
 
