@@ -35,6 +35,10 @@ hgceeDigitizer = cms.PSet(
             adcSaturation_fC  = cms.double(100),
             # the tdc resolution smearing (in picoseconds)
             tdcResolutionInPs = cms.double( 0.001 ),
+            # jitter for timing noise term ns
+            jitterNoise_ns = cms.vdouble(0., 0., 0.),
+            # jitter for timing noise term ns
+            jitterConstant_ns = cms.vdouble(0.00, 0.00, 0.00),
             # LSB for TDC, assuming 12 bit dynamic range to 10 pC
             tdcNbits          = cms.uint32(12),
             # TDC saturation
@@ -43,7 +47,9 @@ hgceeDigitizer = cms.PSet(
             # for different thickness
             adcThreshold_fC   = cms.double(0.672),
             # raise usage of TDC and mode flag (from J. Kaplon)
-            tdcOnset_fC       = cms.double(60) ,
+            tdcOnset_fC       = cms.double(60),
+            # raise usage of TDC for TOA only
+            tdcForToaOnset_fC = cms.vdouble(60., 60., 60.),
             # LSB for time of arrival estimate from TDC in ns
             toaLSB_ns         = cms.double(0.005),
             #toa computation mode (0=by weighted energy, 1=simple threshold)
@@ -86,6 +92,10 @@ hgchefrontDigitizer = cms.PSet(
             adcSaturation_fC  = cms.double(100),
             # the tdc resolution smearing (in picoseconds)
             tdcResolutionInPs = cms.double( 0.001 ),
+            # jitter for timing noise term ns
+            jitterNoise_ns = cms.vdouble(0., 0., 0.),
+            # jitter for timing noise term ns
+            jitterConstant_ns = cms.vdouble(0.00, 0.00, 0.00),
             # LSB for TDC, assuming 12 bit dynamic range to 10 pC
             tdcNbits          = cms.uint32(12),
             # TDC saturation
@@ -94,7 +104,9 @@ hgchefrontDigitizer = cms.PSet(
             # for different thickness
             adcThreshold_fC   = cms.double(0.672),
             # raise usage of TDC and mode flag (from J. Kaplon)
-            tdcOnset_fC       = cms.double(60) ,
+            tdcOnset_fC       = cms.double(60), 
+            # raise usage of TDC for TOA only                                                                                                                            
+            tdcForToaOnset_fC = cms.vdouble(60., 60., 60.),
             # LSB for time of arrival estimate from TDC in ns
             toaLSB_ns         = cms.double(0.005),
             #toa computation mode (0=by weighted energy, 1=simple threshold)
