@@ -105,7 +105,7 @@ class HGCFEElectronics
   std::vector<float> noise_fC_;
   uint32_t toaMode_;
   //caches
-  std::array<bool,hgc::nSamples>  busyFlags, totFlags, totForToaFlags;
+  std::array<bool,hgc::nSamples>  busyFlags, totFlags, toaFlags;
   hgc::HGCSimHitData newCharge, toaFromToT;
 };
 
