@@ -27,12 +27,33 @@ namespace {
   
   constexpr std::array<double,3> occupancyGuesses = { { 0.5,0.2,0.2 } };
 
+  bool comparePairs(const std::pair<float, float>& i, const std::pair<float, float>& j){
+    return i.second < j.second;
+  }
+
   float getPositionDistance(const HGCalGeometry* geom, const DetId& id) {
     return geom->getPosition(id).mag();
   }
 
   float getPositionDistance(const HcalGeometry* geom, const DetId& id) {
     return geom->getGeometry(id)->getPosition().mag();
+  }
+
+  int getCellThickness(const HGCalGeometry* geom, const DetId& detid ) {
+    const auto& topo     = geom->topology();
+    const auto& dddConst = topo.dddConstants();
+    uint32_t id(detid.rawId());
+    HGCalDetId hid(id);
+    int wafer = HGCalDetId(id).wafer();
+    int waferTypeL = dddConst.waferTypeL(wafer);
+    int isHalf = dddConst.isHalfCell(wafer,hid.cell());
+    int size = (isHalf ? 0.5 : 1.0);
+    return waferTypeL;
+  }
+
+  int getCellThickness(const HcalGeometry* geom, const DetId& detid ) {
+    int size = 1;
+    return 1;
   }
 
   void getValidDetIds(const HGCalGeometry* geom, std::unordered_set<DetId>& valid) {
@@ -155,6 +176,7 @@ void HGCDigitizer::initializeEvent(edm::Event const& e, edm::EventSetup const& e
 //
 void HGCDigitizer::finalizeEvent(edm::Event& e, edm::EventSetup const& es, CLHEP::HepRandomEngine* hre)
 {
+  hitRefs_bx0.clear();
   
   const CaloSubdetectorGeometry* theGeom = ( nullptr == gHGCal_ ? 
 					     static_cast<const CaloSubdetectorGeometry*>(gHcal_) : 
@@ -264,21 +286,22 @@ void HGCDigitizer::accumulate(edm::Handle<edm::PCaloHitContainer> const &hits,
   
   //configuration to apply for the computation of time-of-flight
   bool weightToAbyEnergy(false);
-  float tdcOnset(0.f),keV2fC(0.f);
+  std::array<float, 3> tdcForToaOnset{ {0.f, 0.f, 0.f} };
+  float keV2fC(0.f);
   switch( mySubDet_ ) {
   case ForwardSubdetector::HGCEE:
     weightToAbyEnergy = theHGCEEDigitizer_->toaModeByEnergy();
-    tdcOnset          = theHGCEEDigitizer_->tdcOnset();
+    tdcForToaOnset    = theHGCEEDigitizer_->tdcForToaOnset();
     keV2fC            = theHGCEEDigitizer_->keV2fC();
     break;
   case ForwardSubdetector::HGCHEF:
     weightToAbyEnergy = theHGCHEfrontDigitizer_->toaModeByEnergy();
-    tdcOnset          = theHGCHEfrontDigitizer_->tdcOnset();
+    tdcForToaOnset    = theHGCHEfrontDigitizer_->tdcForToaOnset();
     keV2fC            = theHGCHEfrontDigitizer_->keV2fC();
     break;
   case ForwardSubdetector::HGCHEB:
     weightToAbyEnergy = theHGCHEbackDigitizer_->toaModeByEnergy();
-    tdcOnset          = theHGCHEbackDigitizer_->tdcOnset();
+    tdcForToaOnset    = theHGCHEbackDigitizer_->tdcForToaOnset();
     keV2fC            = theHGCHEbackDigitizer_->keV2fC();     
     break;
   default:
@@ -331,7 +354,7 @@ void HGCDigitizer::accumulate(edm::Handle<edm::PCaloHitContainer> const &hits,
     //accumulate in 15 buckets of 25ns (9 pre-samples, 1 in-time, 5 post-samples)
     const float tof = toa-dist2center/refSpeed_+tofDelay_ ;
     const int itime= std::floor( tof/bxTime_ ) + 9;
-      
+
     //no need to add bx crossing - tof comes already corrected from the mixing module
     //itime += bxCrossing;
     //itime += 9;
@@ -343,32 +366,59 @@ void HGCDigitizer::accumulate(edm::Handle<edm::PCaloHitContainer> const &hits,
 
     (simHitIt->second).hit_info[0][itime] += charge;
     float accCharge=(simHitIt->second).hit_info[0][itime];
-      
+
+
+    //working version with pileup only for in-time hits
+    int waferThickness = getCellThickness(geom,id);
+    float accChargeForToA = 0;
+    bool orderChanged = false;
+    if(itime == 9){
+      if(hitRefs_bx0[id].empty()){
+	hitRefs_bx0[id].push_back(std::pair<float, float>(charge, tof));
+	accChargeForToA += charge;
+      }
+      else if(tof <= hitRefs_bx0[id].back().second){
+	hitRefs_bx0[id].push_back(std::pair<float, float>(charge, tof));
+	std::sort(hitRefs_bx0[id].begin(), hitRefs_bx0[id].end(), comparePairs);
+	for(const auto& step : hitRefs_bx0[id]){
+	  accChargeForToA += step.first;
+	  if(accChargeForToA > tdcForToaOnset[waferThickness-1] && step.second != hitRefs_bx0[id].back().second){
+	    while(step != hitRefs_bx0[id].back())  hitRefs_bx0[id].pop_back();
+	    break;
+	  }
+	}
+	orderChanged = true;
+      }
+      else{
+        if(accCharge - charge <= tdcForToaOnset[waferThickness-1]){
+          hitRefs_bx0[id].push_back(std::pair<float, float>(charge, tof));
+          accChargeForToA = accCharge;
+        }
+      }
+    }
+
     //time-of-arrival (check how to be used)
     if(weightToAbyEnergy) (simHitIt->second).hit_info[1][itime] += charge*tof;
-    else if((simHitIt->second).hit_info[1][itime]==0) {	
-      if( accCharge>tdcOnset)
-	{
-	  //extrapolate linear using previous simhit if it concerns to the same DetId
-	  float fireTDC=tof;
-	  if(i>0)
-	    {
-	      uint32_t prev_id  = std::get<1>(hitRefs[i-1]);
-	      if(prev_id==id)
-		{
-		  float prev_toa    = std::get<2>(hitRefs[i-1]);
-		  float prev_tof(prev_toa-dist2center/refSpeed_+tofDelay_);
-		  //float prev_charge = std::get<3>(hitRefs[i-1]);
-		  float deltaQ2TDCOnset = tdcOnset-((simHitIt->second).hit_info[0][itime]-charge);
-		  float deltaQ          = charge;
-		  float deltaT          = (tof-prev_tof);
-		  fireTDC               = deltaT*(deltaQ2TDCOnset/deltaQ)+prev_tof;
-		}		  
-	    }
-	  
-	  (simHitIt->second).hit_info[1][itime]=fireTDC;
+    if(accChargeForToA > tdcForToaOnset[waferThickness-1] &&
+       ((simHitIt->second).hit_info[1][itime] == 0 || orderChanged == true) ){
+      float fireTDC = hitRefs_bx0[id].back().second;
+      if (hitRefs_bx0[id].size() > 1){
+	float chargeBeforeThr = 0.;
+	float tofchargeBeforeThr = 0.;
+	for(const auto& step : hitRefs_bx0[id]){
+	  if(step.first + chargeBeforeThr <= tdcForToaOnset[waferThickness-1]){
+	    chargeBeforeThr += step.first;
+	    tofchargeBeforeThr = step.second;
+	  }
+	  else break;
 	}
+	float deltaQ = accChargeForToA - chargeBeforeThr;
+	float deltaTOF = fireTDC - tofchargeBeforeThr;
+	fireTDC = (tdcForToaOnset[waferThickness-1] - chargeBeforeThr) * deltaTOF / deltaQ + tofchargeBeforeThr;
+      }
+      (simHitIt->second).hit_info[1][itime] = fireTDC;                                                                  
     }
+
   }
   hitRefs.clear();
 }
