@@ -16,6 +16,7 @@ for tracks in selectedTracks :
     label = 'TrackerCollisionSelectedTrackMonCommon' + str(tracks)
     locals()[label] = TrackerCollisionTrackMonCommon.clone()
     locals()[label].TrackProducer    = cms.InputTag(tracks)
+    locals()[label].allTrackProducer = cms.InputTag(allTrackProducer[tracks])
     locals()[label].FolderName       = cms.string(mainfolderName[tracks])
     locals()[label].PVFolderName     = cms.string(vertexfolderName[tracks])
     locals()[label].TrackPtMin       = trackPtMin[tracks]
@@ -243,6 +244,10 @@ for step in seedInputTag.iterkeys():
     elif clusterLabel[step] == cms.vstring('Strip') or clusterLabel[step] == cms.vstring('Tot') :
         locals()[label].NClusStrBin = clusterBin[step]
         locals()[label].NClusStrMax = clusterMax[step]
+    if step in regionLabel:
+        locals()[label].doRegionPlots = True
+        locals()[label].RegionProducer = regionLabel[step]
+        locals()[label].RegionCandidates = regionCandidateLabel[step]
 
 # DQM Services
 dqmInfoTracking = cms.EDAnalyzer("DQMEventInfo",

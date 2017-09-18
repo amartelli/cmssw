@@ -35,23 +35,23 @@ namespace edm {
   public:
     ParameterSetDescriptionFiller() {}
 
-    virtual void fill(ConfigurationDescriptions & descriptions) const {
+    void fill(ConfigurationDescriptions & descriptions) const override {
       T::fillDescriptions(descriptions);
       T::prevalidate(descriptions);
     }
 
-    virtual const std::string& baseType() const {
+    const std::string& baseType() const override {
       return T::baseType();
     }
 
-    virtual const std::string& extendedBaseType() const {
+    const std::string& extendedBaseType() const override {
       const T* type = nullptr;
       return ParameterSetDescriptionFillerBase::extendedBaseType(type);
     }
 
   private:
-    ParameterSetDescriptionFiller(const ParameterSetDescriptionFiller&); // stop default
-    const ParameterSetDescriptionFiller& operator=(const ParameterSetDescriptionFiller&); // stop default
+    ParameterSetDescriptionFiller(const ParameterSetDescriptionFiller&) = delete; // stop default
+    const ParameterSetDescriptionFiller& operator=(const ParameterSetDescriptionFiller&) = delete; // stop default
     
   };
 
@@ -130,7 +130,7 @@ namespace edm {
 
     // If T has a fillDescriptions function then just call that, otherwise
     // put in an "unknown description" as a default.
-    virtual void fill(ConfigurationDescriptions & descriptions) const {
+    void fill(ConfigurationDescriptions & descriptions) const override {
       std::conditional_t<edm::fillDetails::has_fillDescriptions_function<T>::value,
                          edm::fillDetails::DoFillDescriptions<T>,
                          edm::fillDetails::DoFillAsUnknown<T>> fill_descriptions;
@@ -140,11 +140,11 @@ namespace edm {
       //prevalidateService(descriptions);
     }
 
-    virtual const std::string& baseType() const {
+    const std::string& baseType() const override {
       return kBaseForService;
     }
 
-    virtual const std::string& extendedBaseType() const {
+    const std::string& extendedBaseType() const override {
       return kEmpty;
     }
 
@@ -162,7 +162,7 @@ namespace edm {
 
     // If T has a fillDescriptions function then just call that, otherwise
     // put in an "unknown description" as a default.
-    virtual void fill(ConfigurationDescriptions & descriptions) const {
+    void fill(ConfigurationDescriptions & descriptions) const override {
       std::conditional_t<edm::fillDetails::has_fillDescriptions_function<T>::value,
                          edm::fillDetails::DoFillDescriptions<T>,
                          edm::fillDetails::DoFillAsUnknown<T>> fill_descriptions;
@@ -174,17 +174,17 @@ namespace edm {
       prevalidate(descriptions);
     }
 
-    virtual const std::string& baseType() const {
+    const std::string& baseType() const override {
       return kBaseForESSource;
     }
 
-    virtual const std::string& extendedBaseType() const {
+    const std::string& extendedBaseType() const override {
       return kEmpty;
     }
 
   private:
-    DescriptionFillerForESSources(const DescriptionFillerForESSources&); // stop default
-    const DescriptionFillerForESSources& operator=(const DescriptionFillerForESSources&); // stop default
+    DescriptionFillerForESSources(const DescriptionFillerForESSources&) = delete; // stop default
+    const DescriptionFillerForESSources& operator=(const DescriptionFillerForESSources&) = delete; // stop default
   };
 
   template<typename T>
@@ -195,7 +195,7 @@ namespace edm {
 
     // If T has a fillDescriptions function then just call that, otherwise
     // put in an "unknown description" as a default.
-    virtual void fill(ConfigurationDescriptions & descriptions) const {
+    void fill(ConfigurationDescriptions & descriptions) const override {
       std::conditional_t<edm::fillDetails::has_fillDescriptions_function<T>::value,
                          edm::fillDetails::DoFillDescriptions<T>,
                          edm::fillDetails::DoFillAsUnknown<T>> fill_descriptions;
@@ -207,17 +207,17 @@ namespace edm {
       prevalidate(descriptions);
     }
 
-    virtual const std::string& baseType() const {
+    const std::string& baseType() const override {
       return kBaseForESProducer;
     }
 
-    virtual const std::string& extendedBaseType() const {
+    const std::string& extendedBaseType() const override {
       return kEmpty;
     }
 
   private:
-    DescriptionFillerForESProducers(const DescriptionFillerForESProducers&); // stop default
-    const DescriptionFillerForESProducers& operator=(const DescriptionFillerForESProducers&); // stop default
+    DescriptionFillerForESProducers(const DescriptionFillerForESProducers&) = delete; // stop default
+    const DescriptionFillerForESProducers& operator=(const DescriptionFillerForESProducers&) = delete; // stop default
   };
 }
 #endif

@@ -33,13 +33,13 @@ class HGCFEElectronics
      @short switches according to the firmware version
    */
   inline void runShaper(DFr &dataFrame, hgc::HGCSimHitData& chargeColl, 
-                        hgc::HGCSimHitData& toa, int thickness, CLHEP::HepRandomEngine* engine)
+                        hgc::HGCSimHitData& toa, int thickness, CLHEP::HepRandomEngine* engine, float cce = 1.0)
   {    
     switch(fwVersion_)
       {
-      case SIMPLE :  { runSimpleShaper(dataFrame,chargeColl, thickness);      break; }
-      case WITHTOT : { runShaperWithToT(dataFrame,chargeColl,toa, thickness, engine); break; }
-      default :      { runTrivialShaper(dataFrame,chargeColl, thickness);     break; }
+      case SIMPLE :  { runSimpleShaper(dataFrame,chargeColl, thickness, cce);      break; }
+      case WITHTOT : { runShaperWithToT(dataFrame,chargeColl,toa, thickness, engine, cce); break; }
+      default :      { runTrivialShaper(dataFrame,chargeColl, thickness, cce);     break; }
       }
   }
 
@@ -69,18 +69,18 @@ class HGCFEElectronics
   /**
      @short converts charge to digis without pulse shape
    */
-  void runTrivialShaper(DFr &dataFrame, hgc::HGCSimHitData& chargeColl, int thickness);
+  void runTrivialShaper(DFr &dataFrame, hgc::HGCSimHitData& chargeColl, int thickness, float cce = 1.0);
 
   /**
      @short applies a shape to each time sample and propagates the tails to the subsequent time samples
    */
-  void runSimpleShaper(DFr &dataFrame, hgc::HGCSimHitData& chargeColl, int thickness);
+  void runSimpleShaper(DFr &dataFrame, hgc::HGCSimHitData& chargeColl, int thickness, float cce = 1.0);
 
   /**
      @short implements pulse shape and switch to time over threshold including deadtime
    */
   void runShaperWithToT(DFr &dataFrame, hgc::HGCSimHitData& chargeColl, 
-                        hgc::HGCSimHitData& toa, int thickness, CLHEP::HepRandomEngine* engine);
+                        hgc::HGCSimHitData& toa, int thickness, CLHEP::HepRandomEngine* engine, float cce = 1.0);
 
   /**
      @short returns how ToT will be computed
@@ -104,6 +104,7 @@ class HGCFEElectronics
   std::array<float,3> jitterNoise2_ns_, jitterConstant2_ns_;
   std::vector<float> noise_fC_;
   uint32_t toaMode_;
+  bool thresholdFollowsMIP_;
   //caches
   std::array<bool,hgc::nSamples>  busyFlags, totFlags, toaFlags;
   hgc::HGCSimHitData newCharge, toaFromToT;
