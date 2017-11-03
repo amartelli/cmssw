@@ -23,7 +23,7 @@ hgceeDigitizer = cms.PSet(
     digiCfg = cms.PSet( 
         keV2fC           = cms.double(0.044259), #1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
 
-        chargeCollectionEfficiency = cms.vdouble( nonAgedCCEs ),
+        chargeCollectionEfficiencies = cms.vdouble( nonAgedCCEs ),
         noise_fC         = cms.vdouble( [x*fC_per_ele for x in nonAgedNoises] ), #100,200,300 um
         doTimeSamples    = cms.bool(False),                                         
         feCfg   = cms.PSet( 
@@ -83,7 +83,7 @@ hgchefrontDigitizer = cms.PSet(
     verbosity         = cms.untracked.uint32(0),
     digiCfg = cms.PSet(        
         keV2fC           = cms.double(0.044259), #1000 eV / 3.62 (eV per e) / 6.24150934e3 (e per fC)
-        chargeCollectionEfficiency = cms.vdouble( nonAgedCCEs ),
+        chargeCollectionEfficiencies = cms.vdouble( nonAgedCCEs ),
         noise_fC         = cms.vdouble( [x*fC_per_ele for x in nonAgedNoises] ), #100,200,300 um
         doTimeSamples    = cms.bool(False),                                         
         feCfg   = cms.PSet( 
@@ -169,6 +169,6 @@ endOfLifeNoises = [2400.0,2250.0,1750.0]
 def HGCal_setEndOfLifeNoise(digitizer):
     if( digitizer.digiCollection != "HGCDigisHEback" ):
         digitizer.digiCfg.noise_fC = cms.vdouble( [x*fC_per_ele for x in endOfLifeNoises] )
-        digitizer.digiCfg.chargeCollectionEfficiency = cms.double(endOfLifeCCEs)
+        digitizer.digiCfg.chargeCollectionEfficiencies = cms.vdouble(endOfLifeCCEs)
     else: #use S/N of 7 for SiPM readout
-        digitizer.digiCfg.noise_MIP = cms.vdouble( 1.0/5.0 )
+        digitizer.digiCfg.noise_MIP = cms.double( 1.0/5.0 )
