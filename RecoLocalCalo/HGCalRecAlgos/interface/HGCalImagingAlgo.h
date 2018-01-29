@@ -15,6 +15,7 @@
 #include "DataFormats/EgammaReco/interface/BasicCluster.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
+#include "RecoLocalCalo/HGCalRecAlgos/interface/ClusterTools.h"
 
 // C/C++ headers
 #include <string>
@@ -24,35 +25,17 @@
 
 #include "KDTreeLinkerAlgoT.h"
 
-
-template <typename T>
-std::vector<size_t> sorted_indices(const std::vector<T> &v) {
-
-        // initialize original index locations
-        std::vector<size_t> idx(v.size());
-        std::iota (std::begin(idx), std::end(idx), 0);
-
-        // sort indices based on comparing values in v
-        std::sort(idx.begin(), idx.end(),
-                  [&v](size_t i1, size_t i2) {
-                return v[i1] > v[i2];
-        });
-
-        return idx;
-}
-
 class HGCalImagingAlgo
 {
 
 
 public:
 
-enum VerbosityLevel { pDEBUG = 0, pWARNING = 1, pINFO = 2, pERROR = 3 };
 
 HGCalImagingAlgo() : vecDeltas(), kappa(1.), ecut(0.), cluster_offset(0),
-        sigma2(1.0),
-        algoId(reco::CaloCluster::undefined),
-        verbosity(pERROR),initialized(false){
+    sigma2(1.0),
+    algoId(reco::CaloCluster::undefined),
+    verbosity(hgcal::pERROR),initialized(false){
 }
 
 HGCalImagingAlgo(const std::vector<double>& vecDeltas_in, double kappa_in, double ecut_in,
@@ -64,7 +47,7 @@ HGCalImagingAlgo(const std::vector<double>& vecDeltas_in, double kappa_in, doubl
                  double fcPerEle_in,
                  const std::vector<double>& nonAgedNoises_in,
                  double noiseMip_in,
-                 VerbosityLevel the_verbosity = pERROR) :
+                 hgcal::VerbosityLevel the_verbosity = hgcal::pERROR) :
         vecDeltas(vecDeltas_in), kappa(kappa_in),
         ecut(ecut_in),
         cluster_offset(0),
@@ -97,7 +80,7 @@ HGCalImagingAlgo(const std::vector<double>& vecDeltas_in, double kappa_in, doubl
                  double fcPerEle_in,
                  const std::vector<double>& nonAgedNoises_in,
                  double noiseMip_in,
-                 VerbosityLevel the_verbosity = pERROR) : vecDeltas(vecDeltas_in), kappa(kappa_in),
+                 hgcal::VerbosityLevel the_verbosity = hgcal::pERROR) : vecDeltas(vecDeltas_in), kappa(kappa_in),
         ecut(ecut_in),
         cluster_offset(0),
         sigma2(std::pow(showerSigma,2.0)),
@@ -123,7 +106,7 @@ virtual ~HGCalImagingAlgo()
 {
 }
 
-void setVerbosity(VerbosityLevel the_verbosity)
+ void setVerbosity(hgcal::VerbosityLevel the_verbosity)
 {
         verbosity = the_verbosity;
 }
@@ -203,7 +186,7 @@ std::vector<std::vector<double> > thresholds;
 std::vector<std::vector<double> > v_sigmaNoise;
 
 // The verbosity level
-VerbosityLevel verbosity;
+ hgcal::VerbosityLevel verbosity;
 
 // initialization bool
 bool initialized;
