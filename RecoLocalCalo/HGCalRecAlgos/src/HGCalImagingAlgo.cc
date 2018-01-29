@@ -123,7 +123,7 @@ std::vector<reco::BasicCluster> HGCalImagingAlgo::getClusters(bool doSharing){
 	  }
 	}
 
-	if (verbosity < pINFO)
+	if (verbosity < hgcal::pINFO)
 	  {
 	    std::cout << "\t******** NEW CLUSTER (SHARING) ********" << std::endl;
 	    std::cout << "\tEff. No. of cells = " << effective_hits << std::endl;
@@ -145,7 +145,7 @@ std::vector<reco::BasicCluster> HGCalImagingAlgo::getClusters(bool doSharing){
       // use fraction to store whether this is a Halo hit or not
 	  thisCluster.emplace_back(std::pair<DetId, float>(it.data.detid,(it.data.isHalo?0.:1.)));
 	};
-      if (verbosity < pINFO)
+      if (verbosity < hgcal::pINFO)
 	{
 	  std::cout << "******** NEW CLUSTER (HGCIA) ********" << std::endl;
 	  std::cout << "Index          " << i                   << std::endl;
@@ -313,7 +313,7 @@ int HGCalImagingAlgo::findAndAssignClusters(std::vector<KDNode> &nd,KDTree &lp, 
 
 
     nd[ds[i]].data.clusterIndex = clusterIndex;
-    if (verbosity < pINFO)
+    if (verbosity < hgcal::pINFO)
       {
 	    std::cout << "Adding new cluster with index " << clusterIndex+cluster_offset << std::endl;
 	    std::cout << "Cluster center is hit " << ds[i] << std::endl;
@@ -337,7 +337,7 @@ int HGCalImagingAlgo::findAndAssignClusters(std::vector<KDNode> &nd,KDTree &lp, 
 
   //make room in the temporary cluster vector for the additional clusterIndex clusters
   // from this layer
-  if (verbosity < pINFO)
+  if (verbosity < hgcal::pINFO)
     {
       std::cout << "resizing cluster vector by "<< clusterIndex << std::endl;
     }
@@ -390,7 +390,7 @@ int HGCalImagingAlgo::findAndAssignClusters(std::vector<KDNode> &nd,KDTree &lp, 
     if(ci!=-1) {
       if (nd[i].data.rho <= rho_b[ci]) nd[i].data.isHalo = true;
       current_v[ci+cluster_offset].push_back(nd[i]);
-      if (verbosity < pINFO)
+      if (verbosity < hgcal::pINFO)
 	  {
 	    std::cout << "Pushing hit " << i << " into cluster with index " << ci+cluster_offset << std::endl;
 	    std::cout << "Size now " << current_v[ci+cluster_offset].size() << std::endl;
@@ -399,7 +399,7 @@ int HGCalImagingAlgo::findAndAssignClusters(std::vector<KDNode> &nd,KDTree &lp, 
   }
 
   //prepare the offset for the next layer if there is one
-  if (verbosity < pINFO)
+  if (verbosity < hgcal::pINFO)
     {
       std::cout << "moving cluster offset by " << clusterIndex << std::endl;
     }

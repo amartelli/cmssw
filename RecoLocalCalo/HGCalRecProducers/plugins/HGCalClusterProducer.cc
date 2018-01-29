@@ -49,7 +49,7 @@ class HGCalClusterProducer : public edm::stream::EDProducer<> {
   bool doSharing;
   std::string detector;
 
-  HGCalImagingAlgo::VerbosityLevel verbosity;
+  hgcal::VerbosityLevel verbosity;
 };
 
 DEFINE_FWK_MODULE(HGCalClusterProducer);
@@ -58,7 +58,7 @@ HGCalClusterProducer::HGCalClusterProducer(const edm::ParameterSet &ps) :
   algoId(reco::CaloCluster::undefined),
   doSharing(ps.getParameter<bool>("doSharing")),
   detector(ps.getParameter<std::string >("detector")), // one of EE, FH, BH or "all"
-  verbosity((HGCalImagingAlgo::VerbosityLevel)ps.getUntrackedParameter<unsigned int>("verbosity",3)){
+  verbosity((hgcal::VerbosityLevel)ps.getUntrackedParameter<unsigned int>("verbosity",3)){
   double ecut = ps.getParameter<double>("ecut");
   std::vector<double> vecDeltas = ps.getParameter<std::vector<double> >("deltac");
   double kappa = ps.getParameter<double>("kappa");
