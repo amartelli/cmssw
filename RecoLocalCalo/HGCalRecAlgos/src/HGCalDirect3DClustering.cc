@@ -11,6 +11,12 @@
 #include "DataFormats/CaloRecHit/interface/CaloID.h"
 
 void HGCalDirect3DClustering::populate(const HGCRecHitCollection& hits){
+
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::populate **** " << std::endl;
+  }
+
+
   //loop over all hits and create the Hexel structure, skip energies below ecut
 
   if (dependSensor) {
@@ -103,6 +109,10 @@ void HGCalDirect3DClustering::makeClusters()
 //RA tocheck
 std::vector<reco::BasicCluster> HGCalDirect3DClustering::getClusters(bool doSharing){
 
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::getClusters **** " << std::endl;
+  }
+
   reco::CaloID caloID = reco::CaloID::DET_HGCAL_ENDCAP;
   std::vector< std::pair<DetId, float> > thisCluster;
   for (unsigned int i = 0; i < current_v.size(); ++i){
@@ -176,6 +186,12 @@ std::vector<reco::BasicCluster> HGCalDirect3DClustering::getClusters(bool doShar
 
 
 math::XYZPoint HGCalDirect3DClustering::calculatePosition(std::vector<Hexel> &v){
+
+
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::calculatePosition **** " << std::endl;
+  }
+
   float total_weight = 0.;
   float x = 0.;
   float y = 0.;
@@ -222,11 +238,17 @@ math::XYZPoint HGCalDirect3DClustering::calculatePosition(std::vector<Hexel> &v)
 //compute local energy density for each point node (nd_i) in the tree structure (lp)
 double HGCalDirect3DClustering::calculateLocalDensity(HexelCloud &nd, my_kd_tree_t &lp){
 
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::calculateLocalDensity **** " << std::endl;
+  }
+
   double maxdensity = 0.;
 
   // delta_c is maximum search distance (critical distance) for local density calculation
   // make it subdetector dependent
   float delta_c; 
+
+  std::cout << " total nodes = nd.pts.size() = " << nd.pts.size() << std::endl;
 
   for(unsigned int i = 0; i < nd.pts.size(); ++i){
     //RA would give reduced or effective z instead of lz
@@ -255,9 +277,9 @@ double HGCalDirect3DClustering::calculateLocalDensity(HexelCloud &nd, my_kd_tree
 	std::cout << "hit i(node),j(found) " << i << "," << j
 		  << " distance by Hexel " << distance2(nd.pts[i],nd.pts[j]) 
 		  << " distance by kdtree " <<  ret_matches[k].second << std::endl;
-      std::cout << "delta x" << nd.pts[i].x-nd.pts[j].x << std::endl;
-      std::cout << "delta y" << nd.pts[i].y-nd.pts[j].y << std::endl;
-      std::cout << "delta lz" << nd.pts[i].lz-nd.pts[j].lz << std::endl;
+      std::cout << "delta x " << nd.pts[i].x-nd.pts[j].x << std::endl;
+      std::cout << "delta y " << nd.pts[i].y-nd.pts[j].y << std::endl;
+      std::cout << "delta lz " << nd.pts[i].lz-nd.pts[j].lz << std::endl;
     }
       //here compute the local energy density => possible to specify the Kernel for rho
       //by construction distance is < delta_c
@@ -283,6 +305,11 @@ double HGCalDirect3DClustering::calculateLocalDensity(HexelCloud &nd, my_kd_tree
 //in delta the smallest distance wrt the hits with higher density
 //in nearestHigher the hit with higher density having the smallest distance
 double HGCalDirect3DClustering::calculateDistanceToHigher(HexelCloud &nd){
+
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::calculateDistanceToHigher **** " << std::endl;
+  }
+
 
   //sort vector of Hexels by decreasing local density
   std::vector<size_t> rs = sorted_indices(nd.pts);
@@ -311,6 +338,10 @@ double HGCalDirect3DClustering::calculateDistanceToHigher(HexelCloud &nd){
   const double max_dist2 = dist2;
   const unsigned int nd_size = rs.size();
 
+  if(verbosity < hgcal::pINFO){
+    std::cout << " number 0 delta = " << nd.pts[rs[0]].delta << " nearestHigher = " << nearestHigher << std::endl;
+  }
+
   //start from second-highest density
   for(unsigned int oi = 1; oi < nd_size; ++oi){
     dist2 = max_dist2;
@@ -329,6 +360,11 @@ double HGCalDirect3DClustering::calculateDistanceToHigher(HexelCloud &nd){
     }
     nd.pts[i].delta = std::sqrt(dist2);
     nd.pts[i].nearestHigher = nearestHigher; //this uses the original unsorted hitlist
+
+    if (verbosity < hgcal::pINFO){
+      std::cout << "hit " << i << " distance to higher is " << nd.pts[i].delta << std::endl;
+      std::cout << "hit " << i << " nearest higher is " << nd.pts[i].nearestHigher << std::endl;
+    }
   }
   return maxdensity;
 }
@@ -336,6 +372,11 @@ double HGCalDirect3DClustering::calculateDistanceToHigher(HexelCloud &nd){
 
 
 int HGCalDirect3DClustering::findAndAssignClusters(HexelCloud &nd,my_kd_tree_t &lp, double maxdensity){
+
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::findAndAssignClusters **** " << std::endl;
+  }
+
   nanoflann::SearchParams params;
   params.sorted = true;
 
@@ -507,6 +548,12 @@ int HGCalDirect3DClustering::findAndAssignClusters(HexelCloud &nd,my_kd_tree_t &
 
 // find local maxima within delta_c, marking the indices in the cluster
 std::vector<unsigned> HGCalDirect3DClustering::findLocalMaximaInCluster(const std::vector<Hexel> &v){
+
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::findLocalMaximaInCluster **** " << std::endl;
+  }
+
+
   std::vector<unsigned> result;
   std::vector<bool> seed(v.size(),true);
   float delta_c = 2.;
@@ -552,6 +599,12 @@ math::XYZPoint HGCalDirect3DClustering::calculatePositionWithFraction(const std:
 
 double HGCalDirect3DClustering::calculateEnergyWithFraction(const std::vector<Hexel> &hits,
 							    const std::vector<double>& fractions) {
+
+
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::calculateEnergyWithFraction **** " << std::endl;
+  }
+
   double result = 0.0;
   for( unsigned i = 0 ; i < hits.size(); ++i ) {
     result += fractions[i]*hits[i].weight;
@@ -563,6 +616,12 @@ double HGCalDirect3DClustering::calculateEnergyWithFraction(const std::vector<He
 void HGCalDirect3DClustering::shareEnergy(const std::vector<Hexel> &incluster, 
 					  const std::vector<unsigned>& seeds,
 					  std::vector<std::vector<double> >& outclusters) {
+
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::shareEnergy **** " << std::endl;
+  }
+
+
   std::vector<bool> isaseed(incluster.size(),false);
   outclusters.clear();
   outclusters.resize(seeds.size());
@@ -658,6 +717,11 @@ void HGCalDirect3DClustering::shareEnergy(const std::vector<Hexel> &incluster,
 
 
 void HGCalDirect3DClustering::computeThreshold() {
+
+  if(verbosity < hgcal::pINFO){
+    std::cout << " **** HGCalDirect3DClustering::computeThreshold **** " << std::endl;
+  }
+
 
   if(initialized) return; // only need to calculate thresholds once
   const std::vector<DetId>& listee(rhtools_.getGeometry()->getValidDetIds(DetId::Forward,ForwardSubdetector::HGCEE));
