@@ -21,7 +21,6 @@
 #include <chrono>
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalImagingAlgo.h"
-//#include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalOneStepAlgo.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalDirect3DClustering.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalDepthPreClusterer.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/HGCal3DClustering.h"
@@ -48,7 +47,6 @@ class HGCalCluster3DProducer : public edm::stream::EDProducer<> {
   reco::CaloCluster::AlgoId algoId;
 
   std::unique_ptr<HGCalImagingAlgo> algo;
-  //  std::unique_ptr<HGCalOneStepAlgo> algo_onestep;
   std::unique_ptr<HGCalDirect3DClustering> direct3d_algo;
   std::unique_ptr<HGCal3DClustering> multicluster_algo;
   bool doOneStep;
@@ -101,11 +99,9 @@ HGCalCluster3DProducer::HGCalCluster3DProducer(const edm::ParameterSet &ps) :
   if(doSharing){
     double showerSigma =  ps.getParameter<double>("showerSigma");
     algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut, showerSigma, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
-    //algo_onestep = std::make_unique<HGCalOneStepAlgo>(vecDeltas[0], kappa, ecut, showerSigma, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
     direct3d_algo = std::make_unique<HGCalDirect3DClustering>(vecDeltas, kappa, ecut, showerSigma, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);  
   }else{
     algo = std::make_unique<HGCalImagingAlgo>(vecDeltas, kappa, ecut, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
-    //algo_onestep = std::make_unique<HGCalOneStepAlgo>(vecDeltas[0], kappa, ecut, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);
     direct3d_algo = std::make_unique<HGCalDirect3DClustering>(vecDeltas, kappa, ecut, algoId, dependSensor, dEdXweights, thicknessCorrection, fcPerMip, fcPerEle, nonAgedNoises, noiseMip, verbosity);  
   }
 
@@ -123,8 +119,6 @@ HGCalCluster3DProducer::HGCalCluster3DProducer(const edm::ParameterSet &ps) :
 void HGCalCluster3DProducer::produce(edm::Event& evt, 
 				       const edm::EventSetup& es) {
   
-  std::cout << " in HGCalCluster3DProducer doOneStep = " << doOneStep << std::endl;
-
   edm::Handle<HGCRecHitCollection> ee_hits;
   edm::Handle<HGCRecHitCollection> fh_hits;
   edm::Handle<HGCRecHitCollection> bh_hits;
@@ -132,12 +126,11 @@ void HGCalCluster3DProducer::produce(edm::Event& evt,
 
   std::unique_ptr<std::vector<reco::BasicCluster> > clusters( new std::vector<reco::BasicCluster> ), 
     clusters_sharing( new std::vector<reco::BasicCluster> );
-  
+
+
   algo->reset();
   algo->getEventSetup(es);
 
-  // algo_onestep->reset();
-  // algo_onestep->getEventSetup(es);
   direct3d_algo->reset();          
   direct3d_algo->getEventSetup(es);
 
@@ -175,11 +168,21 @@ void HGCalCluster3DProducer::produce(edm::Event& evt,
   default:
     break;
   }
-  if(doOneStep) direct3d_algo->makeClusters();
-  else algo->makeClusters();
-  if(doOneStep)*clusters = direct3d_algo->getClusters(false);
-  else *clusters = algo->getClusters(false);
-  std::cout << "cluster vector size " << clusters->size() << std::endl;
+
+
+
+  if(doOneStep){
+    direct3d_algo->makeClusters();
+    *clusters = direct3d_algo->getClusters(false);
+  }
+  else{
+    algo->makeClusters();
+    *clusters = algo->getClusters(false);
+  }
+
+  if(verbosity < hgcal::pINFO)
+    std::cout << " **** cluster vector size " << clusters->size() << " doOneStep = " << doOneStep << std::endl;
+
   if(doSharing){
     if(doOneStep)
       *clusters_sharing = direct3d_algo->getClusters(true);
@@ -210,6 +213,7 @@ void HGCalCluster3DProducer::produce(edm::Event& evt,
     }
   }
 
+
   std::unique_ptr<std::vector<reco::HGCalMultiCluster> > 
     multiclusters( new std::vector<reco::HGCalMultiCluster> ), 
     multiclusters_sharing( new std::vector<reco::HGCalMultiCluster> );
@@ -226,6 +230,7 @@ void HGCalCluster3DProducer::produce(edm::Event& evt,
   // delta += float (now.tv_usec - then.tv_usec)/1000.;                                                                  
   edm::LogInfo ("HGCalClusterProducer") << "Time taken by multiclustering " << time_span.count() << " ms";
   std::cout << " Time taken by multiclustering " << time_span.count() << " ms" << std::endl;
+
 }
 
 #endif

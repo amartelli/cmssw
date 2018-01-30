@@ -12,9 +12,9 @@ from SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi import fC_per_ele, nonA
 hgcal3DClusters =  cms.EDProducer(
     "HGCalCluster3DProducer",
     detector = cms.string("all"),
-    doOneStep = cms.bool(False),
+    doOneStep = cms.bool(True),
     doSharing = cms.bool(False),
-    deltac = cms.vdouble(2.,2.,5.),
+    deltac = cms.vdouble(2.,2.,2.),
     dependSensor = cms.bool(True),
     ecut = cms.double(3.),
     kappa = cms.double(9.),

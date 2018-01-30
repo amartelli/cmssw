@@ -12,6 +12,8 @@
 
 void HGCalDirect3DClustering::populate(const HGCRecHitCollection& hits){
 
+  std::cout << "verbosity = " << verbosity<< std::endl;
+
   if(verbosity < hgcal::pINFO){
     std::cout << " **** HGCalDirect3DClustering::populate **** " << std::endl;
   }
@@ -91,11 +93,10 @@ void HGCalDirect3DClustering::makeClusters()
 
   //assign all hits in each layer to a cluster core or halo
   // just 2 blocks one per endcap
-  for (unsigned int i = 0; i <= 2; ++i) {
+  for (unsigned int i = 0; i < 2; ++i) {
 
     my_kd_tree_t hit_kdtree(3, points[i], nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */) );
     hit_kdtree.buildIndex();
-
 
     double maxdensity = calculateLocalDensity(points[i], hit_kdtree); // also stores rho (energy density) for each point (node)
     // calculate distance to nearest point with higher density storing distance (delta) and point's index
@@ -156,9 +157,10 @@ std::vector<reco::BasicCluster> HGCalDirect3DClustering::getClusters(bool doShar
 						algoId));
 	thisCluster.clear();
       }
-    }else{
+    }
+    else{
       position = calculatePosition(current_v[i]); // energy-weighted position
-
+      
       for (auto& it: current_v[i])
 	{
 	  energy += it.isHalo ? 0. : it.weight;
@@ -247,8 +249,6 @@ double HGCalDirect3DClustering::calculateLocalDensity(HexelCloud &nd, my_kd_tree
   // delta_c is maximum search distance (critical distance) for local density calculation
   // make it subdetector dependent
   float delta_c; 
-
-  std::cout << " total nodes = nd.pts.size() = " << nd.pts.size() << std::endl;
 
   for(unsigned int i = 0; i < nd.pts.size(); ++i){
     //RA would give reduced or effective z instead of lz
@@ -470,7 +470,7 @@ int HGCalDirect3DClustering::findAndAssignClusters(HexelCloud &nd,my_kd_tree_t &
       std::vector<std::pair<size_t,double> >  ret_matches; //index and distance of neighbors within radius
       const size_t nMatches = lp.radiusSearch(&query_pt[0],search_radius, ret_matches, params);
 
-      if(nMatches!=nd.pts[i].nNeighbors){
+      if(nMatches!=nd.pts[i].nNeighbors && verbosity < hgcal::pERROR){
 	std::cout << "for hit " << i << " of cluster index "<< ci 
 		  << " neighbors found differ " << nMatches << " - " << nd.pts[i].nNeighbors
                   << std::endl;
@@ -542,6 +542,7 @@ int HGCalDirect3DClustering::findAndAssignClusters(HexelCloud &nd,my_kd_tree_t &
       std::cout << "moving cluster offset by " << clusterIndex << std::endl;
     }
   cluster_offset += clusterIndex;
+
   return clusterIndex;
 }
 
