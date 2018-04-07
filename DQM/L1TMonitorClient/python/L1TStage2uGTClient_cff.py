@@ -138,8 +138,6 @@ l1tStage2uGTRatioTimingPlots = DQMEDHarvester("DQMGenericClient",
     ),
     resolution = cms.vstring(),
     verbose = cms.untracked.uint32(0),
-    runOnEndLumi = cms.untracked.bool(True),
-    makeGlobalEffienciesPlot = cms.untracked.bool(False)
 )
 
 # sequences
