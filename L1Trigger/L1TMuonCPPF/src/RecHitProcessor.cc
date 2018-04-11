@@ -215,7 +215,6 @@ void RecHitProcessor::processLook(
 	    if(Geo){
 	      std::shared_ptr<l1t::CPPFDigi> MainVariables1(new l1t::CPPFDigi(rpcId, Bx , (*cppf).int_phi, (*cppf).int_theta, isValid, (*cppf).lb, (*cppf).halfchannel, EMTFsector1, EMTFLink1, old_strip, clustersize, global_phi, global_theta));
 	      std::shared_ptr<l1t::CPPFDigi> MainVariables2(new l1t::CPPFDigi(rpcId, Bx , (*cppf).int_phi, (*cppf).int_theta, isValid, (*cppf).lb, (*cppf).halfchannel, EMTFsector2, EMTFLink2, old_strip, clustersize, global_phi, global_theta));
-
 	      if ((EMTFsector1 > 0) && (EMTFsector2 == 0)){
 		cppfDigis.push_back(*MainVariables1.get());
 	      } 
