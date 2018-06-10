@@ -17,6 +17,7 @@ from PhysicsTools.NanoAOD.isotracks_cff import *
 from PhysicsTools.NanoAOD.BToKmumu_cff import *
 from PhysicsTools.NanoAOD.BToKee_cff import *
 from PhysicsTools.NanoAOD.BToKpipi_cff import *
+from PhysicsTools.NanoAOD.PFCands_cff import *
 from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
 
 from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
@@ -126,8 +127,8 @@ nanoSequence = cms.Sequence(
         nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+metSequence+
         isoTrackSequence + # must be after all the leptons 
         linkedObjects  +
-        BToKmumuSequence + BToKeeSequence + BToKpipiSequence +
-        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + triggerObjectTables + isoTrackTables + BToKmumuTables + BToKeeTables + BToKpipiTables +
+        BToKmumuSequence + BToKeeSequence + BToKpipiSequence + PFCandSequence +
+        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + triggerObjectTables + isoTrackTables + BToKmumuTables + BToKeeTables + BToKpipiTables + PFCandTables +
 	l1bits)
 
 nanoSequenceMC = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequence + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
