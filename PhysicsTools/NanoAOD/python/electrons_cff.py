@@ -205,7 +205,7 @@ run2_miniAOD_80XLegacy.toReplaceWith(slimmedElectronsWithUserData.userIntFromBoo
 
 finalElectrons = cms.EDFilter("PATElectronRefSelector",
     src = cms.InputTag("slimmedElectronsWithUserData"),
-    cut = cms.string("pt > 5 ")
+    cut = cms.string("pt > 1 ")
 )
 
 electronMVATTH= cms.EDProducer("EleBaseMVAValueMapProducer",
@@ -301,10 +301,11 @@ electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
 # scale and smearing only when available
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2:
     modifier.toModify(electronTable.variables,
-        pt = Var("pt*userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, precision=-1, doc="p_{T}"),
+        #pt = Var("pt*userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, precision=-1, doc="p_{T}"),
         energyErr = Var("userFloat('ecalTrkEnergyErrPostCorr')", float, precision=6, doc="energy error of the cluster-track combination"),
         eCorr = Var("userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, doc="ratio of the calibrated energy/miniaod energy"),
     )
+
 run2_miniAOD_80XLegacy.toModify(electronTable.variables,
     cutBased_HLTPreSel = Var("userInt('cutbasedID_HLT')",int,doc="cut-based HLT pre-selection ID"),
     mvaSpring16GP = Var("userFloat('mvaSpring16GP')",float,doc="MVA general-purpose ID score"),
