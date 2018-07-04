@@ -133,7 +133,7 @@ nanoSequence = cms.Sequence(
         jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + triggerObjectTables + isoTrackTables + BToKmumuTables + BToKeeTables + BToKpipiTables + PFCandTables +
 	l1bits)
 
-nanoSequenceMC = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequence + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
+nanoSequenceMC = cms.Sequence(particleLevelSequence + genParticleSequence + nanoSequence + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
 
 
 from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
@@ -182,6 +182,7 @@ def nanoAOD_addDeepFlavourTagFor94X2016(process):
     patAlgosToolsTask .add(process.patJetCorrFactors)
     process.additionalendpath = cms.EndPath(patAlgosToolsTask)
     return process
+
 
 
 def nanoAOD_customizeCommon(process):
