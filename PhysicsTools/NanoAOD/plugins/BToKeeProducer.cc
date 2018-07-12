@@ -203,37 +203,31 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
                   RefCountedKinematicVertex refitVertexEE;
                   RefCountedKinematicParticle refitEle1_EE;
                   RefCountedKinematicParticle refitEle2_EE;
+                  
+                  passedDiEle = EEVertexRefitting(ele1, ele2,
+						  theTTBuilder,
+						  refitVertexEE,
+						  refitEE,
+						  refitEle1_EE,
+						  refitEle2_EE);
 
-                  passed_EERefit = EEVertexRefitting(ele1, ele2,
-						     theTTBuilder,
-						     refitVertexEE,
-						     refitEE,
-						     refitEle1_EE,
-						     refitEle2_EE);
+                  if(passedDiEle){
 
-		  if(passed_EERefit){
+                     math::XYZVector refitEle1V3D_EE = refitEle1_EE->refittedTransientTrack().track().momentum();
+                     math::XYZVector refitEle2V3D_EE = refitEle2_EE->refittedTransientTrack().track().momentum();
+                     refitEEV3D = refitEle1V3D_EE + refitEle2V3D_EE;
 
-		    math::XYZVector refitEle1V3D_EE = refitEle1_EE->refittedTransientTrack().track().momentum();
-		    math::XYZVector refitEle2V3D_EE = refitEle2_EE->refittedTransientTrack().track().momentum();
-		    math::XYZVector refitEEV3D = refitEle1V3D_EE + refitEle2V3D_EE;
+                     EE_mass_err = sqrt(refitEE->currentState().kinematicParametersError().matrix()(6,6));
 
-		    EE_pt = sqrt(refitEEV3D.perp2());
-		    EE_eta = refitEEV3D.eta();
-		    EE_phi = refitEEV3D.phi();
-		    EE_mass = refitEE->currentState().mass();
-		    EE_mass_err = sqrt(refitEE->currentState().kinematicParametersError().matrix()(6,6));
+                     pair<double,double> EELS = computeLS(refitVertexEE,beamSpot);
+                     EELSBS = EELS.first;
+                     EELSBSErr = EELS.second;
 
-		    pair<double,double> EELS = computeLS(refitVertexEE,beamSpot);
-		    double EELSBS = EELS.first;
-		    double EELSBSErr = EELS.second;
-		    EE_Lxy = EELSBS/EELSBSErr;
-
-		    EE_CL_vtx = TMath::Prob((double)refitVertexEE->chiSquared(),
-					    int(rint(refitVertexEE->degreesOfFreedom())));
-
-		  }
-
-		}
+                     EEVtx_CL = TMath::Prob((double)refitVertexEE->chiSquared(),
+                                             int(rint(refitVertexEE->degreesOfFreedom())));
+                  }
+                  
+                }
               
                 //Kaon
                 for (unsigned int k = 0; k < pfCandNumber; ++k) {
@@ -314,14 +308,13 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     BToKEECand.addUserFloat("kaon_DCASig", DCABS/DCABSErr);
 
                     BToKEECand.addUserInt("eeRefit", (int)passedDiEle);
-		    BToKEECand.addUserFloat("ee_pt",    (passedDiEle)? sqrt(refitEEV3D.perp2()) : -1.);
-		    BToKEECand.addUserFloat("ee_eta",   (passedDiEle)? refitEEV3D.eta() : -9.);
-		    BToKEECand.addUserFloat("ee_phi",   (passedDiEle)? refitEEV3D.phi() : -9.);
-		    BToKEECand.addUserFloat("ee_mass",  (passedDiEle)? refitEE->currentState().mass() : -1.);
-		    BToKEECand.addUserFloat("ee_mass_err",   EE_mass_err);
-		    BToKEECand.addUserFloat("ee_Lxy", (float) EELSBS/EELSBSErr);
-		    BToKEECand.addUserFloat("ee_CL_vtx", (float) EEVtx_CL);
-
+                    BToKEECand.addUserFloat("ee_pt",    (passedDiEle)? sqrt(refitEEV3D.perp2()) : -1.);
+                    BToKEECand.addUserFloat("ee_eta",   (passedDiEle)? refitEEV3D.eta() : -9.);
+                    BToKEECand.addUserFloat("ee_phi",   (passedDiEle)? refitEEV3D.phi() : -9.);
+                    BToKEECand.addUserFloat("ee_mass",  (passedDiEle)? refitEE->currentState().mass() : -1.);
+                    BToKEECand.addUserFloat("ee_mass_err", (passedDiEle)? EE_mass_err : -1.);
+                    BToKEECand.addUserFloat("ee_Lxy", (passedDiEle)? (float) EELSBS/EELSBSErr : -1.);
+                    BToKEECand.addUserFloat("ee_CL_vtx", (passedDiEle)? (float) EEVtx_CL : -1.);
 
                     math::XYZVector refitBToKEEV3D = refitEle1V3D + refitEle2V3D + refitKaonV3D;
                     BToKEECand.addUserFloat("pt",     sqrt(refitBToKEEV3D.perp2()));
