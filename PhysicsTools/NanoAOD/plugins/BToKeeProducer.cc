@@ -71,7 +71,7 @@ private:
 
     bool BToKJPsiEEVertexRefitting(const RefCountedKinematicParticle refitEE,
 				   const pat::PackedCandidate &kaon,
-				   edm::ESHandle<MagneticField> bFieldHandle,
+				   edm::ESHandle<TransientTrackBuilder> theTTBuilder,
 				   RefCountedKinematicVertex &refitVertex,
 				   RefCountedKinematicParticle &refitBToKJPsiEE,
 				   RefCountedKinematicParticle &refitJPsi,
@@ -357,33 +357,33 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
                       RefCountedKinematicParticle refitKaon_KJPsi;
 
                       passed = BToKJPsiEEVertexRefitting(refitEE, pfCand,
-							 bFieldHandle,
-							 refitVertexBToKJPsiEE,
-							 refitBToKJPsiEE,
-							 refitJPsiEE,
-							 refitKaon_KJPsi);
-		      if(passed){
+                                                         theTTBuilder,
+                                                         refitVertexBToKJPsiEE,
+                                                         refitBToKJPsiEE,
+                                                         refitJPsiEE,
+                                                         refitKaon_KJPsi);
+                                                         
+                      if(passed){
 
-			math::XYZVector refitJPsiEEV3D = refitJPsiEE->refittedTransientTrack().track().momentum();
-			math::XYZVector refitKaonV3D_KJPsi = refitKaon_KJPsi->refittedTransientTrack().track().momentum();
-			math::XYZVector refitBToKJPsiEEV3D = refitJPsiEEV3D + refitKaonV3D_KJPsi;
+                         math::XYZVector refitJPsiEEV3D = refitJPsiEE->refittedTransientTrack().track().momentum();
+                         math::XYZVector refitKaonV3D_KJPsi = refitKaon_KJPsi->refittedTransientTrack().track().momentum();
+                         math::XYZVector refitBToKJPsiEEV3D = refitJPsiEEV3D + refitKaonV3D_KJPsi;
 
-			pt_2trk = sqrt(refitBToKJPsiEEV3D.perp2());
-			eta_2trk = refitBToKJPsiEEV3D.eta();
-			phi_2trk = refitBToKJPsiEEV3D.phi();
-			mass_2trk = refitBToKJPsiEE->currentState().mass();
+                         pt_2trk = sqrt(refitBToKJPsiEEV3D.perp2());
+                         eta_2trk = refitBToKJPsiEEV3D.eta();
+                         phi_2trk = refitBToKJPsiEEV3D.phi();
+                         mass_2trk = refitBToKJPsiEE->currentState().mass();
+                         mass_err_2trk = sqrt(refitBToKJPsiEE->currentState().kinematicParametersError().matrix()(6,6));
 
-			mass_err_2trk = sqrt(refitBToKJPsiEE->currentState().kinematicParametersError().matrix()(6,6));
+                         pair<double,double> BToKJPsiEELS = computeLS(refitVertexBToKJPsiEE,beamSpot);
+                         double LSBS_2trk = BToKJPsiEELS.first;
+                         double LSBSErr_2trk = BToKJPsiEELS.second;
+                         Lxy_2trk = LSBS_2trk/LSBSErr_2trk;
+                         CL_vtx_2trk = TMath::Prob((double)refitVertexBToKJPsiEE->chiSquared(),
+                                                   int(rint(refitVertexBToKJPsiEE->degreesOfFreedom())));
+                         cosAlpha_2trk = computeCosAlpha(refitBToKJPsiEE,refitVertexBToKJPsiEE,beamSpot);
 
-			pair<double,double> BToKJPsiEELS = computeLS(refitVertexBToKJPsiEE,beamSpot);
-			double LSBS_2trk = BToKJPsiEELS.first;
-			double LSBSErr_2trk = BToKJPsiEELS.second;
-			Lxy_2trk = LSBS_2trk/LSBSErr_2trk;
-			CL_vtx_2trk = TMath::Prob((double)refitVertexBToKJPsiEE->chiSquared(),
-						  int(rint(refitVertexBToKJPsiEE->degreesOfFreedom())));
-			cosAlpha_2trk = computeCosAlpha(refitBToKJPsiEE,refitVertexBToKJPsiEE,beamSpot);
-
-		      }
+                      }
 
                     }
 
@@ -462,7 +462,7 @@ bool BToKeeProducer::EEVertexRefitting(const pat::Electron & ele1,
 bool BToKeeProducer::BToKEEVertexRefitting(const pat::Electron &ele1,
 					   const pat::Electron &ele2,
 					   const pat::PackedCandidate &kaon,
-					   edm::ESHandle<TransientTrackBuilder> theTTBuilder,					   
+					   edm::ESHandle<TransientTrackBuilder> theTTBuilder,
 					   RefCountedKinematicVertex &refitVertex,
 					   RefCountedKinematicParticle &refitBToKEE,
 					   RefCountedKinematicParticle &refitEle1,
@@ -515,14 +515,14 @@ bool BToKeeProducer::BToKEEVertexRefitting(const pat::Electron &ele1,
 
 bool BToKeeProducer::BToKJPsiEEVertexRefitting(const RefCountedKinematicParticle refitEE,
 					       const pat::PackedCandidate &kaon,
-					       edm::ESHandle<MagneticField> bFieldHandle,
+					       edm::ESHandle<TransientTrackBuilder> theTTBuilder,
 					       RefCountedKinematicVertex &refitVertex,
 					       RefCountedKinematicParticle &refitBToKJPsiEE,
 					       RefCountedKinematicParticle &refitJPsi,
 					       RefCountedKinematicParticle &refitKaon){
 
   const reco::TransientTrack EETT = refitEE->refittedTransientTrack();
-  const reco::TransientTrack kaonTT(*(kaon.bestTrack()), &(*bFieldHandle));
+  const reco::TransientTrack kaonTT = theTTBuilder->build(kaon.bestTrack());
 
   KinematicParticleFactoryFromTransientTrack partFactory;
   KinematicParticleVertexFitter PartVtxFitter;
