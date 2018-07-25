@@ -328,6 +328,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     BToKMuMuCand.addUserFloat("mumu_mass",  (passedDiMuon)? refitMuMu->currentState().mass() : -1.);
                     BToKMuMuCand.addUserFloat("mumu_mass_err", (passedDiMuon)? MuMu_mass_err : -1.);
                     BToKMuMuCand.addUserFloat("mumu_Lxy", (passedDiMuon)? (float) MuMuLSBS/MuMuLSBSErr : -1.);
+                    BToKMuMuCand.addUserFloat("mumu_ctxy", (passedDiMuon)? (float) MuMuLSBS/sqrt(refitMuMuV3D.perp2()) : -1.);
                     BToKMuMuCand.addUserFloat("mumu_CL_vtx", (passedDiMuon)? (float) MuMuVtx_CL : -1.);
                     
 		    math::XYZVector refitBToKMuMuV3D = refitMu1V3D + refitMu2V3D + refitKaonV3D;
@@ -338,6 +339,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     BToKMuMuCand.addUserFloat("mass_err", mass_err);
                     
                     BToKMuMuCand.addUserFloat("Lxy", (float) LSBS/LSBSErr);
+                    BToKMuMuCand.addUserFloat("ctxy", (float) LSBS/sqrt(refitBToKMuMuV3D.perp2()));
                     BToKMuMuCand.addUserFloat("CL_vtx", (float) BToKMuMuVtx_CL);
                     BToKMuMuCand.addUserFloat("cosAlpha", (float) cosAlpha);
 
@@ -347,6 +349,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     float mass_2trk = -9999.;
                     float mass_err_2trk = -9999.;
                     float Lxy_2trk = -9999.;
+                    float ctxy_2trk = -9999.;
                     float CL_vtx_2trk = -9999.;
                     float cosAlpha_2trk = -9999.;
 
@@ -389,13 +392,14 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 			mass_2trk = refitBToKJPsiMuMu->currentState().mass();
 			mass_err_2trk = sqrt(refitBToKJPsiMuMu->currentState().kinematicParametersError().matrix()(6,6));
 
-			pair<double,double> BToKJPsiMuMuLS = computeLS(refitVertexBToKJPsiMuMu,beamSpot);
-			double LSBS_2trk = BToKJPsiMuMuLS.first;
-			double LSBSErr_2trk = BToKJPsiMuMuLS.second;
-			Lxy_2trk = LSBS_2trk/LSBSErr_2trk;
-			CL_vtx_2trk = TMath::Prob((double)refitVertexBToKJPsiMuMu->chiSquared(),
-						  int(rint(refitVertexBToKJPsiMuMu->degreesOfFreedom())));
-			cosAlpha_2trk = computeCosAlpha(refitBToKJPsiMuMu,refitVertexBToKJPsiMuMu,beamSpot);
+                          pair<double,double> BToKJPsiMuMuLS = computeLS(refitVertexBToKJPsiMuMu,beamSpot);
+                          double LSBS_2trk = BToKJPsiMuMuLS.first;
+                          double LSBSErr_2trk = BToKJPsiMuMuLS.second;
+                          Lxy_2trk = LSBS_2trk/LSBSErr_2trk;
+                          ctxy_2trk = LSBS_2trk/pt_2trk;
+                          CL_vtx_2trk = TMath::Prob((double)refitVertexBToKJPsiMuMu->chiSquared(),
+                                                    int(rint(refitVertexBToKJPsiMuMu->degreesOfFreedom())));
+                          cosAlpha_2trk = computeCosAlpha(refitBToKJPsiMuMu,refitVertexBToKJPsiMuMu,beamSpot);
 
 		      }
 
@@ -407,6 +411,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     BToKMuMuCand.addUserFloat("mass_2trk", mass_2trk);
                     BToKMuMuCand.addUserFloat("mass_err_2trk", mass_err_2trk);
                     BToKMuMuCand.addUserFloat("Lxy_2trk", Lxy_2trk);
+                    BToKMuMuCand.addUserFloat("ctxy_2trk", ctxy_2trk);
                     BToKMuMuCand.addUserFloat("CL_vtx_2trk", CL_vtx_2trk);
                     BToKMuMuCand.addUserFloat("cosAlpha_2trk", cosAlpha_2trk);
                     
