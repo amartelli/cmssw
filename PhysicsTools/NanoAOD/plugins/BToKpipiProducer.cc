@@ -424,7 +424,7 @@ bool BToKpipiProducer::KPiVertexRefitting(const pat::PackedCandidate &kaon,
 
     KinematicParticleFactoryFromTransientTrack partFactory;
     KinematicConstrainedVertexFitter PartVtxFitter;
-    
+
     std::vector<RefCountedKinematicParticle> KPiParticles;
     double chi = 0.;
     double ndf = 0.;
