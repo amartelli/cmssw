@@ -589,7 +589,7 @@ bool BToKstmumuProducer::MuMuVertexRefitting(const pat::Muon & muon1,
     const reco::TransientTrack muon2TT = theTTBuilder->build(muon2.innerTrack());
     
     KinematicParticleFactoryFromTransientTrack partFactory;
-    KinematicParticleVertexFitter PartVtxFitter;
+    KinematicConstrainedVertexFitter PartVtxFitter;
     
     std::vector<RefCountedKinematicParticle> muParticles;
     double chi = 0.;
@@ -634,7 +634,7 @@ bool BToKstmumuProducer::KstVertexRefitting(const pat::PackedCandidate &kaon,
     const reco::TransientTrack pionTT = theTTBuilder->build(pion.bestTrack());
 
     KinematicParticleFactoryFromTransientTrack partFactory;
-    KinematicParticleVertexFitter PartVtxFitter;
+    KinematicConstrainedVertexFitter PartVtxFitter;
     
     std::vector<RefCountedKinematicParticle> KstParticles;
     double chi = 0.;
@@ -682,7 +682,7 @@ bool BToKstmumuProducer::BToKstMuMuVertexRefitting(const pat::Muon &muon1,
     const reco::TransientTrack KPiTT = refitKPi->refittedTransientTrack();
 
     KinematicParticleFactoryFromTransientTrack partFactory;
-    KinematicParticleVertexFitter PartVtxFitter;
+    KinematicConstrainedVertexFitter PartVtxFitter;
 
     float Kst_mass = refitKPi->currentState().mass();
     float Kst_mass_err = sqrt(refitKPi->currentState().kinematicParametersError().matrix()(6,6));
@@ -745,7 +745,7 @@ bool BToKstmumuProducer::BToKPiMuMuVertexRefitting(const pat::Muon &muon1,
     const reco::TransientTrack pionTT = theTTBuilder->build(pion.bestTrack());
 
     KinematicParticleFactoryFromTransientTrack partFactory;
-    KinematicParticleVertexFitter PartVtxFitter;
+    KinematicConstrainedVertexFitter PartVtxFitter;
 
     std::vector<RefCountedKinematicParticle> BToKstMuMuParticles;
     double chi = 0.;
@@ -799,7 +799,7 @@ bool BToKstmumuProducer::BToKstJPsiMuMuVertexRefitting(const RefCountedKinematic
   const reco::TransientTrack KPiTT = refitKPi->refittedTransientTrack();
 
   KinematicParticleFactoryFromTransientTrack partFactory;
-  KinematicParticleVertexFitter PartVtxFitter;
+  KinematicConstrainedVertexFitter PartVtxFitter;
 
   std::vector<RefCountedKinematicParticle> BToKstMuMuParticles;
   double chi = 0.;

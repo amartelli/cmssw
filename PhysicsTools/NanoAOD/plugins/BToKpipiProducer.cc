@@ -422,9 +422,12 @@ bool BToKpipiProducer::KPiVertexRefitting(const pat::PackedCandidate &kaon,
     const reco::TransientTrack kaonTT(*(kaon.bestTrack()), &(*bFieldHandle));
     const reco::TransientTrack piTT(*(pi.bestTrack()), &(*bFieldHandle));
 
-    KinematicParticleFactoryFromTransientTrack partFactory;
-    KinematicParticleVertexFitter PartVtxFitter;
+    if(!kaonTT.isValid()) std::cout << " kaonTT not valid "<< std::endl;
+    if(!piTT.isValid()) std::cout << " piTT not valid "<< std::endl;
 
+    KinematicParticleFactoryFromTransientTrack partFactory;
+    KinematicConstrainedVertexFitter PartVtxFitter;
+    
     std::vector<RefCountedKinematicParticle> KPiParticles;
     double chi = 0.;
     double ndf = 0.;
@@ -471,7 +474,7 @@ bool BToKpipiProducer::BToKPiPiVertexRefitting(const pat::PackedCandidate &kaon,
     const reco::TransientTrack piBuTT(*(pi_Bu.bestTrack()), &(*bFieldHandle));
 
     KinematicParticleFactoryFromTransientTrack partFactory;
-    KinematicParticleVertexFitter PartVtxFitter;
+    KinematicConstrainedVertexFitter PartVtxFitter;
 
     std::vector<RefCountedKinematicParticle> BToKPiPiParticles;
     double chi = 0.;
@@ -524,7 +527,7 @@ bool BToKpipiProducer::BToD0PiVertexRefitting(const RefCountedKinematicParticle 
   const reco::TransientTrack piBuTT(*(pi_Bu.bestTrack()), &(*bFieldHandle));
 
   KinematicParticleFactoryFromTransientTrack partFactory;
-  KinematicParticleVertexFitter PartVtxFitter;
+  KinematicConstrainedVertexFitter PartVtxFitter;
 
   std::vector<RefCountedKinematicParticle> BToKPiPiParticles;
   double chi = 0.;

@@ -421,7 +421,7 @@ bool BToKeeProducer::EEVertexRefitting(const pat::Electron & ele1,
     const reco::TransientTrack ele2TT = theTTBuilder->build(ele2.gsfTrack());
     
     KinematicParticleFactoryFromTransientTrack partFactory;
-    KinematicParticleVertexFitter PartVtxFitter;
+    KinematicConstrainedVertexFitter PartVtxFitter;
     
     std::vector<RefCountedKinematicParticle> eleParticles;
     double chi = 0.;
@@ -469,7 +469,7 @@ bool BToKeeProducer::BToKEEVertexRefitting(const pat::Electron &ele1,
     const reco::TransientTrack kaonTT = theTTBuilder->build(kaon.bestTrack());
 
     KinematicParticleFactoryFromTransientTrack partFactory;
-    KinematicParticleVertexFitter PartVtxFitter;
+    KinematicConstrainedVertexFitter PartVtxFitter;
 
     std::vector<RefCountedKinematicParticle> BToKEEParticles;
     double chi = 0.;
@@ -520,7 +520,7 @@ bool BToKeeProducer::BToKJPsiEEVertexRefitting(const RefCountedKinematicParticle
   const reco::TransientTrack kaonTT = theTTBuilder->build(kaon.bestTrack());
 
   KinematicParticleFactoryFromTransientTrack partFactory;
-  KinematicParticleVertexFitter PartVtxFitter;
+  KinematicConstrainedVertexFitter PartVtxFitter;
 
   std::vector<RefCountedKinematicParticle> BToKEEParticles;
   double chi = 0.;
