@@ -422,9 +422,6 @@ bool BToKpipiProducer::KPiVertexRefitting(const pat::PackedCandidate &kaon,
     const reco::TransientTrack kaonTT(*(kaon.bestTrack()), &(*bFieldHandle));
     const reco::TransientTrack piTT(*(pi.bestTrack()), &(*bFieldHandle));
 
-    if(!kaonTT.isValid()) std::cout << " kaonTT not valid "<< std::endl;
-    if(!piTT.isValid()) std::cout << " piTT not valid "<< std::endl;
-
     KinematicParticleFactoryFromTransientTrack partFactory;
     KinematicConstrainedVertexFitter PartVtxFitter;
     
