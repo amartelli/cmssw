@@ -180,6 +180,33 @@ def nanoAOD_customizeMC(process):
         process.calibratedPatPhotons80X.isMC = cms.bool(True)
     return process
 
+def nanoAOD_customizeBToKPiPi(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKpipiSequence + BToKpipiTables)
+    return process
+
+def nanoAOD_customizeBToKee(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKeeSequence + BToKsteeSequence + BToKeeTables + BToKsteeTables)
+    return process
+
+def nanoAOD_customizeBToKmumu(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKmumuSequence + BToKstmumuSequence + BToKmumuTables + BToKstmumuTables)
+    return process
+
+def nanoAOD_customizeLostTracks(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
+    if(hasattr(process,'BToKee')):
+        process.BToKee.useLostTracks=cms.bool(True)
+        process.BToKstee.useLostTracks=cms.bool(True)
+    if(hasattr(process,'BToKmumu')):
+        process.BToKmumu.useLostTracks=cms.bool(True)
+        process.BToKstmumu.useLostTracks=cms.bool(True)
+    return process
+
+
 ### Era dependent customization
 _80x_sequence = nanoSequence.copy()
 #remove stuff 
