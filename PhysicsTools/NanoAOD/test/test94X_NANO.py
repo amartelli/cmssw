@@ -7,6 +7,7 @@
 runBToKPiPi = False
 runBToKee = True
 runBToKmumu = True
+useLostTracks = False
 
 import FWCore.ParameterSet.Config as cms
 
@@ -28,7 +29,7 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(50)
 )
 
 # Input source
@@ -58,7 +59,8 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
         filterName = cms.untracked.string('')
     ),
     fileName = cms.untracked.string('test94X_NANO.root'),
-    outputCommands = process.NANOAODSIMEventContent.outputCommands
+    outputCommands = process.NANOAODSIMEventContent.outputCommands,
+    fakeNameForCrab =cms.untracked.bool(True)
 )
 
 # Additional output definition
@@ -68,18 +70,6 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2017_realistic', '')
 
 # Path and EndPath definitions
-if runBToKPiPi:
-    from PhysicsTools.NanoAOD.BToKpipi_cff import *
-    process.nanoSequenceMC = cms.Sequence( process.nanoSequenceMC + BToKpipiSequence + BToKpipiTables)
-if runBToKee:
-    from PhysicsTools.NanoAOD.BToKee_cff import *
-    from PhysicsTools.NanoAOD.BToKstee_cff import *
-    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKeeSequence + BToKsteeSequence + BToKeeTables + BToKsteeTables)
-if runBToKmumu:
-    from PhysicsTools.NanoAOD.BToKmumu_cff import *
-    from PhysicsTools.NanoAOD.BToKstmumu_cff import *
-    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKmumuSequence + BToKstmumuSequence + BToKmumuTables + BToKstmumuTables)
-
 process.nanoAOD_step = cms.Path(process.nanoSequenceMC)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.NANOAODSIMoutput_step = cms.EndPath(process.NANOAODSIMoutput)
@@ -97,10 +87,22 @@ from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeMC
 #call to customisation function nanoAOD_customizeMC imported from PhysicsTools.NanoAOD.nano_cff
 process = nanoAOD_customizeMC(process)
 
+if runBToKPiPi:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKPiPi
+    process = nanoAOD_customizeBToKPiPi(process)
+if runBToKee:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKee
+    process = nanoAOD_customizeBToKee(process)
+if runBToKmumu:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKmumu
+    process = nanoAOD_customizeBToKmumu(process)
+if useLostTracks:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostTracks
+    process = nanoAOD_customizeLostTracks(process)
+
 # End of customisation functions
 
 # Customisation from command line
-
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 # Add early deletion of temporary data products to reduce peak memory need
 from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
