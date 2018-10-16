@@ -27,9 +27,16 @@
 
 #include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
 #include "DataFormats/Math/interface/Vector3D.h"
+#include "DataFormats/Math/interface/deltaR.h"
 #include <TLorentzVector.h>
 #include <TVector.h>
 #include <TMatrix.h>
+
+//optional to build transient track from gsf parameters and update gsf with vertex constraint
+#include "TrackingTools/PatternTools/interface/TSCBLBuilderNoMaterial.h"
+#include "TrackingTools/TransientTrack/interface/TrackTransientTrack.h"
+#include "TrackingTools/TransientTrack/interface/GsfTransientTrack.h"
+#include "TrackingTools/GsfTracking/interface/GsfConstraintAtVertex.h"
 
 
 //
@@ -72,7 +79,7 @@ private:
                                  const RefCountedKinematicParticle refitKPi,
                                  edm::ESHandle<TransientTrackBuilder> theTTBuilder,
                                  RefCountedKinematicVertex &refitVertex,
-                                 RefCountedKinematicParticle &refitBToKstEE,
+                                 math::XYZVector &refitBToKstEE,
                                  RefCountedKinematicParticle &refitEle1,
                                  RefCountedKinematicParticle &refitEle2,
                                  RefCountedKinematicParticle &refitKst);
@@ -102,6 +109,11 @@ private:
     double computeCosAlpha(RefCountedKinematicParticle refitBToKstEE,
                            RefCountedKinematicVertex vertexFitTree,
                            reco::BeamSpot beamSpot);
+
+    double computeCosAlpha(math::XYZVector& refitBToKstEE,
+			   RefCountedKinematicVertex vertexFitTree,
+			   reco::BeamSpot beamSpot);
+
 
     pair<double,double> computeDCA(const pat::PackedCandidate &kaon,
 				   edm::ESHandle<MagneticField> bFieldHandle,
@@ -275,6 +287,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     if(abs(kaon.pdgId())!=211) continue; //Charged hadrons
                     if(!kaon.hasTrackDetails()) continue;
                     if(kaon.pt()<ptMinKaon_ || abs(kaon.eta())>etaMaxKaon_) continue;
+		    if(deltaR(ele1, kaon) < 0.01 || deltaR(ele2, kaon) < 0.01) continue;
 
                     pair<double,double> DCA_kaon = computeDCA(kaon,
 							      bFieldHandle,
@@ -294,6 +307,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		      if(!pion.hasTrackDetails()) continue;
 		      if(pion.pt()<ptMinPion_ || abs(pion.eta())>etaMaxPion_) continue;
 		      if(KstCharge_ && kaon.charge()*pion.charge()>0) continue;
+		      if(deltaR(ele1, pion) < 0.01 || deltaR(ele2, pion) < 0.01 || deltaR(kaon, pion) < 0.01) continue;
 
 		      pair<double,double> DCA_pion = computeDCA(pion,
 								bFieldHandle,
@@ -333,7 +347,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 		      
 		      RefCountedKinematicVertex refitVertexBToKstEE;
-		      RefCountedKinematicParticle refitBToKstEE;
+		      math::XYZVector refitBToKstEEV3D;
 		      RefCountedKinematicParticle refitEle1;
 		      RefCountedKinematicParticle refitEle2;
 		      RefCountedKinematicParticle refitKst_BToKstEE;
@@ -341,7 +355,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		      passed = BToKstEEVertexRefitting(ele1, ele2, refitKst,
 						       theTTBuilder,
 						       refitVertexBToKstEE,
-						       refitBToKstEE,
+						       refitBToKstEEV3D,
 						       refitEle1,
 						       refitEle2,
 						       refitKst_BToKstEE);
@@ -357,14 +371,16 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 							  int(rint(refitVertexBToKstEE->degreesOfFreedom())));
 
                     
-		      double cosAlpha = computeCosAlpha(refitBToKstEE,refitVertexBToKstEE,beamSpot);
+		      double cosAlpha = computeCosAlpha(refitBToKstEEV3D,refitVertexBToKstEE,beamSpot);
                     
-		      double mass_err = sqrt(refitBToKstEE->currentState().kinematicParametersError().matrix()(6,6));
+		      //double mass_err = sqrt(refitBToKstEE->currentState().kinematicParametersError().matrix()(6,6));
+		      double mass_err = -1.;
 
 		      math::XYZVector refitEle1V3D = refitEle1->refittedTransientTrack().track().momentum();
 		      math::XYZVector refitEle2V3D = refitEle2->refittedTransientTrack().track().momentum();
 		      math::XYZVector refitKst_BToKstEE_V3D = refitKst_BToKstEE->refittedTransientTrack().track().momentum();
-		      math::XYZVector refitBToKstEEV3D = refitEle1V3D + refitEle2V3D + refitKst_BToKstEE_V3D;
+		      //math::XYZVector refitBToKstEEV3D = refitEle1V3D + refitEle2V3D + refitKst_BToKstEE_V3D;
+
 
       
 		      pat::CompositeCandidate BToKstEECand;
@@ -420,10 +436,19 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		      BToKstEECand.addUserFloat("Kst_Chi2_vtx", (float) KstVtx_Chi2);
 		      BToKstEECand.addUserFloat("Kst_CL_vtx", (float) KstVtx_CL);
 
+		      TLorentzVector refitEle1V3D_cand;
+		      refitEle1V3D_cand.SetPtEtaPhiM(sqrt(refitEle1V3D.perp2()), refitEle1V3D.eta(), refitEle1V3D.phi(), ElectronMass_);
+		      TLorentzVector refitEle2V3D_cand;
+		      refitEle2V3D_cand.SetPtEtaPhiM(sqrt(refitEle2V3D.perp2()), refitEle2V3D.eta(), refitEle2V3D.phi(), ElectronMass_);
+		      TLorentzVector refitKst_BToKstEE_V3D_cand;
+		      refitKst_BToKstEE_V3D_cand.SetPtEtaPhiM(sqrt(refitKst_BToKstEE_V3D.perp2()), refitKst_BToKstEE_V3D.eta(), 
+							      refitKst_BToKstEE_V3D.phi(), refitKst->currentState().mass());
+
 		      BToKstEECand.addUserFloat("pt",     sqrt(refitBToKstEEV3D.perp2()));
 		      BToKstEECand.addUserFloat("eta",    refitBToKstEEV3D.eta());
 		      BToKstEECand.addUserFloat("phi",    refitBToKstEEV3D.phi());
-		      BToKstEECand.addUserFloat("mass",   refitBToKstEE->currentState().mass());
+		      //BToKstEECand.addUserFloat("mass",   refitBToKstEE->currentState().mass());
+		      BToKstEECand.addUserFloat("mass",   (refitEle1V3D_cand+refitEle2V3D_cand+refitKst_BToKstEE_V3D_cand).Mag());
 		      BToKstEECand.addUserFloat("mass_err", mass_err);
 		      BToKstEECand.addUserFloat("Lxy", (float) LSBS/LSBSErr);
 		      BToKstEECand.addUserFloat("ctxy", (float) LSBS/sqrt(refitBToKstEEV3D.perp2()));
@@ -702,7 +727,7 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::Electron &ele1,
 					       const RefCountedKinematicParticle refitKPi,
 					       edm::ESHandle<TransientTrackBuilder> theTTBuilder,					   
 					       RefCountedKinematicVertex &refitVertex,
-					       RefCountedKinematicParticle &refitBToKstEE,
+					       math::XYZVector &refitBToKstEE,
 					       RefCountedKinematicParticle &refitEle1,
 					       RefCountedKinematicParticle &refitEle2,
 					       RefCountedKinematicParticle &refitKst){
@@ -710,6 +735,9 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::Electron &ele1,
     const reco::TransientTrack ele1TT = theTTBuilder->build(ele1.gsfTrack());
     const reco::TransientTrack ele2TT = theTTBuilder->build(ele2.gsfTrack());
     const reco::TransientTrack KPiTT = refitKPi->refittedTransientTrack();
+
+    const reco::TransientTrack ele1TTel = theTTBuilder->buildfromGSF(ele1.gsfTrack(), math::XYZVector(ele1.momentum()), ele1.charge());
+    const reco::TransientTrack ele2TTel = theTTBuilder->buildfromGSF(ele2.gsfTrack(), math::XYZVector(ele2.momentum()), ele2.charge());
 
     KinematicParticleFactoryFromTransientTrack partFactory;
     KinematicParticleVertexFitter PartVtxFitter;
@@ -734,11 +762,12 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::Electron &ele1,
 
     BToKstEEVertexFitTree->movePointerToTheTop();
     refitVertex = BToKstEEVertexFitTree->currentDecayVertex();
-    refitBToKstEE = BToKstEEVertexFitTree->currentParticle();
+    //refitBToKstEE = BToKstEEVertexFitTree->currentParticle();
 
     if ( !refitVertex->vertexIsValid()) return false;
 
     // extract the re-fitted tracks
+    /*
     BToKstEEVertexFitTree->movePointerToTheTop();
 
     BToKstEEVertexFitTree->movePointerToTheFirstChild();
@@ -749,6 +778,19 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::Electron &ele1,
 
     BToKstEEVertexFitTree->movePointerToTheNextChild();
     refitKst = BToKstEEVertexFitTree->currentParticle();
+    */
+
+    RefCountedKinematicParticle refitEle1N = partFactory.particle(ele1TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
+    RefCountedKinematicParticle refitEle2N = partFactory.particle(ele2TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
+
+    refitEle1 = refitEle1N;
+    refitEle2 = refitEle2N;
+    refitKst = refitKPi;
+
+    math::XYZVector refEle1 = refitEle1->refittedTransientTrack().track().momentum();
+    math::XYZVector refEle2 = refitEle2->refittedTransientTrack().track().momentum();
+    math::XYZVector refKaonPi = refitKst->refittedTransientTrack().track().momentum();
+    refitBToKstEE = refEle1 + refEle2 + refKaonPi;
 
     return true;
 
@@ -927,8 +969,21 @@ double BToKsteeProducer::computeCosAlpha(RefCountedKinematicParticle refitBToKst
 }
 
 
+double BToKsteeProducer::computeCosAlpha(math::XYZVector& refitBToKstEE,
+					 RefCountedKinematicVertex refitVertex,
+					 reco::BeamSpot beamSpot){
 
+  TVector v(2);
+  v[0] = refitVertex->position().x()-beamSpot.position().x();
+  v[1] = refitVertex->position().y()-beamSpot.position().y();
 
+  TVector w(2);
+  w[0] = refitBToKstEE.x();
+  w[1] = refitBToKstEE.y();
+
+  double cosAlpha = v*w/sqrt(v.Norm2Sqr()*w.Norm2Sqr());
+  return cosAlpha;
+}
 
 
 pair<double,double> BToKsteeProducer::computeDCA(const pat::PackedCandidate &kaon,

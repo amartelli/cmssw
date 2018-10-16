@@ -282,6 +282,7 @@ void BToKstmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
                     if(abs(kaon.pdgId())!=211) continue; //Charged hadrons
                     if(!kaon.hasTrackDetails()) continue;
                     if(kaon.pt()<ptMinKaon_ || abs(kaon.eta())>etaMaxKaon_) continue;
+		    if(deltaR(muon1, kaon) < 0.01 || deltaR(muon2, kaon) < 0.01) continue;
 
                     pair<double,double> DCA_kaon = computeDCA(kaon,
 							      bFieldHandle,
@@ -291,7 +292,7 @@ void BToKstmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 
                     if(fabs(DCABS_kaon/DCABSErr_kaon)<DCASigMinKaon_) continue;
 		    
-                    for (unsigned int l = 0; l < pfCandNumber; ++l) {
+                    for (unsigned int l = 0; l < (pfCandNumber+lostTrackNumber); ++l) {
 
 		      if(k==l) continue;
 
@@ -301,6 +302,7 @@ void BToKstmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 		      if(!pion.hasTrackDetails()) continue;
 		      if(pion.pt()<ptMinPion_ || abs(pion.eta())>etaMaxPion_) continue;
 		      if(KstCharge_ && kaon.charge()*pion.charge()>0) continue;
+		      if(deltaR(muon1, pion) < 0.01 || deltaR(muon2, pion) < 0.01 || deltaR(kaon, pion) < 0.01 ) continue;
 
 		      pair<double,double> DCA_pion = computeDCA(pion,
 								bFieldHandle,
