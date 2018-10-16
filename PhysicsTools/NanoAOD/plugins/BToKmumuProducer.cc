@@ -257,6 +257,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     if(abs(pfCand.pdgId())!=211) continue; //Charged hadrons
                     if(!pfCand.hasTrackDetails()) continue;
                     if(pfCand.pt()<ptMinKaon_ || abs(pfCand.eta())>etaMaxKaon_) continue;
+		    if(deltaR(muon1, pfCand) < 0.01 || deltaR(muon2, pfCand) < 0.01) continue;
 
                     pair<double,double> DCA = computeDCA(pfCand,
                                                          bFieldHandle,
