@@ -65,6 +65,14 @@ TransientTrack TransientTrackBuilder::build (const GsfTrackRef & t) const {
   return TransientTrack(new GsfTransientTrack(t, theField, theTrackingGeometry));
 }
 
+TransientTrack TransientTrackBuilder::buildfromGSF (const GsfTrackRef & t, const math::XYZVector& momVal, const int chVal) const {
+  return TransientTrack(new GsfTransientTrack(t, theField, theTrackingGeometry, momVal, chVal));
+};
+
+TransientTrack TransientTrackBuilder::buildfromGSF (const GsfTrackRef & t) const {
+  return buildfromGSF(t, math::XYZVector(t->momentumMode()), t->chargeMode());
+};
+
 vector<TransientTrack> 
 TransientTrackBuilder::build ( const edm::Handle<reco::TrackCollection> & trkColl) const
 {
