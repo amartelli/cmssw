@@ -541,7 +541,7 @@ bool BToKeeProducer::BToKEEVertexRefitting(const pat::Electron &ele1,
     
     BToKEEVertexFitTree->movePointerToTheTop();
     refitVertex = BToKEEVertexFitTree->currentDecayVertex();
-    RefCountedKinematicParticle refitBToKEEtemp = BToKEEVertexFitTree->currentParticle();
+    //RefCountedKinematicParticle refitBToKEEtemp = BToKEEVertexFitTree->currentParticle();
     
     if ( !refitVertex->vertexIsValid()) return false;
     
