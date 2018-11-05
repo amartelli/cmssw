@@ -8,6 +8,8 @@
 #include "TrackingTools/GeomPropagators/interface/AnalyticalPropagator.h"
 #include "TrackingTools/Records/interface/TrackingComponentsRecord.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateOnSurface.h"
+#include "TrackingTools/TrajectoryState/interface/TrajectoryStateTransform.h"
+
 #include "DataFormats/GeometrySurface/interface/Surface.h"
 // #include "TrackingTools/GsfTools/interface/GaussianSumUtilities1D.h"
 // #include "TrackingTools/GsfTools/interface/MultiGaussianState1D.h"
@@ -15,7 +17,9 @@
 #include "TrackingTools/GsfTools/interface/GsfPropagatorAdapter.h"
 #include "TrackingTools/PatternTools/interface/TransverseImpactPointExtrapolator.h"
 #include "TrackingTools/GsfTracking/interface/GsfMultiStateUpdator.h"
+
 #include "DataFormats/GeometryCommonDetAlgo/interface/ErrorFrameTransformer.h"
+
 
 GsfConstraintAtVertex::GsfConstraintAtVertex(const edm::EventSetup& setup) 
 {
@@ -66,6 +70,42 @@ GsfConstraintAtVertex::constrainAtVertex (const reco::GsfTrack& track,
   //
   return constrainAtPoint(track,vtxPosGlobal,vtxCovGlobal);
 }
+
+TrajectoryStateOnSurface
+GsfConstraintAtVertex::simpleConstrainAtVertex (const reco::TransientTrack& track,
+						const reco::Vertex& vertex) const
+{
+  //
+  // Beamspot (global co-ordinates)
+  //
+  GlobalPoint vtxPosGlobal(vertex.position().x(),vertex.position().y(),vertex.position().z());
+  GlobalError vtxCovGlobal(vertex.covariance());
+
+  //
+  // Track on TIP plane
+  //
+  FreeTrajectoryState fts = track.initialFreeState();
+  TrajectoryStateOnSurface tipState = tipExtrapolator_->extrapolate(fts, vtxPosGlobal);
+  if ( !tipState.isValid() )  return TrajectoryStateOnSurface();
+
+  //
+  // RecHit from beam spot
+  //
+  LocalError bsCovLocal = ErrorFrameTransformer().transform(vtxCovGlobal,tipState.surface());
+  TransientTrackingRecHit::RecHitPointer bsHit =
+    TRecHit2DPosConstraint::build(tipState.surface().toLocal(vtxPosGlobal),
+                                  bsCovLocal,&tipState.surface());
+  //
+  // update with constraint
+  //
+  TrajectoryStateOnSurface updatedState = gsfUpdator_.update(tipState,*bsHit);
+  if ( !updatedState.isValid() ) {
+    edm::LogWarning("GsfConstraintAtVertex") << " GSF update with vertex constraint failed";
+    return TrajectoryStateOnSurface();
+  }
+  return updatedState;
+}
+
 
 TrajectoryStateOnSurface
 GsfConstraintAtVertex::constrainAtPoint (const reco::GsfTrack& track,
