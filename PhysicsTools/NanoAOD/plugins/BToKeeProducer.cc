@@ -477,7 +477,7 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
     }
     
-    //    iEvent.put(std::move(result));
+    iEvent.put(std::move(result));
     
 }
 
