@@ -109,8 +109,10 @@ private:
     
     GsfConstraintAtVertex* constraintAtVtx;
 
-    double ptMinEle_;
-    double etaMaxEle_;
+    double ptMinLeadEle_;
+    double etaMaxLeadEle_;
+    double ptMinSubLeadEle_;
+    double etaMaxSubLeadEle_;
     double ptMinKaon_;
     double etaMaxKaon_;
     double DCASigMinKaon_;
@@ -137,8 +139,10 @@ electronSrc_( consumes<std::vector<pat::Electron>> ( iConfig.getParameter<edm::I
 PFCandSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "PFCandCollection" ) ) ),
 lostTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostTrackCollection" ) ) ),
 lostEleTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostEleTrackCollection" ) ) ),
-ptMinEle_( iConfig.getParameter<double>( "ElectronMinPt" ) ),
-etaMaxEle_( iConfig.getParameter<double>( "ElectronMaxEta" ) ),
+ptMinLeadEle_( iConfig.getParameter<double>( "LeadElectronMinPt" ) ),
+etaMaxLeadEle_( iConfig.getParameter<double>( "LeadElectronMaxEta" ) ),
+ptMinSubLeadEle_( iConfig.getParameter<double>( "SubLeadElectronMinPt" ) ),
+etaMaxSubLeadEle_( iConfig.getParameter<double>( "SubLeadElectronMaxEta" ) ),
 ptMinKaon_( iConfig.getParameter<double>( "KaonMinPt" ) ),
 etaMaxKaon_( iConfig.getParameter<double>( "KaonMaxEta" ) ),
 DCASigMinKaon_( iConfig.getParameter<double>( "KaonMinDCASig" ) ),
@@ -201,7 +205,7 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
             
 	    //could implement ele ID criteria here
 	    if(!ele1.hasTrackDetails()) continue;
-            if(ele1.pt()<ptMinEle_ || abs(ele1.eta())>etaMaxEle_) continue;
+	    if(ele1.pt()<ptMinLeadEle_ || abs(ele1.eta())>etaMaxLeadEle_) continue;
 	    //exclude neutral should be safe
 	    if(abs(ele1.pdgId())==0) continue;
 
@@ -219,7 +223,7 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
 	      //if(std::abs(ele1.vz() - ele2.vz()) > 1.) continue;
 	      if(abs(ele2.pdgId())==0) continue;
 	      //could implement ele ID criteria here
-	      if(ele2.pt()<ptMinEle_ || abs(ele2.eta())>etaMaxEle_) continue;        
+	      if(ele2.pt()<ptMinSubLeadEle_ || abs(ele2.eta())>etaMaxSubLeadEle_) continue;
 	      if(diEleCharge_ && ele1.charge()*ele2.charge()>0) continue;
 	      //minimum dR to reject overlapping tracks
 	      if(deltaR(ele1, ele2) < 0.01) continue;
@@ -338,7 +342,7 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 		    //should turn this selection into something configurable from python to test in parallel several options
 		    float B_mass = (ele1cand+ele2cand+kaoncand).Mag();
-		    if(B_mass < 3. || B_mass > 8.) { /*std::cout << "continue mass " << std::endl;*/ continue;}
+		    if(B_mass < 4. || B_mass > 8.) { /*std::cout << "continue mass " << std::endl;*/ continue;}
 
 
                     pat::CompositeCandidate BToKEECand;
