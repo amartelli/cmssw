@@ -18,6 +18,7 @@ from PhysicsTools.NanoAOD.BToKee_cff import *
 from PhysicsTools.NanoAOD.BToKpipi_cff import *
 from PhysicsTools.NanoAOD.BToKstmumu_cff import *
 from PhysicsTools.NanoAOD.BToKstee_cff import *
+#from PhysicsTools.NanoAOD.BToTrks_cff import *
 from PhysicsTools.NanoAOD.PFCands_cff import *
 from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
 
@@ -126,6 +127,22 @@ def nanoAOD_customizeLostTracks(process):
         process.BToKmumu.useLostTracks=cms.bool(True)
         process.BToKstmumu.useLostTracks=cms.bool(True)
     return process
+
+def nanoAOD_customizeLostLepTracks(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
+    if(hasattr(process,'BToKee')):
+        process.BToKee.useLostEleTracks=cms.bool(True)
+        process.BToKstee.useLostEleTracks=cms.bool(True)
+    if(hasattr(process,'BToKmumu')):
+        process.BToKmumu.useLostMuonTracks=cms.bool(True)
+        process.BToKstmumu.useLostMuonTracks=cms.bool(True)
+    return process
+
+#def nanoAOD_customizeBToTrks(process):
+#    process = nanoAOD_customizeCommon(process)
+#    process.nanoSequence = cms.Sequence( process.nanoSequence + BToTrksSequence + BToTrksTables)
+#    return process
 
 
 ### Era dependent customization

@@ -7,15 +7,17 @@ BToKee=cms.EDProducer("BToKeeProducer",
                       electronCollection = cms.InputTag("linkedObjects","electrons"),
                       PFCandCollection=cms.InputTag("packedPFCandidates"),
                       lostTrackCollection = cms.InputTag("lostTracks"),
-                      ElectronMinPt=cms.double(1.),
+                      lostEleTrackCollection = cms.InputTag("lostTracks"),
+                      ElectronMinPt=cms.double(0.2),
                       ElectronMaxEta=cms.double(2.4),
                       KaonMinPt=cms.double(1.),
                       KaonMaxEta=cms.double(2.4),
                       KaonMinDCASig=cms.double(-1.),
-                      DiElectronChargeCheck=cms.bool(False), 
+                      DiElectronChargeCheck=cms.bool(True), 
                       JPsiMassConstraint=cms.double(-1), #2-trk refitting uses measured di-ele mass
                       save2TrackRefit=cms.bool(False),
-                      useLostTracks=cms.bool(False)
+                      useLostTracks=cms.bool(False),
+                      useLostEleTracks=cms.bool(False)
                       )
 
 
@@ -33,21 +35,25 @@ BToKeeTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                 ele1_index=Var("userInt('ele1_index')", int,doc="index of corresponding leading electron"),
                                 ele2_index=Var("userInt('ele2_index')", int,doc="index of corresponding subleading electron"),
                                 kaon_index=Var("userInt('kaon_index')", int,doc="PFCand index of corresponding kaon"),
+                                ele1_lostTrack_index=Var("userInt('ele1_lostTrack_index')", int,doc="LostTrack index of corresponding ele1"),
+                                ele2_lostTrack_index=Var("userInt('ele2_lostTrack_index')", int,doc="LostTrack index of corresponding ele2"),
                                 kaon_lostTrack_index=Var("userInt('kaon_lostTrack_index')", int,doc="LostTrack index of corresponding kaon"),
+                                ele1_isPFCand=Var("userInt('ele2_isPFCand')", int,doc="flag is ele1 from PFCand"),
+                                ele2_isPFCand=Var("userInt('ele2_isPFCand')", int,doc="flag is ele2 from PFCand"),
                                 kaon_isPFCand=Var("userInt('kaon_isPFCand')", int,doc="flag is kaon from PFCand"),
                                 eeRefit=Var("userInt('eeRefit')", int,doc="result of di electron refit"),
                                 ele1_pt=Var("userFloat('ele1_pt')", float,doc="pt of leading electron (refitted)"),
                                 ele1_eta=Var("userFloat('ele1_eta')", float,doc="eta of leading electron (refitted)"),
                                 ele1_phi=Var("userFloat('ele1_phi')", float,doc="phi of leading electron (refitted)"),
                                 ele1_charge=Var("userInt('ele1_charge')", int,doc="charge of leading electron"),
-                                ele1_dxy=Var("daughter('ele1').dB('PV2D')", float,doc="dxy of leading electron (with sign) wrt first PV, in cm"),
-                                ele1_dz=Var("daughter('ele1').dB('PVDZ')", float,doc="dz of leading electron (with sign) wrt first PV, in cm"),
+                                ele1_dxy=Var("daughter('ele1').dxy()", float,doc="dxy of leading electron (with sign) wrt first PV, in cm"),
+                                ele1_dz=Var("daughter('ele1').dz()", float,doc="dz of leading electron (with sign) wrt first PV, in cm"),
                                 ele2_pt=Var("userFloat('ele2_pt')", float,doc="pt of subleading electron (refitted)"),
                                 ele2_eta=Var("userFloat('ele2_eta')", float,doc="eta of subleading electron (refitted)"),
                                 ele2_phi=Var("userFloat('ele2_phi')", float,doc="phi of subleading electron (refitted)"),
                                 ele2_charge=Var("userInt('ele2_charge')", int,doc="charge of subleading electron"),
-                                ele2_dxy=Var("daughter('ele2').dB('PV2D')", float,doc="dxy of subleading electron (with sign) wrt first PV, in cm"),
-                                ele2_dz=Var("daughter('ele2').dB('PVDZ')", float,doc="dz of subleading electron (with sign) wrt first PV, in cm"),
+                                ele2_dxy=Var("daughter('ele2').dxy()", float,doc="dxy of subleading electron (with sign) wrt first PV, in cm"),
+                                ele2_dz=Var("daughter('ele2').dz()", float,doc="dz of subleading electron (with sign) wrt first PV, in cm"),
                                 eeKFit_ee_mass=Var("userFloat('eeKFit_ee_mass')", float, doc="dielectron invariant mass post 3tracks refit"),
                                 kaon_pt=Var("userFloat('kaon_pt')", float,doc="pt of kaon (refitted)"),
                                 kaon_eta=Var("userFloat('kaon_eta')", float,doc="eta of kaon (refitted)"),
@@ -88,5 +94,11 @@ BToKeeTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                 )
                            )
 
+tripletKSelection = cms.EDFilter("CandPtrSelector",
+                                 src = cms.InputTag("BToKee"),
+                                 cut = cms.string("mass > 3. && mass < 8.")
+                             )
+
+#BToKeeSequence=cms.Sequence(BToKee+tripletKSelection)
 BToKeeSequence=cms.Sequence(BToKee)
 BToKeeTables=cms.Sequence(BToKeeTable)

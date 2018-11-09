@@ -5,9 +5,15 @@
 # with command line options: test_data_101X -s NANO --data --eventcontent NANOAOD --datatier NANOAOD --filein /store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/710000/E8D42FDB-2460-E811-A2A5-FA163EB200B1.root --conditions 101X_dataRun2_Prompt_v10 -n 100 --era Run2_2018 --customise_commands=process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 
 runBToKPiPi = False
+runBToKmumu = False
+#to test with all tracks for electrons enable thw following 2
+#N.B all tracks for muons do not work
 runBToKee = True
-runBToKmumu = True
+useLostLepTracks = True
+#to enable lost tracks also for K enable the following
 useLostTracks = False
+
+#runBToTrks = False
 
 import FWCore.ParameterSet.Config as cms
 
@@ -27,12 +33,22 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(20)
 )
+
+#process.Timing = cms.Service("Timing",
+#                             summaryOnly = cms.untracked.bool(True),
+#                             useJobReport = cms.untracked.bool(True)
+#)
+#process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",
+#    ignoreTotal = cms.untracked.int32(1)
+#)
+
 
 # Input source
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring('/store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/710000/E8D42FDB-2460-E811-A2A5-FA163EB200B1.root'),
+                            #fileNames = cms.untracked.vstring('/store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/710000/E8D42FDB-2460-E811-A2A5-FA163EB200B1.root'),
+                            fileNames = cms.untracked.vstring('/store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/30000/E4D4B25D-AC59-E811-AA59-0CC47A78A3D8.root'),
                             secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -97,6 +113,12 @@ if runBToKmumu:
 if useLostTracks:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostTracks
     process = nanoAOD_customizeLostTracks(process)
+if useLostLepTracks:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostLepTracks
+    process = nanoAOD_customizeLostLepTracks(process)
+#if runBToTrks:
+#    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToTrks
+#    process = nanoAOD_customizeBToTrks(process)
 
 # End of customisation functions
 

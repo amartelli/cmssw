@@ -7,21 +7,25 @@ BToKstee=cms.EDProducer("BToKsteeProducer",
                         electronCollection=cms.InputTag("linkedObjects","electrons"), #same collection as in NanoAOD
                         PFCandCollection=cms.InputTag("packedPFCandidates"),
                         lostTrackCollection = cms.InputTag("lostTracks"),
-                        ElectronMinPt=cms.double(1.),
+                        lostEleTrackCollection = cms.InputTag("lostTracks"),
+                        ElectronMinPt=cms.double(0.5),
                         ElectronMaxEta=cms.double(2.4),
                         KaonMinPt=cms.double(1.),
                         KaonMaxEta=cms.double(2.4),
-                        KaonMinDCASig=cms.double(3.3),
+                        #KaonMinDCASig=cms.double(3.3),
+                        KaonMinDCASig=cms.double(-1.),
                         PionMinPt=cms.double(1.),
                         PionMaxEta=cms.double(2.4),
-                        PionMinDCASig=cms.double(3.3),
-                        DiElectronChargeCheck=cms.bool(False),
+                        #PionMinDCASig=cms.double(3.3),
+                        PionMinDCASig=cms.double(-1.),
+                        DiElectronChargeCheck=cms.bool(True),
                         KstarChargeCheck=cms.bool(True),
                         JPsiMassConstraint=cms.double(-1), #2-trk refitting uses measured di-ele mass
                         KstMassConstraint=cms.double(0.89176), #2-trk refitting uses nominal K*(892) mass
                         save2TrackRefit=cms.bool(False),
                         save4TrackRefit=cms.bool(False),
-                        useLostTracks=cms.bool(False)
+                        useLostTracks=cms.bool(False),
+                        useLostEleTracks=cms.bool(False)
                       )
 
 BToKsteeTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer", 
@@ -33,7 +37,11 @@ BToKsteeTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                              extension=cms.bool(False),
                              variables=cms.PSet(
                                 ele1_index=Var("userInt('ele1_index')", int,doc="index of corresponding leading electron"),
+                                ele1_lostTrack_index=Var("userInt('ele1_lostTrack_index')", int,doc="LostTrack index of corresponding ele1"),
+                                ele1_isPFCand=Var("userInt('ele2_isPFCand')", int,doc="flag is ele1 from PFCand"),
                                 ele2_index=Var("userInt('ele2_index')", int,doc="index of corresponding subleading electron"),
+                                ele2_lostTrack_index=Var("userInt('ele2_lostTrack_index')", int,doc="LostTrack index of corresponding ele2"),
+                                ele2_isPFCand=Var("userInt('ele2_isPFCand')", int,doc="flag is ele2 from PFCand"),
                                 kaon_index=Var("userInt('kaon_index')", int,doc="PFCand index of corresponding kaon"),
                                 kaon_lostTrack_index=Var("userInt('kaon_lostTrack_index')", int,doc="LostTrack index of corresponding kaon"),
                                 kaon_isPFCand=Var("userInt('kaon_isPFCand')", int,doc="flag is kaon from PFCand"),
@@ -44,14 +52,14 @@ BToKsteeTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                 ele1_eta=Var("userFloat('ele1_eta')", float,doc="eta of leading electron (refitted)"),
                                 ele1_phi=Var("userFloat('ele1_phi')", float,doc="phi of leading electron (refitted)"),
                                 ele1_charge=Var("userInt('ele1_charge')", int,doc="charge of leading electron"),
-                                ele1_dxy=Var("daughter('ele1').dB('PV2D')", float,doc="dxy of leading electron (with sign) wrt first PV, in cm"),
-                                ele1_dz=Var("daughter('ele1').dB('PVDZ')", float,doc="dz of leading electron (with sign) wrt first PV, in cm"),
+                                ele1_dxy=Var("daughter('ele1').dxy()", float,doc="dxy of leading electron (with sign) wrt first PV, in cm"),
+                                ele1_dz=Var("daughter('ele1').dz()", float,doc="dz of leading electron (with sign) wrt first PV, in cm"),
                                 ele2_pt=Var("userFloat('ele2_pt')", float,doc="pt of subleading electron (refitted)"),
                                 ele2_eta=Var("userFloat('ele2_eta')", float,doc="eta of subleading electron (refitted)"),
                                 ele2_phi=Var("userFloat('ele2_phi')", float,doc="phi of subleading electron (refitted)"),
                                 ele2_charge=Var("userInt('ele2_charge')", int,doc="charge of subleading electron"),
-                                ele2_dxy=Var("daughter('ele2').dB('PV2D')", float,doc="dxy of subleading electron (with sign) wrt first PV, in cm"),
-                                ele2_dz=Var("daughter('ele2').dB('PVDZ')", float,doc="dz of subleading electron (with sign) wrt first PV, in cm"),
+                                ele2_dxy=Var("daughter('ele2').dxy()", float,doc="dxy of subleading electron (with sign) wrt first PV, in cm"),
+                                ele2_dz=Var("daughter('ele2').dz()", float,doc="dz of subleading electron (with sign) wrt first PV, in cm"),
                                 kaon_pt=Var("userFloat('kaon_pt')", float,doc="pt of kaon (refitted)"),
                                 kaon_eta=Var("userFloat('kaon_eta')", float,doc="eta of kaon (refitted)"),
                                 kaon_phi=Var("userFloat('kaon_phi')", float,doc="phi of kaon (refitted)"),
@@ -117,5 +125,12 @@ BToKsteeTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                 )
                              )
 
+
+tripletKstSelection = cms.EDFilter("CandPtrSelector",
+                                src = cms.InputTag("BToKstee"),
+                                cut = cms.string("mass > 3. && mass < 8.")
+                            )
+
+#BToKsteeSequence=cms.Sequence(BToKstee+tripletKstSelection)
 BToKsteeSequence=cms.Sequence(BToKstee)
 BToKsteeTables=cms.Sequence(BToKsteeTable)
