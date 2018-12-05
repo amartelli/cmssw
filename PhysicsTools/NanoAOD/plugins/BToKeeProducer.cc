@@ -215,6 +215,8 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
                 double EE_mass_err = -1.;
 
                 RefCountedKinematicParticle refitEE;
+                math::XYZVector refitEEV3D;
+
 
                 if(save2TrkRefit_){
 
@@ -258,8 +260,8 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
 		    if(deltaR(ele1, pfCand) < 0.01 || deltaR(ele2, pfCand) < 0.01) continue;
 
                     pair<double,double> DCA = computeDCA(pfCand,
-							 bFieldHandle,
-							 beamSpot);
+                                                         bFieldHandle,
+                                                         beamSpot);
                     double DCABS = DCA.first;
                     double DCABSErr = DCA.second;
 
@@ -273,12 +275,12 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     
                     
                     bool passed = BToKEEVertexRefitting(ele1, ele2, pfCand,
-							theTTBuilder,
-							refitVertexBToKEE,
-							refitBToKEE,
-							refitEle1,
-							refitEle2,
-							refitKaon);
+                                                        theTTBuilder,
+                                                        refitVertexBToKEE,
+                                                        refitBToKEE,
+                                                        refitEle1,
+                                                        refitEle2,
+                                                        refitKaon);
                     
                     if (!passed) continue;
                     
@@ -317,11 +319,11 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     BToKEECand.addUserFloat("ele2_phi",    refitEle2V3D.phi());
                     BToKEECand.addUserInt("ele2_charge",   refitEle2->currentState().particleCharge());
 
-		    TLorentzVector ele1cand;
-		    ele1cand.SetPtEtaPhiM(sqrt(refitEle1V3D.perp2()), refitEle1V3D.eta(), refitEle1V3D.phi(), ElectronMass_);
-		    TLorentzVector ele2cand;
-		    ele2cand.SetPtEtaPhiM(sqrt(refitEle2V3D.perp2()), refitEle2V3D.eta(), refitEle2V3D.phi(), ElectronMass_);
-		    BToKEECand.addUserFloat("eeKFit_ee_mass", (ele1cand+ele2cand).Mag());
+                    TLorentzVector ele1cand;
+                    ele1cand.SetPtEtaPhiM(sqrt(refitEle1V3D.perp2()), refitEle1V3D.eta(), refitEle1V3D.phi(), ElectronMass_);
+                    TLorentzVector ele2cand;
+                    ele2cand.SetPtEtaPhiM(sqrt(refitEle2V3D.perp2()), refitEle2V3D.eta(), refitEle2V3D.phi(), ElectronMass_);
+                    BToKEECand.addUserFloat("eeKFit_ee_mass", (ele1cand+ele2cand).Mag());
 
                     math::XYZVector refitKaonV3D = refitKaon->refittedTransientTrack().track().momentum();
 		    TLorentzVector kaoncand;
@@ -353,15 +355,7 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     BToKEECand.addUserFloat("ctxy", (float) LSBS/sqrt(refitBToKEEV3D.perp2()));
                     BToKEECand.addUserFloat("Chi2_vtx", (float) BToKEEVtx_Chi2);
                     BToKEECand.addUserFloat("CL_vtx", (float) BToKEEVtx_CL);
-                    BToKEECand.addUserFloat("cosAlpha", (float) cosAlpha);
-                    
-                    BToKEECand.addUserFloat("ee_pt",     EE_pt);
-                    BToKEECand.addUserFloat("ee_eta",    EE_eta);
-                    BToKEECand.addUserFloat("ee_phi",    EE_phi);
-                    BToKEECand.addUserFloat("ee_mass",   EE_mass);
-                    BToKEECand.addUserFloat("ee_mass_err",   EE_mass_err);
-                    BToKEECand.addUserFloat("ee_Lxy", EE_Lxy);
-                    BToKEECand.addUserFloat("ee_CL_vtx", EE_CL_vtx);
+                    BToKEECand.addUserFloat("cosAlpha", (float) cosAlpha);                    
 
                     float pt_2trk = -9999.;
                     float eta_2trk = -9999.;
