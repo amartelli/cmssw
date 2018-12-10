@@ -117,8 +117,10 @@ private:
     edm::EDGetTokenT<edm::View<pat::PackedCandidate>> PFCandSrc_;
     edm::EDGetTokenT<edm::View<pat::PackedCandidate>> lostTrackSrc_;
     
-    double ptMinMu_;
-    double etaMaxMu_;
+    double ptMinLeadMu_;
+    double etaMaxLeadMu_;
+    double ptMinSubLeadMu_;
+    double etaMaxSubLeadMu_;
     double ptMinKaon_;
     double etaMaxKaon_;
     double DCASigMinKaon_;
@@ -154,8 +156,10 @@ vertexSrc_( consumes<reco::VertexCollection> ( iConfig.getParameter<edm::InputTa
 muonSrc_( consumes<std::vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "muonCollection" ) ) ),
 PFCandSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "PFCandCollection" ) ) ),
 lostTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostTrackCollection" ) ) ),
-ptMinMu_( iConfig.getParameter<double>( "MuonMinPt" ) ),
-etaMaxMu_( iConfig.getParameter<double>( "MuonMaxEta" ) ),
+ptMinLeadMu_( iConfig.getParameter<double>( "LeadMuonMinPt" ) ),
+etaMaxLeadMu_( iConfig.getParameter<double>( "LeadMuonMaxEta" ) ),
+ptMinSubLeadMu_( iConfig.getParameter<double>( "SubLeadMuonMinPt" ) ),
+etaMaxSubLeadMu_( iConfig.getParameter<double>( "SubLeadMuonMaxEta" ) ),
 ptMinKaon_( iConfig.getParameter<double>( "KaonMinPt" ) ),
 etaMaxKaon_( iConfig.getParameter<double>( "KaonMaxEta" ) ),
 DCASigMinKaon_( iConfig.getParameter<double>( "KaonMinDCASig" ) ),
@@ -216,7 +220,7 @@ void BToKstmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
             const pat::Muon & muon1 = (*muonHandle)[i];
 
             if(!(muon1.isLooseMuon() && muon1.isSoftMuon(PV))) continue;
-            if(muon1.pt()<ptMinMu_ || abs(muon1.eta())>etaMaxMu_) continue;
+            if(muon1.pt()<ptMinLeadMu_ || abs(muon1.eta())>etaMaxLeadMu_) continue;
 
             for (unsigned int j = 0; j < muonNumber; ++j) {
 
@@ -226,7 +230,7 @@ void BToKstmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 
 		if(muon1.pt()<muon2.pt()) continue; //Muon 1 is always saved as the leading one
                 if(!(muon2.isLooseMuon() && muon2.isSoftMuon(PV))) continue;
-                if(muon2.pt()<ptMinMu_ || abs(muon2.eta())>etaMaxMu_) continue;
+                if(muon2.pt()<ptMinSubLeadMu_ || abs(muon2.eta())>etaMaxSubLeadMu_) continue;
                 if(diMuonCharge_ && muon1.charge()*muon2.charge()>0) continue;
 
                 bool passedDiMuon = false;

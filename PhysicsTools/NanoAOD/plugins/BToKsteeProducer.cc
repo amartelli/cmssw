@@ -126,8 +126,10 @@ private:
     edm::EDGetTokenT<edm::View<pat::PackedCandidate>> PFCandSrc_;
     edm::EDGetTokenT<edm::View<pat::PackedCandidate>> lostTrackSrc_;
     
-    double ptMinEle_;
-    double etaMaxEle_;
+    double ptMinLeadEle_;
+    double etaMaxLeadEle_;
+    double ptMinSubLeadEle_;
+    double etaMaxSubLeadEle_;
     double ptMinKaon_;
     double etaMaxKaon_;
     double DCASigMinKaon_;
@@ -162,8 +164,10 @@ beamSpotSrc_( consumes<reco::BeamSpot> ( iConfig.getParameter<edm::InputTag>( "b
 electronSrc_( consumes<std::vector<pat::Electron>> ( iConfig.getParameter<edm::InputTag>( "electronCollection" ) ) ),
 PFCandSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "PFCandCollection" ) ) ),
 lostTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostTrackCollection" ) ) ),
-ptMinEle_( iConfig.getParameter<double>( "ElectronMinPt" ) ),
-etaMaxEle_( iConfig.getParameter<double>( "ElectronMaxEta" ) ),
+ptMinLeadEle_( iConfig.getParameter<double>( "LeadElectronMinPt" ) ),
+etaMaxLeadEle_( iConfig.getParameter<double>( "LeadElectronMaxEta" ) ),
+ptMinSubLeadEle_( iConfig.getParameter<double>( "SubLeadElectronMinPt" ) ),
+etaMaxSubLeadEle_( iConfig.getParameter<double>( "SubLeadElectronMaxEta" ) ),
 ptMinKaon_( iConfig.getParameter<double>( "KaonMinPt" ) ),
 etaMaxKaon_( iConfig.getParameter<double>( "KaonMaxEta" ) ),
 DCASigMinKaon_( iConfig.getParameter<double>( "KaonMinDCASig" ) ),
@@ -222,7 +226,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
             const pat::Electron & ele1 = (*electronHandle)[i];
 
 	    //could implement ele ID criteria here
-            if(ele1.pt()<ptMinEle_ || abs(ele1.eta())>etaMaxEle_) continue;
+            if(ele1.pt()<ptMinLeadEle_ || abs(ele1.eta())>etaMaxLeadEle_) continue;
             
             for (unsigned int j = 0; j < electronNumber; ++j) {
 
@@ -232,7 +236,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 		if(ele1.pt()<ele2.pt()) continue; //Electron 1 is always saved as the leading one
 		//could implement ele ID criteria here
-                if(ele2.pt()<ptMinEle_ || abs(ele2.eta())>etaMaxEle_) continue;
+                if(ele2.pt()<ptMinSubLeadEle_ || abs(ele2.eta())>etaMaxSubLeadEle_) continue;
                 if(diEleCharge_ && ele1.charge()*ele2.charge()>0) continue;
 
                 bool passedDiEle = false;
