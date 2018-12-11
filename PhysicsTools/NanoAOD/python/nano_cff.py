@@ -337,20 +337,18 @@ def nanoAOD_customizeKstarFinalState(process):
         process.BToKstll.isChannelKst=cms.bool(True)
     return process
 
+
 def nanoAOD_customizeLostSubLeadLepTracks(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
-    if(hasattr(process,'BToKstll')):
-        process.BToKstll.useLostSubLeadLepTracks=cms.bool(True)
     if(hasattr(process,'BToKee')):
         process.BToKee.useLostSubLeadEleTracks=cms.bool(True)
-    if(hasattr(process,'BToKstee')):
         process.BToKstee.useLostSubLeadEleTracks=cms.bool(True)
-    if(hasattr(process,'BToKmumu')):
-        process.BToKmumu.useLostSubLeadMuonTracks=cms.bool(True)
-    if(hasattr(process,'BToKstmumu')):
-        process.BToKstmumu.useLostSubLeadMuonTracks=cms.bool(True)
+#    if(hasattr(process,'BToKmumu')):                                                                                       
+#        process.BToKmumu.useLostLeadMuonTracks=cms.bool(True)                                                              
+#        process.BToKstmumu.useLostSubLeadMuonTracks=cms.bool(True)
     return process
+
 
 def nanoAOD_customizeLostChHadrTracks(process):
     process = nanoAOD_customizeCommon(process)
@@ -366,7 +364,6 @@ def nanoAOD_customizeLostChHadrTracks(process):
     if(hasattr(process,'BToKstmumu')):
         process.BToKstmumu.useLostChHadTracks=cms.bool(True)
     return process
-
 
 ### Era dependent customization
 _80x_sequence = nanoSequenceCommon.copy()
@@ -386,3 +383,4 @@ _102x_sequence.insert(_102x_sequence.index(simpleCleanerTable)+1,extraFlagsTable
 
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:
     modifier.toReplaceWith(nanoSequenceCommon, _102x_sequence)
+#run2_miniAOD_80XLegacy.toReplaceWith( nanoSequence, _80x_sequence)

@@ -7,7 +7,9 @@
 runBToKPiPi = False
 runBToKee = True
 runBToKmumu = False
-useLostTracks = False
+useLostLeadLepTracks = False
+useLostSubLeadLepTracks = True
+useLostChHadrTracks = True
 
 import FWCore.ParameterSet.Config as cms
 
@@ -94,9 +96,15 @@ if runBToKee:
 if runBToKmumu:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKmumu
     process = nanoAOD_customizeBToKmumu(process)
-if useLostTracks:
-    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostTracks
-    process = nanoAOD_customizeLostTracks(process)
+if useLostLeadLepTracks:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostLeadLepTracks
+    process = nanoAOD_customizeLostLeadLepTracks(process)
+if useLostSubLeadLepTracks:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostSubLeadLepTracks
+    process = nanoAOD_customizeLostSubLeadLepTracks(process)
+if useLostChHadrTracks:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostChHadrTracks
+    process = nanoAOD_customizeLostChHadrTracks(process)
 
 # End of customisation functions
 
