@@ -315,7 +315,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     BToKMuMuCand.addUserInt("kaon_index", isPFCand ? k : -1);
                     BToKMuMuCand.addUserInt("mu2_lostTrack_index", isMuon2PF ? -1 : j-pfCandNumber);
                     BToKMuMuCand.addUserInt("kaon_lostTrack_index", isPFCand ? -1 : k-pfCandNumber);
-                    BToKMuMuCand.addUserInt("muon2_isPFCand", (int)isMuon2PF);
+                    BToKMuMuCand.addUserInt("mu2_isPFCand", (int)isMuon2PF);
                     BToKMuMuCand.addUserInt("kaon_isPFCand", (int)isPFCand);
 
                     math::XYZVector refitMu1V3D = refitMuon1->refittedTransientTrack().track().momentum();
