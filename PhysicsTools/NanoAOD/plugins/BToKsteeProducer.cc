@@ -238,8 +238,6 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
             
             for (unsigned int j = 0; j < (pfCandNumber+lostSubLeadEleTrackNumber); ++j) {
 
-	      //                if(i==j) continue;
-
 		bool isEle2PF = j < pfCandNumber;
 
                 const pat::PackedCandidate & ele2 = isEle2PF ? (*pfCandHandle)[j] : (*lostSubLeadEleTrackHandle)[j-pfCandNumber];
@@ -249,11 +247,12 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 if(ele2.pt()<ptMinSubLeadEle_ || abs(ele2.eta())>etaMaxSubLeadEle_) continue;
 
                 if(!ele2.hasTrackDetails()) continue;
-                if(abs(ele1.pdgId())!=11) continue;
+		//exclude neutral should be safe do not ask too much ID
+                if(abs(ele2.pdgId()) == 0) continue;
 
                 if(diEleCharge_ && ele1.charge()*ele2.charge()>0) continue;
-
-		//		if(deltaR(ele1, ele2) < 0.01) continue;
+		// ele1 and ele2 belong to different collections need to check they are different
+		if(deltaR(ele1, ele2) < 0.01) continue;
 
                 bool passedDiEle = false;
 
@@ -302,7 +301,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 //Kaon
                 for (unsigned int k = 0; k < (pfCandNumber+lostChHadrTrackNumber); ++k) {
 
-		    if(j ==k) continue;//if(i==k || j ==k) continue;
+		    if(j ==k) continue;
 
                     bool kaon_isPFCand = k<pfCandNumber;
                     const pat::PackedCandidate & kaon = kaon_isPFCand ? (*pfCandHandle)[k] : (*lostChHadrTrackHandle)[k-pfCandNumber];
@@ -321,7 +320,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 		    for (unsigned int l = 0; l < (pfCandNumber+lostChHadrTrackNumber); ++l) {
 
-		      if(k==l || j==l) continue;  //if(k==l || i==l || j==l) continue;
+		      if(k==l || j==l) continue;
 
 		      bool pion_isPFCand = l<pfCandNumber;
 		      const pat::PackedCandidate & pion = pion_isPFCand ? (*pfCandHandle)[l] : (*lostChHadrTrackHandle)[l-pfCandNumber];
@@ -789,8 +788,7 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::Electron &ele1,
 
     if ( !refitVertex->vertexIsValid()) return false;
 
-    RefCountedKinematicParticle refitEle1N = partFactory.particle(ele1TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
-    refitEle1 = refitEle1N;
+    refitEle1 = partFactory.particle(ele1TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
     refitEle2 = partFactory.particle(ele2TT, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
     refitKst = refitKPi;
 

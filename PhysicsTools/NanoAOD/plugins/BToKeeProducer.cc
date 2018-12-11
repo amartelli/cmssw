@@ -208,9 +208,6 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
             if(ele1.pt()<ptMinLeadEle_ || abs(ele1.eta())>etaMaxLeadEle_) continue;
             
             for (unsigned int j = 0; j < (pfCandNumber+lostSubLeadEleTrackNumber); ++j) {
-                
-	      //                if(i==j) continue;
-
                 bool isEle2PF = j < pfCandNumber;
 
 		const pat::PackedCandidate & ele2 = isEle2PF ? (*pfCandHandle)[j] : (*lostSubLeadEleTrackHandle)[j-pfCandNumber];
@@ -220,11 +217,12 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
                 if(ele2.pt()<ptMinSubLeadEle_ || abs(ele2.eta())>etaMaxSubLeadEle_) continue;
 
 		if(!ele2.hasTrackDetails()) continue;
-		if(abs(ele1.pdgId())!=11) continue;
-                
-                if(diEleCharge_ && ele1.charge()*ele2.charge()>0) continue;
+		//exclude neutral should be safe do not ask too much ID
+		if(abs(ele2.pdgId()) == 0) continue;
 
-		//      		if(deltaR(ele1, ele2) < 0.01) continue;
+                if(diEleCharge_ && ele1.charge()*ele2.charge()>0) continue;
+                // ele1 and ele2 belong to different collections need to check they are different
+		if(deltaR(ele1, ele2) < 0.01) continue;
                 
                 bool passedDiEle = false;
 
@@ -551,14 +549,10 @@ bool BToKeeProducer::BToKEEVertexRefitting(const pat::Electron &ele1,
     
     if ( !refitVertex->vertexIsValid()) return false;
 
-    RefCountedKinematicParticle refitEle1N = partFactory.particle(ele1TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
-    RefCountedKinematicParticle refitEle2N = partFactory.particle(ele2TT, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
-    RefCountedKinematicParticle refitKaonN = partFactory.particle(kaonTT, ParticleMass(KaonMass_), chi, ndf, KaonMassErr_);
+    refitEle1 = partFactory.particle(ele1TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
+    refitEle2 = partFactory.particle(ele2TT, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
+    refitKaon = partFactory.particle(kaonTT, ParticleMass(KaonMass_), chi, ndf, KaonMassErr_);
 
-    refitEle1 = refitEle1N;
-    refitEle2 = refitEle2N;
-    refitKaon = refitKaonN;
-    
     math::XYZVector refEle1 = refitEle1->refittedTransientTrack().track().momentum();
     math::XYZVector refEle2 = refitEle2->refittedTransientTrack().track().momentum();
     math::XYZVector refKaon = refitKaon->refittedTransientTrack().track().momentum();
