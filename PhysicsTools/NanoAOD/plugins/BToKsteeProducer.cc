@@ -790,9 +790,8 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::Electron &ele1,
     if ( !refitVertex->vertexIsValid()) return false;
 
     RefCountedKinematicParticle refitEle1N = partFactory.particle(ele1TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
-    RefCountedKinematicParticle refitEle2N = partFactory.particle(ele2TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
     refitEle1 = refitEle1N;
-    refitEle2 = refitEle2N;
+    refitEle2 = partFactory.particle(ele2TT, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
     refitKst = refitKPi;
 
     math::XYZVector refEle1 = refitEle1->refittedTransientTrack().track().momentum();

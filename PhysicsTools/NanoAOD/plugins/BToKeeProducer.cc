@@ -552,8 +552,8 @@ bool BToKeeProducer::BToKEEVertexRefitting(const pat::Electron &ele1,
     if ( !refitVertex->vertexIsValid()) return false;
 
     RefCountedKinematicParticle refitEle1N = partFactory.particle(ele1TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
-    RefCountedKinematicParticle refitEle2N = partFactory.particle(ele2TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
-    RefCountedKinematicParticle refitKaonN = partFactory.particle(kaonTT, ParticleMass(KaonMass__), chi, ndf, KaonMassErr_);
+    RefCountedKinematicParticle refitEle2N = partFactory.particle(ele2TT, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
+    RefCountedKinematicParticle refitKaonN = partFactory.particle(kaonTT, ParticleMass(KaonMass_), chi, ndf, KaonMassErr_);
 
     refitEle1 = refitEle1N;
     refitEle2 = refitEle2N;
