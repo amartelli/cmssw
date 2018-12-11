@@ -229,9 +229,9 @@ def nanoAOD_customizeLostSubLeadLepTracks(process):
     if(hasattr(process,'BToKee')):
         process.BToKee.useLostSubLeadEleTracks=cms.bool(True)
         process.BToKstee.useLostSubLeadEleTracks=cms.bool(True)
-#    if(hasattr(process,'BToKmumu')):                                                                                       
-#        process.BToKmumu.useLostLeadMuonTracks=cms.bool(True)                                                              
-#        process.BToKstmumu.useLostSubLeadMuonTracks=cms.bool(True)
+    if(hasattr(process,'BToKmumu')):
+        process.BToKmumu.useLostSubLeadMuonTracks=cms.bool(True)
+        process.BToKstmumu.useLostSubLeadMuonTracks=cms.bool(True)
     return process
 
 
@@ -242,8 +242,8 @@ def nanoAOD_customizeLostChHadrTracks(process):
         process.BToKee.useLostChHadrTracks=cms.bool(True)
         process.BToKstee.useLostChHadrTracks=cms.bool(True)
     if(hasattr(process,'BToKmumu')):
-        process.BToKmumu.useLostTracks=cms.bool(True)
-        process.BToKstmumu.useLostTracks=cms.bool(True)
+        process.BToKmumu.useLostChHadrTracks=cms.bool(True)
+        process.BToKstmumu.useLostChHadTracks=cms.bool(True)
     return process
 
 ### Era dependent customization
