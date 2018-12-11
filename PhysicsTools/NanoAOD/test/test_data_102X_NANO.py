@@ -7,7 +7,6 @@
 runBToKPiPi = False
 runBToKee = True
 runBToKmumu = False
-useLostLeadLepTracks = False
 useLostSubLeadLepTracks = True
 useLostChHadrTracks = True
 
@@ -96,9 +95,6 @@ if runBToKee:
 if runBToKmumu:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKmumu
     process = nanoAOD_customizeBToKmumu(process)
-if useLostLeadLepTracks:
-    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostLeadLepTracks
-    process = nanoAOD_customizeLostLeadLepTracks(process)
 if useLostSubLeadLepTracks:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostSubLeadLepTracks
     process = nanoAOD_customizeLostSubLeadLepTracks(process)

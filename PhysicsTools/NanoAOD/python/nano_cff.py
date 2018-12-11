@@ -196,18 +196,6 @@ def nanoAOD_customizeBToKmumu(process):
     return process
 
 
-def nanoAOD_customizeLostLeadLepTracks(process):
-    process = nanoAOD_customizeCommon(process)
-    process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
-    if(hasattr(process,'BToKee')):
-        process.BToKee.useLostLeadEleTracks=cms.bool(True)
-        process.BToKstee.useLostLeadEleTracks=cms.bool(True)
-#    if(hasattr(process,'BToKmumu')):
-#        process.BToKmumu.useLostLeadMuonTracks=cms.bool(True)
-#        process.BToKstmumu.useLostLeadMuonTracks=cms.bool(True)
-    return process
-
-
 def nanoAOD_customizeLostSubLeadLepTracks(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )

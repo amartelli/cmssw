@@ -58,7 +58,7 @@ private:
     
     virtual void produce(edm::Event&, const edm::EventSetup&);
     
-    bool EEVertexRefitting(const pat::PackedCandidate &ele1,
+    bool EEVertexRefitting(const pat::Electron &ele1,
 			   const pat::PackedCandidate &ele2,
 			   edm::ESHandle<TransientTrackBuilder> theTTBuilder,
 			   RefCountedKinematicVertex &refitVertex,
@@ -74,7 +74,7 @@ private:
 			    RefCountedKinematicParticle &refitKaon,
 			    RefCountedKinematicParticle &refitPion);
 
-    bool BToKstEEVertexRefitting(const pat::PackedCandidate &ele1,
+    bool BToKstEEVertexRefitting(const pat::Electron &ele1,
                   		 const pat::PackedCandidate &ele2,
                                  const RefCountedKinematicParticle refitKPi,
                                  edm::ESHandle<TransientTrackBuilder> theTTBuilder,
@@ -84,7 +84,7 @@ private:
                                  RefCountedKinematicParticle &refitEle2,
                                  RefCountedKinematicParticle &refitKst);
 
-    bool BToKPiEEVertexRefitting(const pat::PackedCandidate &ele1,
+    bool BToKPiEEVertexRefitting(const pat::Electron &ele1,
 				 const pat::PackedCandidate &ele2,
                                  const pat::PackedCandidate &kaon,
                                  const pat::PackedCandidate &pion,
@@ -124,7 +124,6 @@ private:
     edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
     edm::EDGetTokenT<std::vector<pat::Electron>> electronSrc_;
     edm::EDGetTokenT<edm::View<pat::PackedCandidate>> PFCandSrc_;
-    edm::EDGetTokenT<edm::View<pat::PackedCandidate>> lostLeadEleTrackSrc_;
     edm::EDGetTokenT<edm::View<pat::PackedCandidate>> lostSubLeadEleTrackSrc_;
     edm::EDGetTokenT<edm::View<pat::PackedCandidate>> lostChHadrTrackSrc_;
     
@@ -144,7 +143,6 @@ private:
     double KstMassConstraint_;
     bool save2TrkRefit_;
     bool save4TrkRefit_;
-    bool useLostLeadEleTracks_;
     bool useLostSubLeadEleTracks_;
     bool useLostChHadrTracks_;
 
@@ -168,7 +166,6 @@ BToKsteeProducer::BToKsteeProducer(const edm::ParameterSet &iConfig):
 beamSpotSrc_( consumes<reco::BeamSpot> ( iConfig.getParameter<edm::InputTag>( "beamSpot" ) ) ),
 electronSrc_( consumes<std::vector<pat::Electron>> ( iConfig.getParameter<edm::InputTag>( "electronCollection" ) ) ),
 PFCandSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "PFCandCollection" ) ) ),
-lostLeadEleTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostLeadEleTrackCollection" ) ) ),
 lostSubLeadEleTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostSubLeadEleTrackCollection" ) ) ),
 lostChHadrTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostChHadrTrackCollection" ) ) ),
 ptMinLeadEle_( iConfig.getParameter<double>( "LeadElectronMinPt" ) ),
@@ -187,7 +184,6 @@ JPsiMassConstraint_( iConfig.getParameter<double>( "JPsiMassConstraint" ) ),
 KstMassConstraint_( iConfig.getParameter<double>( "KstMassConstraint" ) ),
 save2TrkRefit_( iConfig.getParameter<bool>( "save2TrackRefit" ) ),
 save4TrkRefit_( iConfig.getParameter<bool>( "save4TrackRefit" ) ),
-useLostLeadEleTracks_( iConfig.getParameter<bool>( "useLostLeadEleTracks" ) ),
 useLostSubLeadEleTracks_( iConfig.getParameter<bool>( "useLostSubLeadEleTracks" ) ),
 useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) )
 {
@@ -214,43 +210,35 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
     edm::Handle<std::vector<pat::Electron>> electronHandle;
     edm::Handle<edm::View<pat::PackedCandidate>> pfCandHandle;
-    edm::Handle<edm::View<pat::PackedCandidate>> lostLeadEleTrackHandle;
     edm::Handle<edm::View<pat::PackedCandidate>> lostSubLeadEleTrackHandle;
     edm::Handle<edm::View<pat::PackedCandidate>> lostChHadrTrackHandle;
 
     iEvent.getByToken(electronSrc_, electronHandle);
     iEvent.getByToken(PFCandSrc_, pfCandHandle);
-    if(useLostLeadEleTracks_) iEvent.getByToken(lostLeadEleTrackSrc_, lostLeadEleTrackHandle);
     if(useLostSubLeadEleTracks_) iEvent.getByToken(lostSubLeadEleTrackSrc_, lostSubLeadEleTrackHandle);
     if(useLostChHadrTracks_) iEvent.getByToken(lostChHadrTrackSrc_, lostChHadrTrackHandle);
 
     unsigned int electronNumber = electronHandle->size();
     unsigned int pfCandNumber = pfCandHandle->size();
-    unsigned int lostLeadEleTrackNumber = useLostLeadEleTracks_ ? lostLeadEleTrackHandle->size() : 0;
     unsigned int lostSubLeadEleTrackNumber = useLostSubLeadEleTracks_ ? lostSubLeadEleTrackHandle->size() : 0;
     unsigned int lostChHadrTrackNumber = useLostChHadrTracks_ ? lostChHadrTrackHandle->size() : 0;
 
     // Output collection
     std::unique_ptr<pat::CompositeCandidateCollection> result( new pat::CompositeCandidateCollection );
 
-    if(electronNumber+lostLeadEleTrackNumber>1){
+    if(electronNumber > 1){
 
         // loop on all the eeKPi quadruplets
-        for (unsigned int i = 0; i < (pfCandNumber+lostLeadEleTrackNumber); ++i) {
+        for (unsigned int i = 0; i < electronNumber; ++i) {
 
-	    bool isEle1PF = i < pfCandNumber;	  
-
-            const pat::PackedCandidate & ele1 = isEle1PF ? (*pfCandHandle)[i] : (*lostLeadEleTrackHandle)[i-pfCandNumber];
-
+            const pat::Electron & ele1 = (*electronHandle)[i];
+ 
 	    //could implement ele ID criteria here
             if(ele1.pt()<ptMinLeadEle_ || abs(ele1.eta())>etaMaxLeadEle_) continue;
             
-	    if(!ele1.hasTrackDetails()) continue;
-            if(abs(ele1.pdgId())!=11) continue;
-
             for (unsigned int j = 0; j < (pfCandNumber+lostSubLeadEleTrackNumber); ++j) {
 
-                if(i==j) continue;
+	      //                if(i==j) continue;
 
 		bool isEle2PF = j < pfCandNumber;
 
@@ -265,7 +253,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
                 if(diEleCharge_ && ele1.charge()*ele2.charge()>0) continue;
 
-		if(deltaR(ele1, ele2) < 0.01) continue;
+		//		if(deltaR(ele1, ele2) < 0.01) continue;
 
                 bool passedDiEle = false;
 
@@ -314,7 +302,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 //Kaon
                 for (unsigned int k = 0; k < (pfCandNumber+lostChHadrTrackNumber); ++k) {
 
-               	    if(i==k || j ==k) continue;
+		    if(j ==k) continue;//if(i==k || j ==k) continue;
 
                     bool kaon_isPFCand = k<pfCandNumber;
                     const pat::PackedCandidate & kaon = kaon_isPFCand ? (*pfCandHandle)[k] : (*lostChHadrTrackHandle)[k-pfCandNumber];
@@ -333,7 +321,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 		    for (unsigned int l = 0; l < (pfCandNumber+lostChHadrTrackNumber); ++l) {
 
-		      if(k==l || i==l || j==l) continue;
+		      if(k==l || j==l) continue;  //if(k==l || i==l || j==l) continue;
 
 		      bool pion_isPFCand = l<pfCandNumber;
 		      const pat::PackedCandidate & pion = pion_isPFCand ? (*pfCandHandle)[l] : (*lostChHadrTrackHandle)[l-pfCandNumber];
@@ -423,15 +411,13 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		      BToKstEECand.addDaughter( kaon, "kaon");
 		      BToKstEECand.addDaughter( pion, "pion");
 
-		      BToKstEECand.addUserInt("ele1_index", isEle1PF ? i : -1);
+		      BToKstEECand.addUserInt("ele1_index", i);
 		      BToKstEECand.addUserInt("ele2_index", isEle2PF ? j : -1);
 		      BToKstEECand.addUserInt("kaon_index", kaon_isPFCand ? k : -1);
 		      BToKstEECand.addUserInt("pion_index", pion_isPFCand ? l : -1);
-		      BToKstEECand.addUserInt("ele1_lostTrack_index", isEle1PF ? -1 : i-pfCandNumber);
 		      BToKstEECand.addUserInt("ele2_lostTrack_index", isEle2PF ? -1 : j-pfCandNumber);
 		      BToKstEECand.addUserInt("kaon_lostTrack_index", kaon_isPFCand ? -1 : k-pfCandNumber);
 		      BToKstEECand.addUserInt("pion_lostTrack_index", pion_isPFCand ? -1 : l-pfCandNumber);
-		      BToKstEECand.addUserInt("ele1_isPFCand", (int)isEle1PF);
 		      BToKstEECand.addUserInt("ele2_isPFCand", (int)isEle2PF);
 		      BToKstEECand.addUserInt("kaon_isPFCand", (int)kaon_isPFCand);
 		      BToKstEECand.addUserInt("pion_isPFCand", (int)pion_isPFCand);
@@ -669,7 +655,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 
 
-bool BToKsteeProducer::EEVertexRefitting(const pat::PackedCandidate &ele1,
+bool BToKsteeProducer::EEVertexRefitting(const pat::Electron &ele1,
 				       const pat::PackedCandidate &ele2,
 				       edm::ESHandle<TransientTrackBuilder> theTTBuilder,
 				       RefCountedKinematicVertex &refitVertex,
@@ -677,7 +663,7 @@ bool BToKsteeProducer::EEVertexRefitting(const pat::PackedCandidate &ele1,
 				       RefCountedKinematicParticle &refitEle1,
 				       RefCountedKinematicParticle &refitEle2){
 
-    const reco::TransientTrack ele1TT = theTTBuilder->build(ele1.bestTrack()); //closestCtfTrackRef ?
+    const reco::TransientTrack ele1TT = theTTBuilder->build(ele1.gsfTrack()); //closestCtfTrackRef ?
     const reco::TransientTrack ele2TT = theTTBuilder->build(ele2.bestTrack());    
     
     KinematicParticleFactoryFromTransientTrack partFactory;
@@ -760,7 +746,7 @@ bool BToKsteeProducer::KstVertexRefitting(const pat::PackedCandidate &kaon,
 
 
 
-bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::PackedCandidate &ele1,
+bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::Electron &ele1,
 					       const pat::PackedCandidate &ele2,
 					       const RefCountedKinematicParticle refitKPi,
 					       edm::ESHandle<TransientTrackBuilder> theTTBuilder,					   
@@ -770,9 +756,11 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::PackedCandidate &ele1,
 					       RefCountedKinematicParticle &refitEle2,
 					       RefCountedKinematicParticle &refitKst){
 
-    const reco::TransientTrack ele1TT = theTTBuilder->build(ele1.bestTrack());
+    const reco::TransientTrack ele1TT = theTTBuilder->build(ele1.gsfTrack());
     const reco::TransientTrack ele2TT = theTTBuilder->build(ele2.bestTrack());
     const reco::TransientTrack KPiTT = refitKPi->refittedTransientTrack();
+
+    const reco::TransientTrack ele1TTel = theTTBuilder->buildfromGSF(ele1.gsfTrack(), math::XYZVector(ele1.momentum()), ele1.charge());
 
     KinematicParticleFactoryFromTransientTrack partFactory;
     KinematicParticleVertexFitter PartVtxFitter;
@@ -801,8 +789,10 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::PackedCandidate &ele1,
 
     if ( !refitVertex->vertexIsValid()) return false;
 
-    refitEle1 = partFactory.particle(ele1TT, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
-    refitEle2 = partFactory.particle(ele2TT, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
+    RefCountedKinematicParticle refitEle1N = partFactory.particle(ele1TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
+    RefCountedKinematicParticle refitEle2N = partFactory.particle(ele2TTel, ParticleMass(ElectronMass_), chi, ndf, ElectronMassErr_);
+    refitEle1 = refitEle1N;
+    refitEle2 = refitEle2N;
     refitKst = refitKPi;
 
     math::XYZVector refEle1 = refitEle1->refittedTransientTrack().track().momentum();
@@ -818,7 +808,7 @@ bool BToKsteeProducer::BToKstEEVertexRefitting(const pat::PackedCandidate &ele1,
 
 
 
-bool BToKsteeProducer::BToKPiEEVertexRefitting(const pat::PackedCandidate &ele1,
+bool BToKsteeProducer::BToKPiEEVertexRefitting(const pat::Electron &ele1,
 					       const pat::PackedCandidate &ele2,
 					       const pat::PackedCandidate &kaon,
 					       const pat::PackedCandidate &pion,
@@ -830,7 +820,7 @@ bool BToKsteeProducer::BToKPiEEVertexRefitting(const pat::PackedCandidate &ele1,
 					       RefCountedKinematicParticle &refitKaon,
 					       RefCountedKinematicParticle &refitPion){
 
-    const reco::TransientTrack ele1TT = theTTBuilder->build(ele1.bestTrack());
+    const reco::TransientTrack ele1TT = theTTBuilder->build(ele1.gsfTrack());
     const reco::TransientTrack ele2TT = theTTBuilder->build(ele2.bestTrack());
     const reco::TransientTrack kaonTT = theTTBuilder->build(kaon.bestTrack());
     const reco::TransientTrack pionTT = theTTBuilder->build(pion.bestTrack());
