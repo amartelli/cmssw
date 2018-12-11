@@ -14,6 +14,12 @@ from PhysicsTools.NanoAOD.vertices_cff import *
 from PhysicsTools.NanoAOD.met_cff import *
 from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.NanoAOD.isotracks_cff import *
+from PhysicsTools.NanoAOD.BToKmumu_cff import *
+from PhysicsTools.NanoAOD.BToKee_cff import *
+from PhysicsTools.NanoAOD.BToKpipi_cff import *
+from PhysicsTools.NanoAOD.BToKstmumu_cff import *
+from PhysicsTools.NanoAOD.BToKstee_cff import *
+from PhysicsTools.NanoAOD.PFCands_cff import *
 from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
 
 from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
@@ -123,10 +129,11 @@ nanoSequence = cms.Sequence(
         nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+metSequence+
         isoTrackSequence + # must be after all the leptons 
         linkedObjects  +
-        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + triggerObjectTables + isoTrackTables +
+        PFCandSequence +
+        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + triggerObjectTables + isoTrackTables + PFCandTables +
 	l1bits)
 
-nanoSequenceMC = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequence + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
+nanoSequenceMC = cms.Sequence(particleLevelSequence + genParticleSequence + nanoSequence + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
 
 
 from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
@@ -153,6 +160,7 @@ def nanoAOD_addDeepBTagFor80X(process):
     process.additionalendpath = cms.EndPath(patAlgosToolsTask)
     return process
 
+
 def nanoAOD_customizeCommon(process):
     run2_miniAOD_80XLegacy.toModify(process, nanoAOD_addDeepBTagFor80X)
     return process
@@ -172,6 +180,45 @@ def nanoAOD_customizeMC(process):
         process.calibratedPatPhotons80X.isMC = cms.bool(True)
     return process
 
+def nanoAOD_customizeBToKPiPi(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKpipiSequence + BToKpipiTables)
+    return process
+
+def nanoAOD_customizeBToKee(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKeeSequence + BToKsteeSequence + BToKeeTables + BToKsteeTables)
+    return process
+
+def nanoAOD_customizeBToKmumu(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKmumuSequence + BToKstmumuSequence + BToKmumuTables + BToKstmumuTables)
+    return process
+
+
+def nanoAOD_customizeLostSubLeadLepTracks(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
+    if(hasattr(process,'BToKee')):
+        process.BToKee.useLostSubLeadEleTracks=cms.bool(True)
+        process.BToKstee.useLostSubLeadEleTracks=cms.bool(True)
+#    if(hasattr(process,'BToKmumu')):                                                                                       
+#        process.BToKmumu.useLostLeadMuonTracks=cms.bool(True)                                                              
+#        process.BToKstmumu.useLostSubLeadMuonTracks=cms.bool(True)
+    return process
+
+
+def nanoAOD_customizeLostChHadrTracks(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
+    if(hasattr(process,'BToKee')):
+        process.BToKee.useLostChHadrTracks=cms.bool(True)
+        process.BToKstee.useLostChHadrTracks=cms.bool(True)
+    if(hasattr(process,'BToKmumu')):
+        process.BToKmumu.useLostTracks=cms.bool(True)
+        process.BToKstmumu.useLostTracks=cms.bool(True)
+    return process
+
 ### Era dependent customization
 _80x_sequence = nanoSequence.copy()
 #remove stuff 
@@ -182,6 +229,3 @@ _80x_sequence.insert(_80x_sequence.index(jetSequence), extraFlagsProducers)
 _80x_sequence.insert(_80x_sequence.index(l1bits)+1, extraFlagsTable)
 
 run2_miniAOD_80XLegacy.toReplaceWith( nanoSequence, _80x_sequence)
-
-	
-

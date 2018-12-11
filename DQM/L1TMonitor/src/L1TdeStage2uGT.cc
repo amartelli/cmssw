@@ -175,7 +175,6 @@ void L1TdeStage2uGT::analyze(const edm::Event & event, const edm::EventSetup & e
 }
 
 
-
 void L1TdeStage2uGT::bookHistograms(DQMStore::IBooker &ibooker, const edm::Run& run , const edm::EventSetup& es) 
 {
   gtUtil_->retrieveL1Setup(es);

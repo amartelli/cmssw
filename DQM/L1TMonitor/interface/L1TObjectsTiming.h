@@ -79,7 +79,7 @@ class L1TObjectsTiming : public DQMEDAnalyzer {
   double muonPtCut_;
   int muonQualCut_;
   
-//---------Histograms booking---------
+  //---------Histograms booking---------
   // All bunches
   std::vector<MonitorElement*> muons_eta_phi;
   std::vector<MonitorElement*> jet_eta_phi;

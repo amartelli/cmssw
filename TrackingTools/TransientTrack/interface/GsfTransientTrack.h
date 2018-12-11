@@ -14,6 +14,7 @@
 #include "TrackingTools/PatternTools/interface/TSCPBuilderNoMaterial.h"
 #include "TrackingTools/PatternTools/interface/TransverseImpactPointExtrapolator.h"
 
+
 namespace reco {
 
   class GsfTransientTrack : public GsfTrack, public BasicTransientTrack {
@@ -21,6 +22,7 @@ namespace reco {
 
     // constructor from persistent track
     GsfTransientTrack(); 
+
     GsfTransientTrack( const GsfTrack & tk , const MagneticField* field);
     GsfTransientTrack( const GsfTrack & tk , const double time, const double dtime, const MagneticField* field);
  
@@ -33,6 +35,8 @@ namespace reco {
     GsfTransientTrack( const GsfTrack & tk , const MagneticField* field, const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry);
     GsfTransientTrack( const GsfTrack & tk , const double time, const double dtime, const MagneticField* field, const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry);
 
+    GsfTransientTrack( const GsfTrackRef & tk , const MagneticField* field, const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry,
+		       const math::XYZVector& momVal, const int chVal);
 
     GsfTransientTrack( const GsfTransientTrack & tt );
     
