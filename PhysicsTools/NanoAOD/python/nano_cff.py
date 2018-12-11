@@ -337,7 +337,6 @@ def nanoAOD_customizeKstarFinalState(process):
         process.BToKstll.isChannelKst=cms.bool(True)
     return process
 
-
 def nanoAOD_customizeLostSubLeadLepTracks(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
