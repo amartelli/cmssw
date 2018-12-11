@@ -53,7 +53,7 @@ private:
     virtual void produce(edm::Event&, const edm::EventSetup&);
     
     bool MuMuVertexRefitting(const pat::Muon & muon1,
-                             const pat::Muon & muon2,
+                             const pat::PackedCandidate & muon2,
                              edm::ESHandle<TransientTrackBuilder> theTTBuilder,
                              RefCountedKinematicVertex &refitVertex,
                              RefCountedKinematicParticle &refitMuMu,
@@ -61,7 +61,7 @@ private:
                              RefCountedKinematicParticle &refitMu2);
     
     bool BToKMuMuVertexRefitting(const pat::Muon &muon1,
-                                 const pat::Muon &muon2,
+                                 const pat::PackedCandidate &muon2,
                                  const pat::PackedCandidate &kaon,
                                  edm::ESHandle<TransientTrackBuilder> theTTBuilder,
                                  RefCountedKinematicVertex &refitVertex,
@@ -95,7 +95,8 @@ private:
     edm::EDGetTokenT<reco::VertexCollection> vertexSrc_;
     edm::EDGetTokenT<std::vector<pat::Muon>> muonSrc_;
     edm::EDGetTokenT<edm::View<pat::PackedCandidate>> PFCandSrc_;
-    edm::EDGetTokenT<edm::View<pat::PackedCandidate>> lostTrackSrc_;
+    edm::EDGetTokenT<edm::View<pat::PackedCandidate>> lostSubLeadMuonTrackSrc_;
+    edm::EDGetTokenT<edm::View<pat::PackedCandidate>> lostChHadrTrackSrc_;
     
     double ptMinLeadMu_;
     double etaMaxLeadMu_;
@@ -107,8 +108,9 @@ private:
     bool diMuonCharge_;
     double JPsiMassConstraint_;
     bool save2TrkRefit_;
-    bool useLostTracks_;
-    
+    bool useLostSubLeadMuonTracks_;
+    bool useLostChHadrTracks_;
+
     float MuonMass_ = 0.10565837;
     float MuonMassErr_ = 3.5*1e-9;
     float KaonMass_ = 0.493677;
@@ -125,7 +127,8 @@ beamSpotSrc_( consumes<reco::BeamSpot> ( iConfig.getParameter<edm::InputTag>( "b
 vertexSrc_( consumes<reco::VertexCollection> ( iConfig.getParameter<edm::InputTag>( "vertexCollection" ) ) ),
 muonSrc_( consumes<std::vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "muonCollection" ) ) ),
 PFCandSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "PFCandCollection" ) ) ),
-lostTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostTrackCollection" ) ) ),
+lostSubLeadMuonTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostSubLeadMuonTrackCollection" ) ) ),
+lostChHadrTrackSrc_( consumes<edm::View<pat::PackedCandidate>> ( iConfig.getParameter<edm::InputTag>( "lostChHadrTrackCollection" ) ) ),
 ptMinLeadMu_( iConfig.getParameter<double>( "LeadMuonMinPt" ) ),
 etaMaxLeadMu_( iConfig.getParameter<double>( "LeadMuonMaxEta" ) ),
 ptMinSubLeadMu_( iConfig.getParameter<double>( "SubLeadMuonMinPt" ) ),
@@ -136,7 +139,8 @@ DCASigMinKaon_( iConfig.getParameter<double>( "KaonMinDCASig" ) ),
 diMuonCharge_( iConfig.getParameter<bool>( "DiMuonChargeCheck" ) ),
 JPsiMassConstraint_( iConfig.getParameter<double>( "JPsiMassConstraint" ) ),
 save2TrkRefit_( iConfig.getParameter<bool>( "save2TrackRefit" ) ),
-useLostTracks_( iConfig.getParameter<bool>( "useLostTracks" ) )
+useLostSubLeadMuonTracks_( iConfig.getParameter<bool>( "useLostSubLeadMuonTracks" ) ),
+useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) )
 {
     produces<pat::CompositeCandidateCollection>();
 }
@@ -166,15 +170,18 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
     edm::Handle<std::vector<pat::Muon>> muonHandle;
     edm::Handle<edm::View<pat::PackedCandidate>> pfCandHandle;
-    edm::Handle<edm::View<pat::PackedCandidate>> lostTrackHandle;
+    edm::Handle<edm::View<pat::PackedCandidate>> lostSubLeadMuonTrackHandle;
+    edm::Handle<edm::View<pat::PackedCandidate>> lostChHadrTrackHandle;
     
     iEvent.getByToken(muonSrc_, muonHandle);
     iEvent.getByToken(PFCandSrc_, pfCandHandle);
-    if(useLostTracks_) iEvent.getByToken(lostTrackSrc_, lostTrackHandle);
+    if(useLostSubLeadMuonTracks_) iEvent.getByToken(lostSubLeadMuonTrackSrc_, lostSubLeadMuonTrackHandle);
+    if(useLostChHadrTracks_) iEvent.getByToken(lostChHadrTrackSrc_, lostChHadrTrackHandle);
     
     unsigned int muonNumber = muonHandle->size();
     unsigned int pfCandNumber = pfCandHandle->size();
-    unsigned int lostTrackNumber = useLostTracks_ ? lostTrackHandle->size() : 0;
+    unsigned int lostSubLeadMuonTrackNumber = useLostSubLeadMuonTracks_ ? lostSubLeadMuonTrackHandle->size() : 0;
+    unsigned int lostChHadrTrackNumber = useLostChHadrTracks_ ? lostChHadrTrackHandle->size() : 0;
     
     // Output collection
     std::unique_ptr<pat::CompositeCandidateCollection> result( new pat::CompositeCandidateCollection );
@@ -187,20 +194,26 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
             const pat::Muon & muon1 = (*muonHandle)[i];
             
+	    //have muon softID on leading muon !!
             if(!(muon1.isLooseMuon() && muon1.isSoftMuon(PV))) continue;
             if(muon1.pt()<ptMinLeadMu_ || abs(muon1.eta())>etaMaxLeadMu_) continue;
             
-            for (unsigned int j = 0; j < muonNumber; ++j) {
-                
-	        if(i==j) continue;
+	    for (unsigned int j = 0; j < (pfCandNumber+lostSubLeadMuonTrackNumber); ++j) {
+	      bool isMuon2PF = j < pfCandNumber;
 
-                const pat::Muon & muon2 = (*muonHandle)[j];
+	      const pat::PackedCandidate & muon2 = isMuon2PF ? (*pfCandHandle)[j] : (*lostSubLeadMuonTrackHandle)[j-pfCandNumber];
 
-                if(muon1.pt()<muon2.pt()) continue; //Muon 1 is always saved as the leading one
-                if(!(muon2.isLooseMuon() && muon2.isSoftMuon(PV))) continue;
-                if(muon2.pt()<ptMinSubLeadMu_ || abs(muon2.eta())>etaMaxSubLeadMu_) continue;
-                
-                if(diMuonCharge_ && muon1.charge()*muon2.charge()>0) continue;
+	      if(muon1.pt()<muon2.pt()) continue; //Muon 1 is always saved as the leading one
+	      if(muon2.pt()<ptMinSubLeadMu_ || abs(muon2.eta())>etaMaxSubLeadMu_) continue;
+
+	      if(!muon2.hasTrackDetails()) continue;
+	      //exclude neutral should be safe do not ask too much ID
+	      if(abs(muon2.pdgId()) == 0) continue;
+
+	      if(diMuonCharge_ && muon1.charge()*muon2.charge()>0) continue;
+	      // muon1 and muon2 belong to different collections need to check they are different
+	      if(deltaR(muon1, muon2) < 0.01) continue;
+
 
                 bool passedDiMuon = false;
 
@@ -247,9 +260,9 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                 }
 
                 //Kaon
-                for (unsigned int k = 0; k < (pfCandNumber+lostTrackNumber); ++k) {
+		for (unsigned int k = 0; k < (pfCandNumber+lostChHadrTrackNumber); ++k) {
                     bool isPFCand = k<pfCandNumber;
-                    const pat::PackedCandidate & pfCand = isPFCand ? (*pfCandHandle)[k] : (*lostTrackHandle)[k-pfCandNumber];
+                    const pat::PackedCandidate & pfCand = isPFCand ? (*pfCandHandle)[k] : (*lostChHadrTrackHandle)[k-pfCandNumber];
                     if(abs(pfCand.pdgId())!=211) continue; //Charged hadrons
                     if(!pfCand.hasTrackDetails()) continue;
                     if(pfCand.pt()<ptMinKaon_ || abs(pfCand.eta())>etaMaxKaon_) continue;
@@ -298,9 +311,11 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     BToKMuMuCand.addDaughter( muon2 , "muon2");
                     BToKMuMuCand.addDaughter( pfCand, "kaon");
                     BToKMuMuCand.addUserInt("mu1_index", i);
-                    BToKMuMuCand.addUserInt("mu2_index", j);
+                    BToKMuMuCand.addUserInt("mu2_index", isMuon2PF ? j : -1);
                     BToKMuMuCand.addUserInt("kaon_index", isPFCand ? k : -1);
+                    BToKMuMuCand.addUserInt("mu2_lostTrack_index", isMuon2PF ? -1 : j-pfCandNumber);
                     BToKMuMuCand.addUserInt("kaon_lostTrack_index", isPFCand ? -1 : k-pfCandNumber);
+                    BToKMuMuCand.addUserInt("muon2_isPFCand", (int)isMuon2PF);
                     BToKMuMuCand.addUserInt("kaon_isPFCand", (int)isPFCand);
 
                     math::XYZVector refitMu1V3D = refitMuon1->refittedTransientTrack().track().momentum();
@@ -438,7 +453,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 
 bool BToKmumuProducer::MuMuVertexRefitting(const pat::Muon & muon1,
-                                           const pat::Muon & muon2,
+					   const pat::PackedCandidate & muon2,
                                            edm::ESHandle<TransientTrackBuilder> theTTBuilder,
                                            RefCountedKinematicVertex &refitVertex,
                                            RefCountedKinematicParticle &refitMuMu,
@@ -446,7 +461,7 @@ bool BToKmumuProducer::MuMuVertexRefitting(const pat::Muon & muon1,
                                            RefCountedKinematicParticle &refitMu2){
     
     const reco::TransientTrack muon1TT = theTTBuilder->build(muon1.innerTrack());
-    const reco::TransientTrack muon2TT = theTTBuilder->build(muon2.innerTrack());
+    const reco::TransientTrack muon2TT = theTTBuilder->build(muon2.bestTrack());
     
     KinematicParticleFactoryFromTransientTrack partFactory;
     KinematicParticleVertexFitter PartVtxFitter;
@@ -483,7 +498,7 @@ bool BToKmumuProducer::MuMuVertexRefitting(const pat::Muon & muon1,
 
 
 bool BToKmumuProducer::BToKMuMuVertexRefitting(const pat::Muon &muon1,
-                                               const pat::Muon &muon2,
+                                               const pat::PackedCandidate &muon2,
                                                const pat::PackedCandidate &kaon,
                                                edm::ESHandle<TransientTrackBuilder> theTTBuilder,
                                                RefCountedKinematicVertex &refitVertex,
@@ -493,7 +508,7 @@ bool BToKmumuProducer::BToKMuMuVertexRefitting(const pat::Muon &muon1,
                                                RefCountedKinematicParticle &refitKaon){
 
     const reco::TransientTrack muon1TT = theTTBuilder->build(muon1.innerTrack());
-    const reco::TransientTrack muon2TT = theTTBuilder->build(muon2.innerTrack());
+    const reco::TransientTrack muon2TT = theTTBuilder->build(muon2.bestTrack());
     const reco::TransientTrack kaonTT = theTTBuilder->build(kaon.bestTrack());
 
     KinematicParticleFactoryFromTransientTrack partFactory;
