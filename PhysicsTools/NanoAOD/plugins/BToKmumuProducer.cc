@@ -111,6 +111,9 @@ private:
     bool useLostSubLeadMuonTracks_;
     bool useLostChHadrTracks_;
 
+    double vtxCL_min_;
+    double Bmass_max_;
+
     float MuonMass_ = 0.10565837;
     float MuonMassErr_ = 3.5*1e-9;
     float KaonMass_ = 0.493677;
@@ -140,7 +143,9 @@ diMuonCharge_( iConfig.getParameter<bool>( "DiMuonChargeCheck" ) ),
 JPsiMassConstraint_( iConfig.getParameter<double>( "JPsiMassConstraint" ) ),
 save2TrkRefit_( iConfig.getParameter<bool>( "save2TrackRefit" ) ),
 useLostSubLeadMuonTracks_( iConfig.getParameter<bool>( "useLostSubLeadMuonTracks" ) ),
-useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) )
+useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) ),
+vtxCL_min_( iConfig.getParameter<double>( "vtxCL_min" ) ),
+Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) )
 {
     produces<pat::CompositeCandidateCollection>();
 }
@@ -300,12 +305,25 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     double BToKMuMuVtx_CL = TMath::Prob((double)refitVertexBToKMuMu->chiSquared(),
                                                     int(rint(refitVertexBToKMuMu->degreesOfFreedom())));
 
+
+		    if(BToKMuMuVtx_CL < vtxCL_min_) continue;
                     
                     double cosAlpha = computeCosAlpha(refitBToKMuMu,refitVertexBToKMuMu,beamSpot);
                     
                     double mass_err = sqrt(refitBToKMuMu->currentState().kinematicParametersError().matrix()(6,6));
 
-                    
+                    math::XYZVector refitMu1V3D = refitMuon1->refittedTransientTrack().track().momentum();
+                    math::XYZVector refitMu2V3D = refitMuon2->refittedTransientTrack().track().momentum();
+                    math::XYZVector refitKaonV3D = refitKaon->refittedTransientTrack().track().momentum();
+
+                    TLorentzVector muon1cand;
+                    muon1cand.SetPtEtaPhiM(sqrt(refitMu1V3D.perp2()), refitMu1V3D.eta(), refitMu1V3D.phi(), MuonMass_);
+                    TLorentzVector muon2cand;
+                    muon2cand.SetPtEtaPhiM(sqrt(refitMu2V3D.perp2()), refitMu2V3D.eta(), refitMu2V3D.phi(), MuonMass_);
+
+		    double massKmumu = refitBToKMuMu->currentState().mass();
+		    if(massKmumu > Bmass_max_) continue;
+
                     pat::CompositeCandidate BToKMuMuCand;
                     BToKMuMuCand.addDaughter( muon1 , "muon1");
                     BToKMuMuCand.addDaughter( muon2 , "muon2");
@@ -318,25 +336,18 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     BToKMuMuCand.addUserInt("mu2_isPFCand", (int)isMuon2PF);
                     BToKMuMuCand.addUserInt("kaon_isPFCand", (int)isPFCand);
 
-                    math::XYZVector refitMu1V3D = refitMuon1->refittedTransientTrack().track().momentum();
                     BToKMuMuCand.addUserFloat("mu1_pt",     sqrt(refitMu1V3D.perp2()));
                     BToKMuMuCand.addUserFloat("mu1_eta",    refitMu1V3D.eta());
                     BToKMuMuCand.addUserFloat("mu1_phi",    refitMu1V3D.phi());
                     BToKMuMuCand.addUserInt("mu1_charge", refitMuon1->currentState().particleCharge());
 
-                    math::XYZVector refitMu2V3D = refitMuon2->refittedTransientTrack().track().momentum();
                     BToKMuMuCand.addUserFloat("mu2_pt",     sqrt(refitMu2V3D.perp2()));
                     BToKMuMuCand.addUserFloat("mu2_eta",    refitMu2V3D.eta());
                     BToKMuMuCand.addUserFloat("mu2_phi",    refitMu2V3D.phi());
                     BToKMuMuCand.addUserInt("mu2_charge", refitMuon2->currentState().particleCharge());
 
-                    TLorentzVector muon1cand;
-                    muon1cand.SetPtEtaPhiM(sqrt(refitMu1V3D.perp2()), refitMu1V3D.eta(), refitMu1V3D.phi(), MuonMass_);
-                    TLorentzVector muon2cand;
-                    muon2cand.SetPtEtaPhiM(sqrt(refitMu2V3D.perp2()), refitMu2V3D.eta(), refitMu2V3D.phi(), MuonMass_);
                     BToKMuMuCand.addUserFloat("mumuKFit_mumu_mass", (muon1cand+muon2cand).Mag());
 
-                    math::XYZVector refitKaonV3D = refitKaon->refittedTransientTrack().track().momentum();
                     BToKMuMuCand.addUserFloat("kaon_pt",    sqrt(refitKaonV3D.perp2()));
                     BToKMuMuCand.addUserFloat("kaon_eta",   refitKaonV3D.eta());
                     BToKMuMuCand.addUserFloat("kaon_phi",   refitKaonV3D.phi());
@@ -358,7 +369,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
                     BToKMuMuCand.addUserFloat("pt",     sqrt(refitBToKMuMuV3D.perp2()));
                     BToKMuMuCand.addUserFloat("eta",    refitBToKMuMuV3D.eta());
                     BToKMuMuCand.addUserFloat("phi",    refitBToKMuMuV3D.phi());
-                    BToKMuMuCand.addUserFloat("mass",   refitBToKMuMu->currentState().mass());
+                    BToKMuMuCand.addUserFloat("mass",   massKmumu);
                     BToKMuMuCand.addUserFloat("mass_err", mass_err);
                     
                     BToKMuMuCand.addUserFloat("Lxy", (float) LSBS/LSBSErr);

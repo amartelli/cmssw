@@ -6,7 +6,9 @@
 
 runBToKPiPi = False
 runBToKee = True
+runBToKstee = True
 runBToKmumu = False
+runBToKstmumu = False
 useLostSubLeadLepTracks = True
 useLostChHadrTracks = True
 
@@ -31,13 +33,14 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(50)
 )
 
+
 # Input source
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring('/store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/710000/E8D42FDB-2460-E811-A2A5-FA163EB200B1.root'),
+                            #fileNames = cms.untracked.vstring('/store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/710000/E8D42FDB-2460-E811-A2A5-FA163EB200B1.root'),
                             #runB
                             #fileNames = cms.untracked.vstring('/store/data/Run2018B/ParkingBPH1/MINIAOD/PromptReco-v1/000/317/661/00000/CAEB5FA7-E86F-E811-9FCD-FA163EFA0B3E.root'),
                             #runD
-                            #fileNames = cms.untracked.vstring('/store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root'),
+                            fileNames = cms.untracked.vstring('/store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root'),
                             secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -101,6 +104,12 @@ if runBToKee:
 if runBToKmumu:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKmumu
     process = nanoAOD_customizeBToKmumu(process)
+if runBToKstee:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKstee
+    process = nanoAOD_customizeBToKstee(process)
+if runBToKstmumu:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKstmumu
+    process = nanoAOD_customizeBToKstmumu(process)
 if useLostSubLeadLepTracks:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostSubLeadLepTracks
     process = nanoAOD_customizeLostSubLeadLepTracks(process)
