@@ -20,7 +20,9 @@ BToKmumu=cms.EDProducer("BToKmumuProducer",
                         JPsiMassConstraint=cms.double(-1), #2-trk refitting uses measured di-muon mass
                         save2TrackRefit=cms.bool(False),
                         useLostSubLeadMuonTracks=cms.bool(False),
-                        useLostChHadrTracks=cms.bool(False)
+                        useLostChHadrTracks=cms.bool(False),
+                        vtxCL_min=cms.double(1.e-3),
+                        Bmass_max=cms.double(8.)
                         )
 
 

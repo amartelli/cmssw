@@ -342,9 +342,11 @@ def nanoAOD_customizeLostSubLeadLepTracks(process):
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
     if(hasattr(process,'BToKee')):
         process.BToKee.useLostSubLeadEleTracks=cms.bool(True)
+    if(hasattr(process,'BToKstee')):
         process.BToKstee.useLostSubLeadEleTracks=cms.bool(True)
     if(hasattr(process,'BToKmumu')):
         process.BToKmumu.useLostSubLeadMuonTracks=cms.bool(True)
+    if(hasattr(process,'BToKstmumu')):
         process.BToKstmumu.useLostSubLeadMuonTracks=cms.bool(True)
     return process
 
