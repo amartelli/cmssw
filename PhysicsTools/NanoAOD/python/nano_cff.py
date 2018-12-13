@@ -214,12 +214,22 @@ def nanoAOD_customizeBToKPiPi(process):
 
 def nanoAOD_customizeBToKee(process):
     process = nanoAOD_customizeCommon(process)
-    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKeeSequence + BToKsteeSequence + BToKeeTables + BToKsteeTables)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKeeSequence + BToKeeTables)
+    return process
+
+def nanoAOD_customizeBToKstee(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKsteeSequence + BToKsteeTables)
     return process
 
 def nanoAOD_customizeBToKmumu(process):
     process = nanoAOD_customizeCommon(process)
-    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKmumuSequence + BToKstmumuSequence + BToKmumuTables + BToKstmumuTables)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKmumuSequence + BToKmumuTables)
+    return process
+
+def nanoAOD_customizeBToKstmumu(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstmumuSequence + BToKstmumuTables)
     return process
 
 
@@ -228,9 +238,11 @@ def nanoAOD_customizeLostSubLeadLepTracks(process):
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
     if(hasattr(process,'BToKee')):
         process.BToKee.useLostSubLeadEleTracks=cms.bool(True)
+    if(hasattr(process,'BToKstee')):
         process.BToKstee.useLostSubLeadEleTracks=cms.bool(True)
     if(hasattr(process,'BToKmumu')):
         process.BToKmumu.useLostSubLeadMuonTracks=cms.bool(True)
+    if(hasattr(process,'BToKstmumu')):
         process.BToKstmumu.useLostSubLeadMuonTracks=cms.bool(True)
     return process
 
@@ -240,9 +252,11 @@ def nanoAOD_customizeLostChHadrTracks(process):
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
     if(hasattr(process,'BToKee')):
         process.BToKee.useLostChHadrTracks=cms.bool(True)
+    if(hasattr(process,'BToKstee')):
         process.BToKstee.useLostChHadrTracks=cms.bool(True)
     if(hasattr(process,'BToKmumu')):
         process.BToKmumu.useLostChHadrTracks=cms.bool(True)
+    if(hasattr(process,'BToKstmumu')):
         process.BToKstmumu.useLostChHadTracks=cms.bool(True)
     return process
 

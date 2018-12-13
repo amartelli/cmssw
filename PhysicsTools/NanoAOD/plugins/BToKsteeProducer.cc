@@ -146,6 +146,8 @@ private:
     bool useLostSubLeadEleTracks_;
     bool useLostChHadrTracks_;
 
+    double vtxCL_min_;
+    double Bmass_max_;
     
     float ElectronMass_ = 0.5109989e-3;
     float ElectronMassErr_ = 3.1*1e-12;
@@ -185,7 +187,9 @@ KstMassConstraint_( iConfig.getParameter<double>( "KstMassConstraint" ) ),
 save2TrkRefit_( iConfig.getParameter<bool>( "save2TrackRefit" ) ),
 save4TrkRefit_( iConfig.getParameter<bool>( "save4TrackRefit" ) ),
 useLostSubLeadEleTracks_( iConfig.getParameter<bool>( "useLostSubLeadEleTracks" ) ),
-useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) )
+useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) ),
+vtxCL_min_( iConfig.getParameter<double>( "vtxCL_min" ) ),
+Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) )
 {
     produces<pat::CompositeCandidateCollection>();
 }
@@ -391,7 +395,8 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		      double BToKstEEVtx_CL = TMath::Prob((double)refitVertexBToKstEE->chiSquared(),
 							  int(rint(refitVertexBToKstEE->degreesOfFreedom())));
 
-                    
+		      if(BToKstEEVtx_CL < vtxCL_min_) continue;
+
 		      double cosAlpha = computeCosAlpha(refitBToKstEEV3D,refitVertexBToKstEE,beamSpot);
                     
 		      //double mass_err = sqrt(refitBToKstEE->currentState().kinematicParametersError().matrix()(6,6));
@@ -402,7 +407,17 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		      math::XYZVector refitKst_BToKstEE_V3D = refitKst_BToKstEE->refittedTransientTrack().track().momentum();
 		      //math::XYZVector refitBToKstEEV3D = refitEle1V3D + refitEle2V3D + refitKst_BToKstEE_V3D;
 
+		      TLorentzVector ele1cand;
+		      ele1cand.SetPtEtaPhiM(sqrt(refitEle1V3D.perp2()), refitEle1V3D.eta(), refitEle1V3D.phi(), ElectronMass_);
+		      TLorentzVector ele2cand;
+		      ele2cand.SetPtEtaPhiM(sqrt(refitEle2V3D.perp2()), refitEle2V3D.eta(), refitEle2V3D.phi(), ElectronMass_);
+		      TLorentzVector refitKst_BToKstEE_V3D_cand;
+		      refitKst_BToKstEE_V3D_cand.SetPtEtaPhiM(sqrt(refitKst_BToKstEE_V3D.perp2()), refitKst_BToKstEE_V3D.eta(),
+							      refitKst_BToKstEE_V3D.phi(), refitKst->currentState().mass());
 
+
+		      double massKstee = (ele1cand+ele2cand+refitKst_BToKstEE_V3D_cand).Mag();
+		      if(massKstee > Bmass_max_) continue;
       
 		      pat::CompositeCandidate BToKstEECand;
 		      BToKstEECand.addDaughter( ele1, "ele1");
@@ -431,10 +446,6 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		      BToKstEECand.addUserFloat("ele2_phi",    refitEle2V3D.phi());
 		      BToKstEECand.addUserInt("ele2_charge", refitEle2->currentState().particleCharge());
 
-		      TLorentzVector ele1cand;
-		      ele1cand.SetPtEtaPhiM(sqrt(refitEle1V3D.perp2()), refitEle1V3D.eta(), refitEle1V3D.phi(), ElectronMass_);
-		      TLorentzVector ele2cand;
-		      ele2cand.SetPtEtaPhiM(sqrt(refitEle2V3D.perp2()), refitEle2V3D.eta(), refitEle2V3D.phi(), ElectronMass_);
 		      BToKstEECand.addUserFloat("eeKPiFit_e_mass", (ele1cand+ele2cand).Mag());
 
 		      BToKstEECand.addUserFloat("kaon_pt",     sqrt(refitKaonV3D_Kst.perp2()));
@@ -459,19 +470,11 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		      BToKstEECand.addUserFloat("Kst_Chi2_vtx", (float) KstVtx_Chi2);
 		      BToKstEECand.addUserFloat("Kst_CL_vtx", (float) KstVtx_CL);
 
-		      TLorentzVector refitEle1V3D_cand;
-		      refitEle1V3D_cand.SetPtEtaPhiM(sqrt(refitEle1V3D.perp2()), refitEle1V3D.eta(), refitEle1V3D.phi(), ElectronMass_);
-		      TLorentzVector refitEle2V3D_cand;
-		      refitEle2V3D_cand.SetPtEtaPhiM(sqrt(refitEle2V3D.perp2()), refitEle2V3D.eta(), refitEle2V3D.phi(), ElectronMass_);
-		      TLorentzVector refitKst_BToKstEE_V3D_cand;
-		      refitKst_BToKstEE_V3D_cand.SetPtEtaPhiM(sqrt(refitKst_BToKstEE_V3D.perp2()), refitKst_BToKstEE_V3D.eta(), 
-							      refitKst_BToKstEE_V3D.phi(), refitKst->currentState().mass());
-
 		      BToKstEECand.addUserFloat("pt",     sqrt(refitBToKstEEV3D.perp2()));
 		      BToKstEECand.addUserFloat("eta",    refitBToKstEEV3D.eta());
 		      BToKstEECand.addUserFloat("phi",    refitBToKstEEV3D.phi());
 		      //BToKstEECand.addUserFloat("mass",   refitBToKstEE->currentState().mass());
-		      BToKstEECand.addUserFloat("mass",   (refitEle1V3D_cand+refitEle2V3D_cand+refitKst_BToKstEE_V3D_cand).Mag());
+		      BToKstEECand.addUserFloat("mass",   massKstee);
 		      BToKstEECand.addUserFloat("mass_err", mass_err);
 		      BToKstEECand.addUserFloat("Lxy", (float) LSBS/LSBSErr);
 		      BToKstEECand.addUserFloat("ctxy", (float) LSBS/sqrt(refitBToKstEEV3D.perp2()));
