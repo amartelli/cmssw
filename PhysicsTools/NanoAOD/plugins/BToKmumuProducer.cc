@@ -213,7 +213,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	      if(!muon2.hasTrackDetails()) continue;
 	      //exclude neutral should be safe do not ask too much ID
-	      if(abs(muon2.pdgId()) == 0) continue;
+	      if(abs(muon2.pdgId()) == 0 || abs(muon2.pdgId()) == 11) continue;
 
 	      if(diMuonCharge_ && muon1.charge()*muon2.charge()>0) continue;
 	      // muon1 and muon2 belong to different collections need to check they are different
@@ -266,6 +266,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
                 //Kaon
 		for (unsigned int k = 0; k < (pfCandNumber+lostChHadrTrackNumber); ++k) {
+		  if(j == k) continue;
                     bool isPFCand = k<pfCandNumber;
                     const pat::PackedCandidate & pfCand = isPFCand ? (*pfCandHandle)[k] : (*lostChHadrTrackHandle)[k-pfCandNumber];
                     if(abs(pfCand.pdgId())!=211) continue; //Charged hadrons

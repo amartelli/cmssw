@@ -222,7 +222,7 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 		if(!ele2.hasTrackDetails()) continue;
 		//exclude neutral should be safe do not ask too much ID
-		if(abs(ele2.pdgId()) == 0) continue;
+		if(abs(ele2.pdgId()) == 0 || abs(ele2.pdgId()) == 13) continue;
 
                 if(diEleCharge_ && ele1.charge()*ele2.charge()>0) continue;
                 // ele1 and ele2 belong to different collections need to check they are different
