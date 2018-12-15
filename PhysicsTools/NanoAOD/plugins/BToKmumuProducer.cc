@@ -215,7 +215,7 @@ void BToKmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	      if(!muon2.hasTrackDetails()) continue;
 	      //exclude neutral should be safe do not ask too much ID
-	      if(abs(muon2.pdgId()) == 0 || abs(muon2.pdgId()) == 11) continue;
+	      if(abs(muon2.pdgId()) == 0 || abs(muon2.pdgId()) == 11 || abs(muon2.pdgId()) == 211) continue;
 
 	      if(diMuonCharge_ && muon1.charge()*muon2.charge()>0) continue;
 	      // muon1 and muon2 belong to different collections need to check they are different
