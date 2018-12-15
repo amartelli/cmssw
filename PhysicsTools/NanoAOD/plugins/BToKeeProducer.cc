@@ -125,6 +125,7 @@ private:
     bool useLostChHadrTracks_;
 
     double vtxCL_min_;
+    double Bmass_min_;
     double Bmass_max_;
     
     float ElectronMass_ = 0.5109989e-3;
@@ -156,6 +157,7 @@ save2TrkRefit_( iConfig.getParameter<bool>( "save2TrackRefit" ) ),
 useLostSubLeadEleTracks_( iConfig.getParameter<bool>( "useLostSubLeadEleTracks" ) ), 
 useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) ),
 vtxCL_min_( iConfig.getParameter<double>( "vtxCL_min" ) ),
+Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) ),
 Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) )
 {
     produces<pat::CompositeCandidateCollection>();
@@ -336,7 +338,7 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 		    double massKee = (ele1cand+ele2cand+kaoncand).Mag();
 
-		    if(massKee > Bmass_max_) continue;
+		    if( (massKee < Bmass_min_)  ||  (massKee > Bmass_max_) ) continue;
                     
                     pat::CompositeCandidate BToKEECand;
                     BToKEECand.addDaughter( ele1 , "ele1");
