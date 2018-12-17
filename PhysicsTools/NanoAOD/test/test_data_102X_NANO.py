@@ -6,8 +6,11 @@
 
 runBToKPiPi = False
 runBToKee = True
+runBToKstee = True
 runBToKmumu = False
-useLostTracks = False
+runBToKstmumu = False
+useLostSubLeadLepTracks = True
+useLostChHadrTracks = True
 
 import FWCore.ParameterSet.Config as cms
 
@@ -27,12 +30,17 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(50)
 )
+
 
 # Input source
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring('/store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/710000/E8D42FDB-2460-E811-A2A5-FA163EB200B1.root'),
+                            #fileNames = cms.untracked.vstring('/store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/710000/E8D42FDB-2460-E811-A2A5-FA163EB200B1.root'),
+                            #runB
+                            #fileNames = cms.untracked.vstring('/store/data/Run2018B/ParkingBPH1/MINIAOD/PromptReco-v1/000/317/661/00000/CAEB5FA7-E86F-E811-9FCD-FA163EFA0B3E.root'),
+                            #runD
+                            fileNames = cms.untracked.vstring('/store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root'),
                             secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -66,6 +74,8 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v11', '')
+#for runA and runB use the following
+#process.GlobalTag = GlobalTag(process.GlobalTag, '101X_dataRun2_Prompt_v10', '')
 
 # Path and EndPath definitions
 process.nanoAOD_step = cms.Path(process.nanoSequence)
@@ -94,9 +104,18 @@ if runBToKee:
 if runBToKmumu:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKmumu
     process = nanoAOD_customizeBToKmumu(process)
-if useLostTracks:
-    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostTracks
-    process = nanoAOD_customizeLostTracks(process)
+if runBToKstee:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKstee
+    process = nanoAOD_customizeBToKstee(process)
+if runBToKstmumu:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKstmumu
+    process = nanoAOD_customizeBToKstmumu(process)
+if useLostSubLeadLepTracks:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostSubLeadLepTracks
+    process = nanoAOD_customizeLostSubLeadLepTracks(process)
+if useLostChHadrTracks:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostChHadrTracks
+    process = nanoAOD_customizeLostChHadrTracks(process)
 
 # End of customisation functions
 
