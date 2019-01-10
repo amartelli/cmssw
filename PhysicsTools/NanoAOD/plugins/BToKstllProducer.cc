@@ -606,8 +606,9 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	      continue;}
 	  }
 	
-	  if((isChKst_ == true && BToKstLepLepVtx_CL < worstTag_val_idx.first) ||
-	     (isChKst_ == false && BToKLepLepVtx_CL < worstTag_val_idx.first)) continue;
+	  if((nSelectedTriplets_ != -1 && result->size() >= (unsigned int)nSelectedTriplets_) &&
+	     ((isChKst_ == true && BToKstLepLepVtx_CL < worstTag_val_idx.first) ||
+	      (isChKst_ == false && BToKLepLepVtx_CL < worstTag_val_idx.first)) ) continue;
 
 	  if(debug) std::cout << " now filling " << std::endl;
 	  pat::CompositeCandidate BToKstLLCand;
