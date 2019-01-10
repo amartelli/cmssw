@@ -147,6 +147,7 @@ private:
     bool useLostChHadrTracks_;
 
     double vtxCL_min_;
+    double Bmass_min_;
     double Bmass_max_;
     double Bmass_min_;
     
@@ -190,8 +191,8 @@ save4TrkRefit_( iConfig.getParameter<bool>( "save4TrackRefit" ) ),
 useLostSubLeadEleTracks_( iConfig.getParameter<bool>( "useLostSubLeadEleTracks" ) ),
 useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) ),
 vtxCL_min_( iConfig.getParameter<double>( "vtxCL_min" ) ),
-Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) ),
-Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) )
+Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) ),
+Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) )
 {
     produces<pat::CompositeCandidateCollection>();
 }
@@ -254,7 +255,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
                 if(!ele2.hasTrackDetails()) continue;
 		//exclude neutral should be safe do not ask too much ID
-                if(abs(ele2.pdgId()) == 0 || abs(ele2.pdgId()) == 13) continue;
+                if(abs(ele2.pdgId()) == 0 || abs(ele2.pdgId()) == 13 || abs(ele2.pdgId()) == 211) continue;
 
                 if(diEleCharge_ && ele1.charge()*ele2.charge()>0) continue;
 		// ele1 and ele2 belong to different collections need to check they are different
@@ -419,7 +420,7 @@ void BToKsteeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 
 		      double massKstee = (ele1cand+ele2cand+refitKst_BToKstEE_V3D_cand).Mag();
-		      if(massKstee > Bmass_max_ || massKstee < Bmass_min_) continue;
+		      if( (massKstee < Bmass_min_) || (massKstee > Bmass_max_) ) continue;
       
 		      pat::CompositeCandidate BToKstEECand;
 		      BToKstEECand.addDaughter( ele1, "ele1");

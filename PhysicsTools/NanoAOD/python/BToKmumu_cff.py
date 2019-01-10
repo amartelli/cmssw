@@ -22,8 +22,8 @@ BToKmumu=cms.EDProducer("BToKmumuProducer",
                         useLostSubLeadMuonTracks=cms.bool(False),
                         useLostChHadrTracks=cms.bool(False),
                         vtxCL_min=cms.double(1.e-3),
-                        Bmass_max=cms.double(8.),
-                        Bmass_min=cms.double(2.)
+                        Bmass_min=cms.double(2.),
+                        Bmass_max=cms.double(8.)
                         )
 
 

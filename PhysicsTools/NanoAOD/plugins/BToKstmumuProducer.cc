@@ -138,6 +138,7 @@ private:
     bool useLostChHadrTracks_;
 
     double vtxCL_min_;
+    double Bmass_min_;
     double Bmass_max_;
     double Bmass_min_;
 
@@ -182,9 +183,8 @@ save4TrkRefit_( iConfig.getParameter<bool>( "save4TrackRefit" ) ),
 useLostSubLeadMuonTracks_( iConfig.getParameter<bool>( "useLostSubLeadMuonTracks" ) ),
 useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) ),
 vtxCL_min_( iConfig.getParameter<double>( "vtxCL_min" ) ),
-Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) ),
-Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) )
-
+Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) ),
+Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) )
 {
     produces<pat::CompositeCandidateCollection>();
 }
@@ -245,7 +245,7 @@ void BToKstmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 	      if(muon2.pt()<ptMinSubLeadMu_ || abs(muon2.eta())>etaMaxSubLeadMu_) continue;
 	      if(!muon2.hasTrackDetails()) continue;
 	      //exclude neutral should be safe do not ask too much ID
-	      if(abs(muon2.pdgId()) == 0 || abs(muon2.pdgId()) == 11) continue;
+	      if(abs(muon2.pdgId()) == 0 || abs(muon2.pdgId()) == 11 || abs(muon2.pdgId()) == 211) continue;
 	      if(diMuonCharge_ && muon1.charge()*muon2.charge()>0) continue;
 	      // muon1 and muon2 belong to different collections need to check they are different
 	      if(deltaR(muon1, muon2) < 0.01) continue;
@@ -400,7 +400,7 @@ void BToKstmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 		      math::XYZVector refitBToKstMuMuV3D = refitMuon1V3D + refitMuon2V3D + refitKst_BToKstMuMu_V3D;
 
 		      double massKstmumu = refitBToKstMuMu->currentState().mass();
-		      if(massKstmumu > Bmass_max_ || massKstmumu < Bmass_min_) continue;
+		      if( (massKstmumu < Bmass_min_) || (massKstmumu > Bmass_max_) ) continue;
 
 		      pat::CompositeCandidate BToKstMuMuCand;
 		      BToKstMuMuCand.addDaughter( muon1, "muon1");
