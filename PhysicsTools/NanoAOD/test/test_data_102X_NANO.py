@@ -4,11 +4,17 @@
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
 # with command line options: test_data_102X -s NANO --data --eventcontent NANOAOD --datatier NANOAOD --filein /store/data/Run2018A/ParkingBPH1/MINIAOD/14May2018-v1/710000/E8D42FDB-2460-E811-A2A5-FA163EB200B1.root --conditions 102X_dataRun2_Prompt_v11 -n 100 --era Run2_2018 --customise_commands=process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 
+##to be removed next
 runBToKPiPi = False
-runBToKee = True
-runBToKstee = True
+runBToKee = False
+runBToKstee = False
 runBToKmumu = False
 runBToKstmumu = False
+
+##new default to tune
+runBToKstll = True
+eleFinalState = True
+kstarFinalState = False
 useLostSubLeadLepTracks = True
 useLostChHadrTracks = True
 
@@ -95,6 +101,7 @@ from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeData
 #call to customisation function nanoAOD_customizeData imported from PhysicsTools.NanoAOD.nano_cff
 process = nanoAOD_customizeData(process)
 
+##remove in future                                                                                                                            
 if runBToKPiPi:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKPiPi
     process = nanoAOD_customizeBToKPiPi(process)
@@ -110,6 +117,17 @@ if runBToKstee:
 if runBToKstmumu:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKstmumu
     process = nanoAOD_customizeBToKstmumu(process)
+
+##the following should be enough                                                   
+if runBToKstll:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeBToKstll
+    process = nanoAOD_customizeBToKstll(process)
+if eleFinalState:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeEleFinalState
+    process = nanoAOD_customizeEleFinalState(process)
+if kstarFinalState:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeKstarFinalState
+    process = nanoAOD_customizeKstarFinalState(process)
 if useLostSubLeadLepTracks:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostSubLeadLepTracks
     process = nanoAOD_customizeLostSubLeadLepTracks(process)
