@@ -114,7 +114,6 @@ private:
     double vtxCL_min_;
     double Bmass_min_;
     double Bmass_max_;
-    double Bmass_min_;
 
     float MuonMass_ = 0.10565837;
     float MuonMassErr_ = 3.5*1e-9;

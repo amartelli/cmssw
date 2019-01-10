@@ -127,7 +127,6 @@ private:
     double vtxCL_min_;
     double Bmass_min_;
     double Bmass_max_;
-    double Bmass_min_;
     
     float ElectronMass_ = 0.5109989e-3;
     float ElectronMassErr_ = 3.1*1e-12;
