@@ -15,6 +15,7 @@ from PhysicsTools.NanoAOD.vertices_cff import *
 from PhysicsTools.NanoAOD.met_cff import *
 from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.NanoAOD.isotracks_cff import *
+from PhysicsTools.NanoAOD.BToKstll_cff import *
 from PhysicsTools.NanoAOD.BToKmumu_cff import *
 from PhysicsTools.NanoAOD.BToKee_cff import *
 from PhysicsTools.NanoAOD.BToKpipi_cff import *
@@ -207,6 +208,11 @@ def nanoAOD_customizeMC(process):
         process.calibratedPatPhotons80X.isMC = cms.bool(True)
     return process
 
+def nanoAOD_customizeBToKstll(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
+    return process
+
 def nanoAOD_customizeBToKPiPi(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( process.nanoSequence + BToKpipiSequence + BToKpipiTables)
@@ -232,10 +238,25 @@ def nanoAOD_customizeBToKstmumu(process):
     process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstmumuSequence + BToKstmumuTables)
     return process
 
+def nanoAOD_customizeEleFinalState(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
+    if(hasattr(process,'BToKstll')):
+        process.BToKstll.isLeptonElectron=cms.bool(True)
+    return process
+
+def nanoAOD_customizeKstarFinalState(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
+    if(hasattr(process,'BToKstll')):
+        process.BToKstll.isChannelKst=cms.bool(True)
+    return process
 
 def nanoAOD_customizeLostSubLeadLepTracks(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
+    if(hasattr(process,'BToKstll')):
+        process.BToKstll.useLostSubLeadLepTracks=cms.bool(True)
     if(hasattr(process,'BToKee')):
         process.BToKee.useLostSubLeadEleTracks=cms.bool(True)
     if(hasattr(process,'BToKstee')):
@@ -250,6 +271,8 @@ def nanoAOD_customizeLostSubLeadLepTracks(process):
 def nanoAOD_customizeLostChHadrTracks(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
+    if(hasattr(process,'BToKstll')):
+        process.BToKstll.useLostChHadrTracks=cms.bool(True)
     if(hasattr(process,'BToKee')):
         process.BToKee.useLostChHadrTracks=cms.bool(True)
     if(hasattr(process,'BToKstee')):
