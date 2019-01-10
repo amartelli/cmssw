@@ -234,7 +234,7 @@ run2_nanoAOD_94X2016.toReplaceWith(slimmedElectronsWithUserData.userIntFromBools
 )
 finalElectrons = cms.EDFilter("PATElectronRefSelector",
     src = cms.InputTag("slimmedElectronsWithUserData"),
-    cut = cms.string("pt > 5 ")
+    cut = cms.string("pt > 1 ")
 )
 
 electronMVATTH= cms.EDProducer("EleBaseMVAValueMapProducer",
@@ -323,6 +323,7 @@ electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         convVeto = Var("passConversionVeto()",bool,doc="pass conversion veto"),
         lostHits = Var("gsfTrack.hitPattern.numberOfLostHits('MISSING_INNER_HITS')","uint8",doc="number of missing inner hits"),
         isPFcand = Var("pfCandidateRef().isNonnull()",bool,doc="electron is PF candidate"),
+        fBrem = Var("fbrem()",float,doc="brem fraction from the gsf fit",precision=8),
     ),
     externalVariables = cms.PSet(
         mvaTTH = ExtVar(cms.InputTag("electronMVATTH"),float, doc="TTH MVA lepton ID score",precision=14),
@@ -331,10 +332,11 @@ electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
 # scale and smearing only when available
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_94X2016:
     modifier.toModify(electronTable.variables,
-        pt = Var("pt*userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, precision=-1, doc="p_{T}"),
+        #pt = Var("pt*userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, precision=-1, doc="p_{T}"),
         energyErr = Var("userFloat('ecalTrkEnergyErrPostCorr')", float, precision=6, doc="energy error of the cluster-track combination"),
         eCorr = Var("userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, doc="ratio of the calibrated energy/miniaod energy"),
     )
+
 run2_nanoAOD_94X2016.toModify(electronTable.variables,
     cutBased = Var("userInt('cutbasedID_veto')+userInt('cutbasedID_loose')+userInt('cutbasedID_medium')+userInt('cutbasedID_tight')",int,doc="cut-based Summer16 ID (0:fail, 1:veto, 2:loose, 3:medium, 4:tight)"),
     cutBased_Fall17_V1 = Var("electronID('cutBasedElectronID-Fall17-94X-V1-veto')+electronID('cutBasedElectronID-Fall17-94X-V1-loose')+electronID('cutBasedElectronID-Fall17-94X-V1-medium')+electronID('cutBasedElectronID-Fall17-94X-V1-tight')",int,doc="cut-based Fall17 ID (0:fail, 1:veto, 2:loose, 3:medium, 4:tight)"),
@@ -362,6 +364,7 @@ run2_nanoAOD_94X2016.toModify(electronTable.variables,
     mvaFall17V2noIso_WP90 = None,
     mvaFall17V2noIso_WPL = None,
 )
+
 run2_miniAOD_80XLegacy.toModify(electronTable.variables,
     cutBased_HLTPreSel = Var("userInt('cutbasedID_HLT')",int,doc="cut-based HLT pre-selection ID"),
     mvaSpring16GP = Var("userFloat('mvaSpring16GP')",float,doc="MVA general-purpose ID score"),
