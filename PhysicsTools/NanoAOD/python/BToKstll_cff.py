@@ -18,7 +18,7 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         #case electron
                         LeadEleMinPt = cms.double(1.),
                         LeadEleMaxEta = cms.double(2.4),
-                        SubLeadEleMinPt = cms.double(0.5),
+                        SubLeadEleMinPt = cms.double(1.),
                         SubLeadEleMaxEta = cms.double(2.4),
                         #case muon
                         LeadMuonMinPt = cms.double(1.),
@@ -33,10 +33,10 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         PionMaxEta = cms.double(2.4),
                         PionMinDCASig = cms.double(-1.),
                         
-                        diLepton_dz_max = cms.double(-1.),
-                        lepKaon_dz_max = cms.double(-1.),
-                        lepPion_dz_max = cms.double(-1.),
-                        kaonPion_dz_max = cms.double(-1.),
+                        diLepton_dz_max = cms.double(2.),
+                        lepKaon_dz_max = cms.double(2.),
+                        lepPion_dz_max = cms.double(2.),
+                        kaonPion_dz_max = cms.double(2.),
 
                         DiLeptonChargeCheck = cms.bool(True),
                         KstarChargeCheck = cms.bool(True),
