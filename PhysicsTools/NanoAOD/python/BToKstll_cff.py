@@ -11,26 +11,32 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         lostSubLeadLepTrackCollection = cms.InputTag("lostTracks"),
                         lostChHadrTrackCollection = cms.InputTag("lostTracks"),
 
-                        nSelectedTriplets = cms.int32(50),
+                        nSelectedTriplets = cms.int32(50),  #50
                         isLeptonElectron = cms.bool(False),
                         isChannelKst = cms.bool(False),
 
                         #case electron
                         LeadEleMinPt = cms.double(1.),
                         LeadEleMaxEta = cms.double(2.4),
-                        SubLeadEleMinPt = cms.double(1.),
+                        SubLeadEleMinPt = cms.double(0.5),
                         SubLeadEleMaxEta = cms.double(2.4),
                         #case muon
                         LeadMuonMinPt = cms.double(1.),
                         LeadMuonMaxEta = cms.double(2.4),
-                        SubLeadMuonMinPt = cms.double(1.),
+                        SubLeadMuonMinPt = cms.double(0.5),
                         SubLeadMuonMaxEta = cms.double(2.4),
+
                         KaonMinPt = cms.double(1.),
                         KaonMaxEta = cms.double(2.4),
-                        KaonMinDCASig = cms.double(3.3),
+                        KaonMinDCASig = cms.double(-1.),
                         PionMinPt = cms.double(1.),
                         PionMaxEta = cms.double(2.4),
-                        PionMinDCASig = cms.double(3.3),
+                        PionMinDCASig = cms.double(-1.),
+                        
+                        diLepton_dz_max = cms.double(-1.),
+                        lepKaon_dz_max = cms.double(-1.),
+                        lepPion_dz_max = cms.double(-1.),
+                        kaonPion_dz_max = cms.double(-1.),
 
                         DiLeptonChargeCheck = cms.bool(True),
                         KstarChargeCheck = cms.bool(True),
@@ -40,9 +46,9 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         #save4TrackRefit = cms.bool(False),
                         useLostSubLeadLepTracks = cms.bool(False),
                         useLostChHadrTracks = cms.bool(False),
-                        vtxCL_min = cms.double(1.e-3),
-                        Bmass_min = cms.double(2.),
-                        Bmass_max = cms.double(8.),
+                        vtxCL_min = cms.double(1.e-3),  #e-3
+                        Bmass_min = cms.double(2.),     # 2.
+                        Bmass_max = cms.double(8.),     #8.
                         Bmass_Kst_min = cms.double(2.),
                         Bmass_Kst_max = cms.double(8.)
                       )

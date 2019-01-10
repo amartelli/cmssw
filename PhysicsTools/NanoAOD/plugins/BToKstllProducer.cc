@@ -131,6 +131,11 @@ private:
   double Bmass_Kst_min_;
   double Bmass_Kst_max_;
 
+  double diLepton_dz_max_;
+  double lepKaon_dz_max_;
+  double lepPion_dz_max_;
+  double kaonPion_dz_max_;
+
   float ElectronMass_ = 0.5109989e-3;
   float ElectronMassErr_ = 3.1*1e-12;
   float MuonMass_ = 0.10565837;
@@ -192,7 +197,11 @@ BToKstllProducer::BToKstllProducer(const edm::ParameterSet &iConfig):
   Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) ),
   Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) ),
   Bmass_Kst_min_( iConfig.getParameter<double>( "Bmass_Kst_min" ) ),
-  Bmass_Kst_max_( iConfig.getParameter<double>( "Bmass_Kst_max" ) )
+  Bmass_Kst_max_( iConfig.getParameter<double>( "Bmass_Kst_max" ) ),
+  diLepton_dz_max_( iConfig.getParameter<double>( "diLepton_dz_max" ) ),
+  lepKaon_dz_max_( iConfig.getParameter<double>( "lepKaon_dz_max" ) ),
+  lepPion_dz_max_( iConfig.getParameter<double>( "lepPion_dz_max" ) ),
+  kaonPion_dz_max_( iConfig.getParameter<double>( "kaonPion_dz_max" ) )
 {
   lep1Mass_ = (isLepEle_) ? ElectronMass_ : MuonMass_;
   lep2Mass_ = lep1Mass_;
@@ -246,7 +255,6 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
   unsigned int lostChHadrTrackNumber = useLostChHadrTracks_ ? lostChHadrTrackHandle->size() : 0;
     
   bool isLep2PFL = useLostSubLeadLepTracks_ ? false : true;
-  bool checkdZ = true;
   // Output collection
   std::unique_ptr<pat::CompositeCandidateCollection> result( new pat::CompositeCandidateCollection );
   std::vector<float> resultTag;
@@ -372,7 +380,9 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	if(!isLep2PFL && deltaR(lepton1.Eta(), lepton1.Phi(), lepton2.Eta(), lepton2.Phi()) < 0.01) continue;
 	if(debug) std::cout << " passed lepton 2 " << std::endl;
 
-	if(debug && checkdZ){
+	if(diLepton_dz_max_ > -1. && std::abs(lepton2VZ - lepton1VZ) > diLepton_dz_max_) continue;
+
+	if(debug){
 	  std::cout << " 1_vz =  " << lepton1VZ << " 2_vz = " << lepton2VZ << std::endl; 
 	  //study first then in case if > 1 continue;
 	}
@@ -421,7 +431,10 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	  if(debug) std::cout << " passed kaon " << std::endl;	  
 
-	  if(debug && checkdZ){
+	  if(lepKaon_dz_max_ > -1. && 
+	     std::max(std::abs(lepton2VZ - kaon.vz()), std::abs(lepton1VZ - kaon.vz())) > lepKaon_dz_max_ ) continue;
+
+	  if(debug){
 	    std::cout << " kaon.vz() =  " << kaon.vz() << std::endl;
 	    //if > 1.5 continue
 	  }
@@ -493,7 +506,11 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		 deltaR(lepton2.Eta(), lepton2.Phi(), pion.eta(), pion.phi()) < 0.01 ||
 		 deltaR(kaon, pion) < 0.01) continue;
 	      
-	      if(debug && checkdZ){
+	      if(lepPion_dz_max_ > -1. &&
+		 std::max(std::abs(lepton2VZ - pion.vz()), std::abs(lepton1VZ - pion.vz())) > lepPion_dz_max_ ) continue;
+	      if(kaonPion_dz_max_ > -1. && std::abs(kaon.vz() - pion.vz()) > kaonPion_dz_max_) continue;
+
+	      if(debug){
 		std::cout << " pion.vz() =  " << pion.vz() << std::endl;
 		//if > 1.5 continue
 	      }
