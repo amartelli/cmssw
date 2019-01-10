@@ -298,6 +298,11 @@ def nanoAOD_customizeBToKstll(process):
     process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
     return process
 
+def nanoAOD_customizeBToKstll(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
+    return process
+
 def nanoAOD_customizeBToKPiPi(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( process.nanoSequence + BToKpipiSequence + BToKpipiTables)
@@ -340,6 +345,8 @@ def nanoAOD_customizeKstarFinalState(process):
 def nanoAOD_customizeLostSubLeadLepTracks(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
+    if(hasattr(process,'BToKstll')):
+        process.BToKstll.useLostSubLeadLepTracks=cms.bool(True)
     if(hasattr(process,'BToKee')):
         process.BToKee.useLostSubLeadEleTracks=cms.bool(True)
     if(hasattr(process,'BToKstee')):
