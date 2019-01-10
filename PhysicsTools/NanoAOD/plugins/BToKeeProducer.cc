@@ -126,6 +126,7 @@ private:
 
     double vtxCL_min_;
     double Bmass_max_;
+    double Bmass_min_;
     
     float ElectronMass_ = 0.5109989e-3;
     float ElectronMassErr_ = 3.1*1e-12;
@@ -156,7 +157,8 @@ save2TrkRefit_( iConfig.getParameter<bool>( "save2TrackRefit" ) ),
 useLostSubLeadEleTracks_( iConfig.getParameter<bool>( "useLostSubLeadEleTracks" ) ), 
 useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) ),
 vtxCL_min_( iConfig.getParameter<double>( "vtxCL_min" ) ),
-Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) )
+Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) ),
+Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) )
 {
     produces<pat::CompositeCandidateCollection>();
 }
@@ -336,7 +338,7 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 		    double massKee = (ele1cand+ele2cand+kaoncand).Mag();
 
-		    if(massKee > Bmass_max_) continue;
+		    if(massKee > Bmass_max_ || massKee < Bmass_min_) continue;
                     
                     pat::CompositeCandidate BToKEECand;
                     BToKEECand.addDaughter( ele1 , "ele1");
@@ -469,7 +471,9 @@ void BToKeeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         
     }
-    
+
+    std::cout << " result->size() = " << result->size() << std::endl;    
+
     //iEvent.put(result);
     iEvent.put(std::move(result));
     

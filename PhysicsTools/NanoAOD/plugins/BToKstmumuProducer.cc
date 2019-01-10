@@ -139,6 +139,7 @@ private:
 
     double vtxCL_min_;
     double Bmass_max_;
+    double Bmass_min_;
 
     float MuonMass_ = 0.10565837;
     float MuonMassErr_ = 3.5*1e-9;
@@ -181,7 +182,8 @@ save4TrkRefit_( iConfig.getParameter<bool>( "save4TrackRefit" ) ),
 useLostSubLeadMuonTracks_( iConfig.getParameter<bool>( "useLostSubLeadMuonTracks" ) ),
 useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) ),
 vtxCL_min_( iConfig.getParameter<double>( "vtxCL_min" ) ),
-Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) )
+Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) ),
+Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) )
 
 {
     produces<pat::CompositeCandidateCollection>();
@@ -398,7 +400,7 @@ void BToKstmumuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 		      math::XYZVector refitBToKstMuMuV3D = refitMuon1V3D + refitMuon2V3D + refitKst_BToKstMuMu_V3D;
 
 		      double massKstmumu = refitBToKstMuMu->currentState().mass();
-		      if(massKstmumu > Bmass_max_) continue;
+		      if(massKstmumu > Bmass_max_ || massKstmumu < Bmass_min_) continue;
 
 		      pat::CompositeCandidate BToKstMuMuCand;
 		      BToKstMuMuCand.addDaughter( muon1, "muon1");
