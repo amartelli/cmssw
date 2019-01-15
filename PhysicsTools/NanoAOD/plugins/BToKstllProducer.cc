@@ -145,8 +145,8 @@ private:
   double lepPion_dz_max_;
   double kaonPion_dz_max_;
   double kaonRefitllVertex_dxy_max_;
-  double kll_dxyPV_max_;
-  double IPPV_llRefitVtx_;
+  double kll_dxyPV_min_;
+  double IPPV_llRefitVtx_min_;
 
   float ElectronMass_ = 0.5109989e-3;
   float ElectronMassErr_ = 3.1*1e-12;
@@ -215,8 +215,8 @@ BToKstllProducer::BToKstllProducer(const edm::ParameterSet &iConfig):
   lepPion_dz_max_( iConfig.getParameter<double>( "lepPion_dz_max" ) ),
   kaonPion_dz_max_( iConfig.getParameter<double>( "kaonPion_dz_max" ) ),
   kaonRefitllVertex_dxy_max_( iConfig.getParameter<double>( "kaonRefitllVertex_dxy_max" ) ),
-  kll_dxyPV_max_( iConfig.getParameter<double>( "kll_dxyPV_max" ) ),
-  IPPV_llRefitVtx_( iConfig.getParameter<double>( "IPPV_llRefitVtx" ) )
+  kll_dxyPV_min_( iConfig.getParameter<double>( "kll_dxyPV_min" ) ),
+  IPPV_llRefitVtx_min_( iConfig.getParameter<double>( "IPPV_llRefitVtx_min" ) )
 {
   lep1Mass_ = (isLepEle_) ? ElectronMass_ : MuonMass_;
   lep2Mass_ = lep1Mass_;
@@ -526,7 +526,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 				       int(rint(refitVertexLepLep_2trks->degreesOfFreedom())));
 	  }
 	}
-	if(save2TrkRefit_ && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_) continue;
+	if(save2TrkRefit_ && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
 
 	if(save2TrkRefit_ && !passedDiLepton) continue;
 	const math::XYZPoint &leplepRefitVertex = (save2TrkRefit_ && passedDiLepton) ? math::XYZPoint(refitVertexLepLep_2trks->position()) : math::XYZPoint(0.,0.,0.);
@@ -550,7 +550,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	  float kaon_dxyS = kaon.dxy()/kaon.dxyError();
 	  float maxl1l2k_dxyS = std::max(maxl1l2_dxyS, kaon_dxyS);
-	  if(std::abs(maxl1l2k_dxyS) < kll_dxyPV_max_) continue;
+	  if(std::abs(maxl1l2k_dxyS) < kll_dxyPV_min_) continue;
 
 	  if(debug) std::cout << " passed kaon " << std::endl;	  
 
