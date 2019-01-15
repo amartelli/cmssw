@@ -23,7 +23,7 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         #case muon
                         LeadMuonMinPt = cms.double(1.),
                         LeadMuonMaxEta = cms.double(2.4),
-                        SubLeadMuonMinPt = cms.double(0.5),
+                        SubLeadMuonMinPt = cms.double(1.),
                         SubLeadMuonMaxEta = cms.double(2.4),
 
                         KaonMinPt = cms.double(1.),
@@ -37,13 +37,16 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         lepKaon_dz_max = cms.double(2.),
                         lepPion_dz_max = cms.double(2.),
                         kaonPion_dz_max = cms.double(2.),
+                        kaonRefitllVertex_dxy_max = cms.double(1000.), # > 0.2 ?
+                        kll_dxyPV_max = cms.double(0.),  #<1 ?
 
                         DiLeptonChargeCheck = cms.bool(True),
                         KstarChargeCheck = cms.bool(True),
                         JPsiMassConstraint = cms.double(-1), #2-trk refitting uses measured di-ele mass
                         KstMassConstraint = cms.double(0.89176), #2-trk refitting uses nominal K*(892) mass
-                        save2TrackRefit = cms.bool(False),
+                        save2TrackRefit = cms.bool(True),
                         #save4TrackRefit = cms.bool(False),
+                        IPPV_llRefitVtx = cms.double(0.),  #<1 ?
                         useLostSubLeadLepTracks = cms.bool(False),
                         useLostChHadrTracks = cms.bool(False),
                         vtxCL_min = cms.double(1.e-3),  #e-3
@@ -82,7 +85,9 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                  lep1_phi=Var("userFloat('lep1_phi')", float,doc="phi of leading lepton"),
                                  lep1_charge=Var("userInt('lep1_charge')", int,doc="charge of leading lepton"),
                                  lep1_dxy=Var("userFloat('lep1_dxy')", float,doc="dxy of leading lepton (with sign) wrt first PV, in cm"),
+                                 lep1_dxyS=Var("userFloat('lep1_dxyS')", float,doc="dxy/err of leading lepton (with sign) wrt first PV, in cm"),
                                  lep1_dz=Var("userFloat('lep1_dz')", float,doc="dz of leading lepton (with sign) wrt first PV, in cm"),
+                                 lep1_dzS=Var("userFloat('lep1_dzS')", float,doc="dz/err of leading lepton (with sign) wrt first PV, in cm"),
                                  lep1_vz=Var("userFloat('lep1_vz')", float,doc="z coordinate of vertex position for lep1"),
 
                                  lep2_pt=Var("userFloat('lep2_pt')", float,doc="pt of subleading lepton"),
@@ -90,7 +95,9 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                  lep2_phi=Var("userFloat('lep2_phi')", float,doc="phi of subleading lepton"),
                                  lep2_charge=Var("userInt('lep2_charge')", int,doc="charge of subleading lepton"),
                                  lep2_dxy=Var("userFloat('lep2_dxy')", float,doc="dxy of subleading lepton (with sign) wrt first PV, in cm"),
+                                 lep2_dxyS=Var("userFloat('lep2_dxyS')", float,doc="dxy/err of subleading lepton (with sign) wrt first PV, in cm"),
                                  lep2_dz=Var("userFloat('lep2_dz')", float,doc="dz of subleading lepton (with sign) wrt first PV, in cm"),
+                                 lep2_dzS=Var("userFloat('lep2_dzS')", float,doc="dz/err of subleading lepton (with sign) wrt first PV, in cm"),
                                  lep2_vz=Var("userFloat('lep2_vz')", float,doc="z coordinate of vertex position for lep2"),
 
                                  kaon_pt=Var("userFloat('kaon_pt')", float,doc="pt of kaon"),
@@ -99,8 +106,11 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                  kaon_charge=Var("userInt('kaon_charge')", int,doc="charge of kaon"),
                                  kaon_DCASig=Var("userFloat('kaon_DCASig')", float,doc="significance of xy-distance of closest approach kaon-beamspot"),
                                  kaon_dxy=Var("daughter('kaon').dxy()", float,doc="dxy of kaon"),
+                                 kaon_dxyS=Var("userFloat('kaon_dxyS')", float,doc="dxy/err of kaon"),
                                  kaon_dz=Var("daughter('kaon').dz()", float,doc="dz of kaon"),
+                                 kaon_dzS=Var("userFloat('kaon_dzS')", float,doc="dz/err of kaon"),
                                  kaon_vz=Var("userFloat('kaon_vz')", float,doc="z coordinate of vertex position for kaon"),
+                                 kaon_dxy_wrtllVtx=Var("userFloat('kaon_dxy_wrtllVtx')", float,doc="impact parameter of kaon wrt ll refit vtx"),
 
                                  pion_pt=Var("userFloat('pion_pt')", float,doc="pt of pion"),
                                  pion_eta=Var("userFloat('pion_eta')", float,doc="eta of pion"),
@@ -108,7 +118,9 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                  pion_charge=Var("userInt('pion_charge')", int,doc="charge of pion"),
                                  pion_DCASig=Var("userFloat('pion_DCASig')", float,doc="significance of xy-distance of closest approach pion-beamspot"),
                                  pion_dxy=Var("userFloat('pion_dxy')", float,doc="dxy of pion"),
+                                 pion_dxyS=Var("userFloat('pion_dxyS')", float,doc="dxy/err of pion"),
                                  pion_dz=Var("userFloat('pion_dz')", float,doc="dz of pion"),
+                                 pion_dzS=Var("userFloat('pion_dzS')", float,doc="dz/err of pion"),
                                  pion_vz=Var("userFloat('pion_vz')", float,doc="z coordinate of vertex position for pion"),
 
                                  fitLepLep=Var("userInt('fitLepLep')", int, doc="flag 1 if lepton-lepton fit is performed"),
@@ -121,6 +133,7 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                  ll_ctxy=Var("userFloat('ll_mass')", float,doc="dielectron vertex-beamspot xy-separation/pt"),
                                  ll_Chi2_vtx=Var("userFloat('ll_Chi2_vtx')", float,doc="dilepton vertex chi2"),
                                  ll_CL_vtx=Var("userFloat('ll_Chi2_vtx')", float,doc="dilepton vertex chi2 vertex probability"),
+                                 maxl1l2_dxyS=Var("userFloat('maxl1l2_dxyS')", float,doc="max l1 l2 transverse displacement wrt PV"),
 
                                  Kst_mass=Var("userFloat('Kst_mass')", float,doc="K* mass (refitted)"),
                                  Kst_pt=Var("userFloat('Kst_pt')", float,doc="K* pt (refitted)"),
@@ -141,6 +154,7 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                  B_Chi2_vtx=Var("userFloat('B_Chi2_vtx')", float,doc="B vertex chi2"),
                                  B_CL_vtx=Var("userFloat('B_CL_vtx')", float,doc="B chi2 vertex probability"),
                                  B_cosAlpha=Var("userFloat('B_cosAlpha')", float,doc="cosine of angle between B momentum and vertex-beamspot separation"),
+                                 maxl1l2k_dxyS=Var("userFloat('maxl1l2k_dxyS')", float,doc="max l1 l2 k transverse displacement wrt PV"),
                                 )
                              )
 
