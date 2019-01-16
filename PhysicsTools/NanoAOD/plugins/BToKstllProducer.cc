@@ -530,7 +530,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 				       int(rint(refitVertexLepLep_2trks->degreesOfFreedom())));
 	  }
 	}
-	if(save2TrkRefit_ && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
+	if(save2TrkRefit_ && IPPV_llRefitVtx_min_ != -1 && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
 
 	if(save2TrkRefit_ && !passedDiLepton) continue;
 	const math::XYZPoint &leplepRefitVertex = (save2TrkRefit_ && passedDiLepton) ? math::XYZPoint(refitVertexLepLep_2trks->position()) : math::XYZPoint(0.,0.,0.);
@@ -550,11 +550,12 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	     deltaR(lepton2.Eta(), lepton2.Phi(), kaon.eta(), kaon.phi()) < 0.01 ) continue;
 
 	  float kaon_dxyFromRefitllVtx = save2TrkRefit_ ? kaon.dxy(leplepRefitVertex) : -1;
-	  if(save2TrkRefit_ && std::abs(kaon_dxyFromRefitllVtx) > kaonRefitllVertex_dxy_max_) continue;
+	  if(save2TrkRefit_ && kaonRefitllVertex_dxy_max_ != -1 &&
+	     std::abs(kaon_dxyFromRefitllVtx) > kaonRefitllVertex_dxy_max_) continue;
 
 	  float kaon_dxyS = kaon.dxy()/kaon.dxyError();
 	  float maxl1l2k_dxyS = std::max(maxl1l2_dxyS, kaon_dxyS);
-	  if(std::abs(maxl1l2k_dxyS) < kll_dxyPV_min_) continue;
+	  if(kll_dxyPV_min_ != -1 && std::abs(maxl1l2k_dxyS) < kll_dxyPV_min_) continue;
 
 	  if(debug) std::cout << " passed kaon " << std::endl;	  
 
