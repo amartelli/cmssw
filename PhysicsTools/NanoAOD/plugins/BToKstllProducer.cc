@@ -446,6 +446,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	    if(!ele2.hasTrackDetails()) continue;
 	    //exclude neutral should be safe do not ask too much ID
 	    if(abs(ele2.pdgId()) == 0) continue;
+	    //FIXME
+	    if(ele2.pt() > 3.) continue;
 
 	    lepton2TT = theTTBuilder->build(ele2.bestTrack());
 	    candLep2Dxy = ele2.dxy();
@@ -464,7 +466,9 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	    //exclude neutral should be safe do not ask too much ID
 	    if(abs(muon2.pdgId()) == 0) continue;   
 	    //muonID for pT > 3 in EB => recover with pfCand
-	    if(std::abs(muon2.eta()) > 1.497 || muon2.pt() > 3.) continue;
+	    //FIXME
+	    //if(std::abs(muon2.eta()) > 1.497 || muon2.pt() > 3.) continue;
+	    if(muon2.pt() > 3.) continue;
 	    if(debug) std::cout << " muon2 da mettere in candLep2 " << std::endl;
 
 	    lepton2TT = theTTBuilder->build(muon2.bestTrack()); 

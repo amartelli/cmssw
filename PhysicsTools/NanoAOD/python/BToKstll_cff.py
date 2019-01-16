@@ -37,7 +37,7 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         lepKaon_dz_max = cms.double(2.),
                         lepPion_dz_max = cms.double(2.),
                         kaonPion_dz_max = cms.double(2.),
-                        kaonRefitllVertex_dxy_max = cms.double(0.2), # > 0.2 ?
+                        kaonRefitllVertex_dxy_max = cms.double(0.02), # > 0.2 ?
                         kll_dxyPV_min = cms.double(1.),  #<1 ?
 
                         DiLeptonChargeCheck = cms.bool(True),
