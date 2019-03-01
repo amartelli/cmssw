@@ -355,7 +355,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
       //removableL2.clear();
 
-      for (unsigned int j = 0; j < subLeadLeptonTrackNumber; ++j) {
+      for (unsigned int j = i+1; j < subLeadLeptonTrackNumber; ++j) {
 	bool isLep2PFL = (j < leptonNumber || useLostSubLeadLepTracks_ == false) ? true : false;
 	bool isLep2PFC = (isLep2PFL == false && j < (pfCandNumber+leptonNumber)) ? true : false;
 	bool isLep2LT = (j >= (pfCandNumber+leptonNumber)) ? true : false;
