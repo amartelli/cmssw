@@ -546,7 +546,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	//Kaon
 	for (unsigned int k = 0; k < (pfCandNumber+lostChHadrTrackNumber); ++k) {
-	  if(!isLep2PFL && j == k) continue;
+	  if(!isLep2PFL && (j-leptonNumber) == k) continue;
 	  bool isKPFCand = k<pfCandNumber;
 	  const pat::PackedCandidate & kaon = isKPFCand ? (*pfCandHandle)[k] : (*lostChHadrTrackHandle)[k-pfCandNumber];
 	  
@@ -635,7 +635,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  if(isChKst_){
 	    for (unsigned int l = 0; l < (pfCandNumber+lostChHadrTrackNumber); ++l) {
 	      candPionL = l;
-	      if(!isLep2PFL && (k == l || j == l)) continue;
+	      if(!isLep2PFL && (k == l || (j-leptonNumber) == l)) continue;
 	      
 	      isPionPFCand = l<pfCandNumber;
 
