@@ -773,9 +773,13 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	      continue;}
 	  }
 	
+	  if(debug) std::cout << " result->size() = " << result->size()
+			      << " worstTag_val_idx.first = " << worstTag_val_idx.first
+			      << " isLep2PFL = " << isLep2PFL << std::endl;
+
 	  if((nSelectedTriplets_ != -1 && result->size() >= (unsigned int)nSelectedTriplets_) &&
-	     ((isChKst_ == true && BToKstLepLepVtx_CL < worstTag_val_idx.first) ||
-	      (isChKst_ == false && BToKLepLepVtx_CL < worstTag_val_idx.first)) ) continue;
+	     ((isChKst_ == true && (isLep2PFL ? (BToKstLepLepVtx_CL+2) : BToKstLepLepVtx_CL) < worstTag_val_idx.first) ||
+	      (isChKst_ == false && (isLep2PFL ? (BToKLepLepVtx_CL+2) : BToKLepLepVtx_CL) < worstTag_val_idx.first)) ) continue;
 
 	  if(debug) std::cout << " now filling " << std::endl;
 	  pat::CompositeCandidate BToKstLLCand;
@@ -792,7 +796,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  BToKstLLCand.addUserInt("lep2_lostTrack_index", isLep2LT ? j-leptonNumber-pfCandNumber : -1);
 	  BToKstLLCand.addUserInt("kaon_index", isKPFCand ? k : -1);
 	  BToKstLLCand.addUserInt("kaon_lostTrack_index", isKPFCand ? -1 : k-pfCandNumber);
-	  
+
 	  BToKstLLCand.addUserInt("lep2_isPFLep", (int)isLep2PFL);
 	  BToKstLLCand.addUserInt("lep2_isPFCand", (int)isLep2PFC);
 	  BToKstLLCand.addUserInt("kaon_isPFCand", (int)isKPFCand);
@@ -890,8 +894,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	  if(result->size() < (unsigned int)nSelectedTriplets_ || nSelectedTriplets_ == -1){
 	    result->push_back(BToKstLLCand);
-	    if(isChKst_) resultTag.push_back(BToKstLepLepVtx_CL);
-	    else resultTag.push_back(BToKLepLepVtx_CL);
+	    if(isChKst_) resultTag.push_back(isLep2PFL ? (BToKstLepLepVtx_CL+2) : BToKstLepLepVtx_CL);
+	    else resultTag.push_back(isLep2PFL ? (BToKLepLepVtx_CL+2) : BToKLepLepVtx_CL);
 	  }
 	  else{
 	    float dummyVal = 10.;
@@ -903,7 +907,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	      }
 	    }
 	    if(debug) std::cout << " worst CL = " << worstTag_val_idx.first << " with idx = " << worstTag_val_idx.second << std::endl;
-	    resultTag[worstTag_val_idx.second] = isChKst_ ? BToKstLepLepVtx_CL : BToKLepLepVtx_CL;
+	    resultTag[worstTag_val_idx.second] = isChKst_ ? (isLep2PFL ? (BToKstLepLepVtx_CL+2) : BToKstLepLepVtx_CL) :
+	      (isLep2PFL ? (BToKLepLepVtx_CL+2) : BToKLepLepVtx_CL);
 	    result->at(worstTag_val_idx.second) = BToKstLLCand;
 	  }
 
