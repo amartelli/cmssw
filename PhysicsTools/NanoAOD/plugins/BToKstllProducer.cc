@@ -169,6 +169,8 @@ private:
   //float KstMass_ = 0.89176;  //Configurable parameter  
   float KstMassErr_ = 0.25e-3;
 
+
+  int nEvent;
   bool debug;
 };
 
@@ -226,12 +228,18 @@ BToKstllProducer::BToKstllProducer(const edm::ParameterSet &iConfig):
   produces<pat::CompositeCandidateCollection>();
   //typedef std::vector<CompositeCandidate> CompositeCandidateCollection
 
+  nEvent = 0;
   debug = false;
 }
 
 
 void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     
+  ++nEvent;
+  if(debug) std::cout << " new event = " << nEvent << std::endl;
+
+
+
   edm::ESHandle<MagneticField> bFieldHandle;
   edm::ESHandle<TransientTrackBuilder> theTTBuilder;
   
@@ -762,6 +770,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	    BToKcosAlpha = computeCosAlpha(refitBToKLepLep,refitVertexBToKLepLep,beamSpot);
 	    
+	    if(debug) std::cout << " BToKLepLepVtx_CL = " << BToKLepLepVtx_CL << std::endl;
 	    if(BToKLepLepVtx_CL < vtxCL_min_){ 
 	      if(debug)std::cout << " bad BToKLepLepVtx_CL " << std::endl; 
 	      continue;}
@@ -896,8 +905,25 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	    result->push_back(BToKstLLCand);
 	    if(isChKst_) resultTag.push_back(isLep2PFL ? (BToKstLepLepVtx_CL+2) : BToKstLepLepVtx_CL);
 	    else resultTag.push_back(isLep2PFL ? (BToKLepLepVtx_CL+2) : BToKLepLepVtx_CL);
+
+	    if(worstTag_val_idx.first == 0 || resultTag[resultTag.size()-1] < worstTag_val_idx.first){
+	      worstTag_val_idx.first = resultTag[resultTag.size()-1];
+	      worstTag_val_idx.second = resultTag.size()-1;
+	    }
 	  }
 	  else{
+	    if(debug) std::cout << " worst CL = " << worstTag_val_idx.first << " with idx = " << worstTag_val_idx.second << std::endl;
+	    
+	    resultTag[worstTag_val_idx.second] = isChKst_ ? (isLep2PFL ? (BToKstLepLepVtx_CL+2) : BToKstLepLepVtx_CL) :
+	      (isLep2PFL ? (BToKLepLepVtx_CL+2) : BToKLepLepVtx_CL);
+	    result->at(worstTag_val_idx.second) = BToKstLLCand;
+
+	    if(debug){
+	      if(isChKst_) std::cout << " post push_back result->size() = " << result->size() << " BToKstLepLepVtx_CL = " << BToKstLepLepVtx_CL << std::endl;
+	      else std::cout << " post push_back result->size() = " << result->size() << " BToKLepLepVtx_CL = " << BToKLepLepVtx_CL << std::endl;
+	    }
+
+	    if(debug) std::cout << " now looking for new worst " << std::endl;
 	    float dummyVal = 10.;
 	    for(unsigned int ij=0; ij<resultTag.size(); ++ij){
 	      if(resultTag[ij] < dummyVal){
@@ -905,17 +931,11 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		worstTag_val_idx.first = dummyVal;
 		worstTag_val_idx.second = ij;
 	      }
+	      if(debug) std::cout << ij << " resultTag[ij] = " << resultTag[ij] << " dummyVal = " << dummyVal 
+				  << " worstTag_val_idx.first = " << worstTag_val_idx.first << " worstTag_val_idx.second = " << worstTag_val_idx.second << std::endl;
 	    }
-	    if(debug) std::cout << " worst CL = " << worstTag_val_idx.first << " with idx = " << worstTag_val_idx.second << std::endl;
-	    resultTag[worstTag_val_idx.second] = isChKst_ ? (isLep2PFL ? (BToKstLepLepVtx_CL+2) : BToKstLepLepVtx_CL) :
-	      (isLep2PFL ? (BToKLepLepVtx_CL+2) : BToKLepLepVtx_CL);
-	    result->at(worstTag_val_idx.second) = BToKstLLCand;
 	  }
 
-	  if(debug){
-	    if(isChKst_) std::cout << " post push_back result->size() = " << result->size() << " BToKstLepLepVtx_CL = " << BToKstLepLepVtx_CL << std::endl;
-	    else std::cout << " post push_back result->size() = " << result->size() << " BToKLepLepVtx_CL = " << BToKLepLepVtx_CL << std::endl;
-	  }
 
 	  // if(save2TrkRefit_ && passedDiLepton) std::cout << " kaonDXY = " << kaon.dxy(leplepRefitVertex)
 	  // 						 << " kaonDZ = " << kaon.dz(leplepRefitVertex) << std::endl;
