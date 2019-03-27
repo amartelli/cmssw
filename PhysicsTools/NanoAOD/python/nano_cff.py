@@ -132,21 +132,30 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False))
 
-nanoSequenceCommon = cms.Sequence(
+
+nanoSequence = cms.Sequence(
         nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+
-        isoTrackSequence + # must be after all the leptons 
+        isoTrackSequence+ # must be after all the leptons                                     
         linkedObjects  +
         PFCandSequence +
-        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables + PFCandTables
-        )
+        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + triggerObjectTables + isoTrackTables + PFCandTables +l1bits )
+
+
+nanoSequenceCommon = cms.Sequence( 
+	nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+
+        isoTrackSequence+ # must be after all the leptons 
+        linkedObjects  + 
+	PFCandSequence +
+        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables + PFCandTables  )
+
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 
-nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyFullSim)
+#nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyFullSim)
 
-nanoSequenceFS = cms.Sequence(particleLevelSequence + genParticleSequence + nanoSequenceCommon + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
+nanoSequenceFS = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequenceCommon + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
 
-nanoSequenceMC = nanoSequenceFS.copy()
-nanoSequenceMC.insert(nanoSequenceFS.index(nanoSequenceCommon)+1,nanoSequenceOnlyFullSim)
+nanoSequenceMC = cms.Sequence(particleLevelSequence + genParticleSequence + nanoSequence + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
+
 
 # modify extraFlagsTable to store ecalBadCalibFilter decision which is re-run with updated bad crystal list for 2017 and 2018 samples
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:
@@ -219,11 +228,11 @@ def nanoAOD_addDeepInfoAK8(process,addDeepBTag,addDeepBoostedJet,jecPayload):
         print("Updating process to run DeepCSV btag to AK8 jets")
         _btagDiscriminators += ['pfDeepCSVJetTags:probb','pfDeepCSVJetTags:probbb']
     if addDeepBoostedJet:
-        print("Updating process to run DeepBoostedJet on datasets before 103X")
+        #print("Updating process to run DeepBoostedJet on datasets before 103X")
         from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsAll as pfDeepBoostedJetTagsAll
         _btagDiscriminators += pfDeepBoostedJetTagsAll
     if len(_btagDiscriminators)==0: return process
-    print("Will recalculate the following discriminators on AK8 jets: "+", ".join(_btagDiscriminators))
+    #print("Will recalculate the following discriminators on AK8 jets: "+", ".join(_btagDiscriminators))
     updateJetCollection(
        process,
        jetSource = cms.InputTag('slimmedJetsAK8'),
@@ -296,11 +305,7 @@ def nanoAOD_customizeMC(process):
 def nanoAOD_customizeBToKstll(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
-    return process
-
-def nanoAOD_customizeBToKstll(process):
-    process = nanoAOD_customizeCommon(process)
-    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
+    print("in nanoAOD_customizeBToKstll")
     return process
 
 def nanoAOD_customizeBToKPiPi(process):
@@ -385,6 +390,7 @@ _80x_sequence.insert(_80x_sequence.index(simpleCleanerTable)+1, extraFlagsTable)
 run2_miniAOD_80XLegacy.toReplaceWith( nanoSequenceCommon, _80x_sequence)
 
 _102x_sequence = nanoSequenceCommon.copy()
+
 #add stuff
 _102x_sequence.insert(_102x_sequence.index(jetSequence),extraFlagsProducers102x)
 _102x_sequence.insert(_102x_sequence.index(simpleCleanerTable)+1,extraFlagsTable)

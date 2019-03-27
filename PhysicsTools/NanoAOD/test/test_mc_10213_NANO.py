@@ -29,7 +29,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100)
+    input = cms.untracked.int32(-1)
 )
 
 # Input source
@@ -82,7 +82,6 @@ associatePatAlgosToolsTask(process)
 
 # Automatic addition of the customisation function from PhysicsTools.NanoAOD.nano_cff
 from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeMC 
-
 #call to customisation function nanoAOD_customizeMC imported from PhysicsTools.NanoAOD.nano_cff
 process = nanoAOD_customizeMC(process)
 

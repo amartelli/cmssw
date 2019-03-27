@@ -5,9 +5,9 @@
 # with command line options: test_data_1025 --data -s NANO --data --eventcontent NANOAOD --datatier NANOAOD --filein /store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root --no_exec -n 100 --conditions 102X_dataRun2_Prompt_v11 --era Run2_2018 --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False))) --customise_commands=process.NANOAODoutput.fakeNameForCrab=cms.untracked.bool(True) --customise_commands=process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 
 runBToKstll = True
-eleFinalState = False
+eleFinalState = True
 kstarFinalState = False
-useLostSubLeadLepTracks = True
+useLostSubLeadLepTracks = False
 useLostChHadrTracks = True
 
 import FWCore.ParameterSet.Config as cms
@@ -33,7 +33,8 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('/store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root'),
+    #fileNames = cms.untracked.vstring('/store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root'),
+    fileNames = cms.untracked.vstring('/store/data/Run2018D/ParkingBPH5/MINIAOD/20Mar2019-v1/120000/0071842F-3A26-0D43-92F2-E2376273008E.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -65,7 +66,7 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v11', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v12', '')
 
 # Path and EndPath definitions
 process.nanoAOD_step = cms.Path(process.nanoSequence)
