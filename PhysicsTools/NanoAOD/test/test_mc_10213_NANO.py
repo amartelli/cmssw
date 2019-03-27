@@ -34,7 +34,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18MiniAOD/BuToK_ToMuMu_MuFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/PUPoissonAve20_102X_upgrade2018_realistic_v15-v2/00000/035481CF-7C75-1046-B916-72ACA28654DE.root'),
+fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18MiniAOD/BuToK_ToMuMu_MuFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/PUPoissonAve20_102X_upgrade2018_realistic_v15-v2/00000/F61219E1-1981-2B4A-B811-274A745C3443.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -44,7 +44,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('test_mc_1025 nevts:100'),
+    annotation = cms.untracked.string('test_mc_10213 nevts:100'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -58,7 +58,7 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
         dataTier = cms.untracked.string('NANOAODSIM'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('test_mc_1025_NANO.root'),
+    fileName = cms.untracked.string('test_mc_10213_NANO.root'),
     outputCommands = process.NANOAODSIMEventContent.outputCommands
 )
 

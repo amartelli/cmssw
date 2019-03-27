@@ -43,7 +43,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('test_data_1025 nevts:100'),
+    annotation = cms.untracked.string('test_data_10213 nevts:100'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -57,7 +57,7 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
         dataTier = cms.untracked.string('NANOAOD'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('test_data_1025_NANO.root'),
+    fileName = cms.untracked.string('test_data_10213_NANO.root'),
     outputCommands = process.NANOAODEventContent.outputCommands
 )
 
