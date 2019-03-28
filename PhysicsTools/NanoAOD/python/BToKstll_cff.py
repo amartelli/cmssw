@@ -33,17 +33,7 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         PionMaxEta = cms.double(2.4),
                         PionMinDCASig = cms.double(-1.),
                         
-                        ## following for lepton + lepton + track
-                        #diLepton_dz_max = cms.double(-1),
-                        #lepKaon_dz_max = cms.double(-1),
-                        #lepPion_dz_max = cms.double(-1),
-                        #kaonPion_dz_max = cms.double(-1),
-                        #kaonRefitllVertex_dxy_max = cms.double(-1), # > 0.2 ?
-                        #kll_dxyPV_min = cms.double(-1),  #<1 ?
-                        #IPPV_llRefitVtx_min = cms.double(-1),  #<1 ?
-                        ###
-
-                        ## following for lepton + track + track
+                        ## following are effective only for lepton + track + track
                         diLepton_dz_max = cms.double(2.),
                         lepKaon_dz_max = cms.double(2.),
                         lepPion_dz_max = cms.double(2.),

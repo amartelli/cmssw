@@ -509,7 +509,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	if(!isLep2PFL && deltaR(lepton1.Eta(), lepton1.Phi(), lepton2.Eta(), lepton2.Phi()) < 0.01) continue;
 	if(debug) std::cout << " passed lepton 2 " << std::endl;
 
-	if(diLepton_dz_max_ > -1. && std::abs(lepton2VZ - lepton1VZ) > diLepton_dz_max_) continue;
+	if(!isLep2PFL && diLepton_dz_max_ > -1. && std::abs(lepton2VZ - lepton1VZ) > diLepton_dz_max_) continue;
 
 	float maxl1l2_dxyS = std::max(candLep2DxyS, candLep1DxyS);
 
@@ -545,7 +545,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 				       int(rint(refitVertexLepLep_2trks->degreesOfFreedom())));
 	  }
 	}
-	if(save2TrkRefit_ && IPPV_llRefitVtx_min_ != -1 && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
+	if(!isLep2PFL && save2TrkRefit_ && IPPV_llRefitVtx_min_ != -1 && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
 
 	if(save2TrkRefit_ && !passedDiLepton) continue;
 	const math::XYZPoint &leplepRefitVertex = (save2TrkRefit_ && passedDiLepton) ? math::XYZPoint(refitVertexLepLep_2trks->position()) : math::XYZPoint(0.,0.,0.);
@@ -577,16 +577,16 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	     deltaR(lepton2.Eta(), lepton2.Phi(), kaon.eta(), kaon.phi()) < 0.01 ) continue;
 
 	  float kaon_dxyFromRefitllVtx = save2TrkRefit_ ? kaon.dxy(leplepRefitVertex) : -1;
-	  if(save2TrkRefit_ && kaonRefitllVertex_dxy_max_ != -1 &&
+	  if(!isLep2PFL && save2TrkRefit_ && kaonRefitllVertex_dxy_max_ != -1 &&
 	     std::abs(kaon_dxyFromRefitllVtx) > kaonRefitllVertex_dxy_max_) continue;
 
 	  float kaon_dxyS = kaon.dxy()/kaon.dxyError();
 	  float maxl1l2k_dxyS = std::max(maxl1l2_dxyS, kaon_dxyS);
-	  if(kll_dxyPV_min_ != -1 && std::abs(maxl1l2k_dxyS) < kll_dxyPV_min_) continue;
+	  if(!isLep2PFL && kll_dxyPV_min_ != -1 && std::abs(maxl1l2k_dxyS) < kll_dxyPV_min_) continue;
 
 	  if(debug) std::cout << " passed kaon " << std::endl;	  
 
-	  if(lepKaon_dz_max_ > -1. && 
+	  if(!isLep2PFL && lepKaon_dz_max_ > -1. && 
 	     std::max(std::abs(lepton2VZ - kaon.vz()), std::abs(lepton1VZ - kaon.vz())) > lepKaon_dz_max_ ) continue;
 
 	  if(debug){
@@ -676,9 +676,9 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 		 deltaR(lepton2.Eta(), lepton2.Phi(), pion.eta(), pion.phi()) < 0.01 ||
 		 deltaR(kaon, pion) < 0.01) continue;
 	      
-	      if(lepPion_dz_max_ > -1. &&
+	      if(!isLep2PFL && lepPion_dz_max_ > -1. &&
 		 std::max(std::abs(lepton2VZ - pion.vz()), std::abs(lepton1VZ - pion.vz())) > lepPion_dz_max_ ) continue;
-	      if(kaonPion_dz_max_ > -1. && std::abs(kaon.vz() - pion.vz()) > kaonPion_dz_max_) continue;
+	      if(!isLep2PFL && kaonPion_dz_max_ > -1. && std::abs(kaon.vz() - pion.vz()) > kaonPion_dz_max_) continue;
 
 	      if(debug){
 		std::cout << " pion.vz() =  " << pion.vz() << std::endl;
