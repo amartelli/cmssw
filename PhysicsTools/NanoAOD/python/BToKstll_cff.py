@@ -21,17 +21,13 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         isLowPtEle = cms.bool(False),
                         isChannelKst = cms.bool(False),
 
-                        #case LowPtElectron
-                        LeadBDTUnbiased = cms.double(6.5),
-                        #LeadEleMinPt = cms.double(1.),
-                        #LeadEleMaxEta = cms.double(2.4),
-                        #SubLeadEleMinPt = cms.double(1.),
-                        #SubLeadEleMaxEta = cms.double(2.4),
                         #case electron
                         LeadEleMinPt = cms.double(1.),
                         LeadEleMaxEta = cms.double(2.4),
                         SubLeadEleMinPt = cms.double(1.),
                         SubLeadEleMaxEta = cms.double(2.4),
+                        #case LowPtElectron in addition to electron
+                        LeadBDTUnbiased = cms.double(6.5),
                         #case muon
                         LeadMuonMinPt = cms.double(1.),
                         LeadMuonMaxEta = cms.double(2.4),
@@ -45,24 +41,15 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         PionMaxEta = cms.double(2.4),
                         PionMinDCASig = cms.double(-1.),
                         
-                        ## following for lepton + lepton + track
-                        diLepton_dz_max = cms.double(-1),
-                        lepKaon_dz_max = cms.double(-1),
-                        lepPion_dz_max = cms.double(-1),
-                        kaonPion_dz_max = cms.double(-1),
-                        kaonRefitllVertex_dxy_max = cms.double(-1), # > 0.2 ?
-                        kll_dxyPV_min = cms.double(-1),  #<1 ?
-                        IPPV_llRefitVtx_min = cms.double(-1),  #<1 ?
-                        ###
-
-                        ## following for lepton + track + track
-                        #diLepton_dz_max = cms.double(2.),
-                        #lepKaon_dz_max = cms.double(2.),
-                        #lepPion_dz_max = cms.double(2.),
-                        #kaonPion_dz_max = cms.double(2.),
-                        #kaonRefitllVertex_dxy_max = cms.double(0.02), # > 0.2 ?
-                        #kll_dxyPV_min = cms.double(0.02),  #<1 ?
-                        #IPPV_llRefitVtx_min = cms.double(1.),  #<1 ?
+                        ## following are only effective for lepton + track + track
+                        ## for lowPtgsfTrack effective only kaonPion_dz_max and IPPV_llRefitVtx_min
+                        diLepton_dz_max = cms.double(2.),
+                        lepKaon_dz_max = cms.double(2.),
+                        lepPion_dz_max = cms.double(2.),
+                        kaonPion_dz_max = cms.double(2.),
+                        kaonRefitllVertex_dxy_max = cms.double(0.02), # > 0.2 ?
+                        kll_dxyPV_min = cms.double(0.02),  #<1 ?
+                        IPPV_llRefitVtx_min = cms.double(1.),  #<1 ?
                         ###
 
                         DiLeptonChargeCheck = cms.bool(True),
