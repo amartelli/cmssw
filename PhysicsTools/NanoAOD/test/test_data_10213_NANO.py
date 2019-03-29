@@ -4,10 +4,12 @@
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
 # with command line options: test_data_1025 --data -s NANO --data --eventcontent NANOAOD --datatier NANOAOD --filein /store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root --no_exec -n 100 --conditions 102X_dataRun2_Prompt_v11 --era Run2_2018 --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False))) --customise_commands=process.NANOAODoutput.fakeNameForCrab=cms.untracked.bool(True) --customise_commands=process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 
+
 runBToKstll = True
 eleFinalState = True
+lowPtEleFinalState = False
 kstarFinalState = False
-useLostSubLeadLepTracks = False
+useLostSubLeadLepTracks = True ## cannot be true if lowPtEleFinalState == true
 useLostChHadrTracks = True
 
 import FWCore.ParameterSet.Config as cms
@@ -93,6 +95,9 @@ if runBToKstll:
 if eleFinalState:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeEleFinalState
     process = nanoAOD_customizeEleFinalState(process)
+if lowPtEleFinalState:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLowPtEleFinalState
+    process = nanoAOD_customizeLowPtEleFinalState(process)
 if kstarFinalState:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeKstarFinalState
     process = nanoAOD_customizeKstarFinalState(process)

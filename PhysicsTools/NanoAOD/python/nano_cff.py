@@ -305,7 +305,6 @@ def nanoAOD_customizeMC(process):
 def nanoAOD_customizeBToKstll(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
-    print("in nanoAOD_customizeBToKstll")
     return process
 
 def nanoAOD_customizeBToKPiPi(process):
@@ -338,6 +337,13 @@ def nanoAOD_customizeEleFinalState(process):
     process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
     if(hasattr(process,'BToKstll')):
         process.BToKstll.isLeptonElectron=cms.bool(True)
+    return process
+
+def nanoAOD_customizeLowPtEleFinalState(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
+    if(hasattr(process,'BToKstll')):
+        process.BToKstll.isLowPtEle=cms.bool(True)
     return process
 
 def nanoAOD_customizeKstarFinalState(process):

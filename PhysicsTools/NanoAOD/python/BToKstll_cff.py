@@ -6,6 +6,11 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         beamSpot = cms.InputTag("offlineBeamSpot"),
                         vertexCollection=cms.InputTag("offlineSlimmedPrimaryVertices"),
                         electronCollection = cms.InputTag("linkedObjects","electrons"), #same collection as in NanoAOD
+                        lowPtGsfTrackCollection = cms.InputTag("lowPtGsfEleGsfTracks::RECO"),
+                        mvaSeeds = cms.VInputTag( cms.InputTag("lowPtGsfElectronSeedValueMaps:unbiased"),
+                                                  cms.InputTag("lowPtGsfElectronSeedValueMaps:ptbiased") ),
+                        lowPtGsfLinksLT = cms.InputTag("lowPtGsfLinks","lostTracks"),
+                        lowPtGsfLinksPC = cms.InputTag("lowPtGsfLinks","packedCandidates"),
                         muonCollection = cms.InputTag("linkedObjects","muons"), #same collection as in NanoAOD
                         PFCandCollection = cms.InputTag("packedPFCandidates"),
                         lostSubLeadLepTrackCollection = cms.InputTag("lostTracks"),
@@ -13,6 +18,7 @@ BToKstll=cms.EDProducer("BToKstllProducer",
 
                         nSelectedTriplets = cms.int32(50),  #50
                         isLeptonElectron = cms.bool(False),
+                        isLowPtEle = cms.bool(False),
                         isChannelKst = cms.bool(False),
 
                         #case electron
@@ -20,6 +26,8 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         LeadEleMaxEta = cms.double(2.4),
                         SubLeadEleMinPt = cms.double(1.),
                         SubLeadEleMaxEta = cms.double(2.4),
+                        #case LowPtElectron in addition to electron
+                        LeadBDTUnbiased = cms.double(6.5),
                         #case muon
                         LeadMuonMinPt = cms.double(1.),
                         LeadMuonMaxEta = cms.double(2.4),
@@ -33,17 +41,8 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         PionMaxEta = cms.double(2.4),
                         PionMinDCASig = cms.double(-1.),
                         
-                        ## following for lepton + lepton + track
-                        #diLepton_dz_max = cms.double(-1),
-                        #lepKaon_dz_max = cms.double(-1),
-                        #lepPion_dz_max = cms.double(-1),
-                        #kaonPion_dz_max = cms.double(-1),
-                        #kaonRefitllVertex_dxy_max = cms.double(-1), # > 0.2 ?
-                        #kll_dxyPV_min = cms.double(-1),  #<1 ?
-                        #IPPV_llRefitVtx_min = cms.double(-1),  #<1 ?
-                        ###
-
-                        ## following for lepton + track + track
+                        ## following are only effective for lepton + track + track
+                        ## for lowPtgsfTrack effective only kaonPion_dz_max and IPPV_llRefitVtx_min
                         diLepton_dz_max = cms.double(2.),
                         lepKaon_dz_max = cms.double(2.),
                         lepPion_dz_max = cms.double(2.),
@@ -78,6 +77,7 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                              variables=cms.PSet(
                                  isEleCh=Var("userInt('isEleCh')", int, doc="electrons final state"),
                                  isKstCh=Var("userInt('isKstCh')", int, doc="Kstart final state"),
+                                 isLowPtEle=Var("userInt('isLowPtEle')", int, doc="low pt GsfTracks as ele"),
 
                                  lep1_index=Var("userInt('lep1_index')", int,doc="index of leading lepton in pfLepton collection"),
                                  lep2_index=Var("userInt('lep2_index')", int,doc="index of subleading lepton in pfLepton collection"),
@@ -88,6 +88,12 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                  lep2_isPFLep=Var("userInt('lep2_isPFLep')", int,doc="flag is lepton2 from PFLepton collection"),
                                  lep2_isPFCand=Var("userInt('lep2_isPFCand')", int,doc="flag is lepton2 from PFCandidate collection"),
                                  kaon_isPFCand=Var("userInt('kaon_isPFCand')", int,doc="flag is kaon from PFCandidate collection"),
+
+                                 lep1_seedBDT_unbiased=Var("userFloat('lep1_seedBDT_unbiased')", float,doc="seed BDT unbiased for lep1 -99 if not available"),
+                                 lep1_seedBDT_ptbiased=Var("userFloat('lep1_seedBDT_ptbiased')", float,doc="seed BDT ptbiased for lep1 -99 if not available"),
+                                 lep2_seedBDT_unbiased=Var("userFloat('lep2_seedBDT_unbiased')", float,doc="seed BDT unbiased for lep2 -99 if not available"),
+                                 lep2_seedBDT_ptbiased=Var("userFloat('lep2_seedBDT_ptbiased')", float,doc="seed BDT ptbiased for lep2 -99 if not available"),
+
                                  pion_index=Var("userInt('pion_index')", int,doc="PFCand index of corresponding pion"),
                                  pion_lostTrack_index=Var("userInt('pion_lostTrack_index')", int,doc="LostTrack index of corresponding pion"),
                                  pion_isPFCand=Var("userInt('pion_isPFCand')", int,doc="flag is pion from PFCand"),
