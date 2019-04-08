@@ -688,7 +688,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 				       int(rint(refitVertexLepLep_2trks->degreesOfFreedom())));
 	  }
 	}
-	if(!isLep2PFL && save2TrkRefit_ && IPPV_llRefitVtx_min_ != -1 && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
+	if(!isLep2PFL && !isLowPtEle_ && save2TrkRefit_ && IPPV_llRefitVtx_min_ != -1 && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
 
 	if(save2TrkRefit_ && !passedDiLepton) continue;
 	const math::XYZPoint &leplepRefitVertex = (save2TrkRefit_ && passedDiLepton) ? math::XYZPoint(refitVertexLepLep_2trks->position()) : math::XYZPoint(0.,0.,0.);
