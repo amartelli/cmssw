@@ -27,7 +27,8 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         SubLeadEleMinPt = cms.double(1.),
                         SubLeadEleMaxEta = cms.double(2.4),
                         #case LowPtElectron in addition to electron
-                        LeadBDTUnbiased = cms.double(2.),
+                        LeadBDTUnbiased = cms.double(4.),
+                        SubLeadBDTUnbiased = cms.double(4.),
                         #case muon
                         LeadMuonMinPt = cms.double(1.),
                         LeadMuonMaxEta = cms.double(2.4),
