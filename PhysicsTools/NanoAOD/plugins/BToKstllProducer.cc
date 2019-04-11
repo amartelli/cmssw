@@ -125,6 +125,7 @@ private:
   bool isChKst_;
 
   double bdtUnbiasedLeadLep_;
+  double bdtUnbiasedSubLeadLep_;
 
   double ptMinLeadLep_;
   double etaMaxLeadLep_;
@@ -208,6 +209,7 @@ BToKstllProducer::BToKstllProducer(const edm::ParameterSet &iConfig):
   isLowPtEle_( iConfig.getParameter<bool>( "isLowPtEle" ) ),
   isChKst_( iConfig.getParameter<bool>( "isChannelKst" ) ),
   bdtUnbiasedLeadLep_( iConfig.getParameter<double>( "LeadBDTUnbiased") ),
+  bdtUnbiasedSubLeadLep_( iConfig.getParameter<double>( "SubLeadBDTUnbiased") ),
   ptMinLeadLep_( iConfig.getParameter<double>( (isLepEle_ == true) ? "LeadEleMinPt" : "LeadMuonMinPt" ) ),
   etaMaxLeadLep_( iConfig.getParameter<double>( (isLepEle_ == true) ? "LeadEleMaxEta" : "LeadMuonMaxEta" ) ),
   ptMinSubLeadLep_( iConfig.getParameter<double>( (isLepEle_ == true) ? "SubLeadEleMinPt" : "SubLeadMuonMinPt" ) ),
@@ -506,7 +508,9 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  //could implement ele ID criteria here
 
 
-	  if(debug) std::cout << " low pt gsf Track2 idx = " << j << " gsfTrk1_seedBDT_unbiased = " << gsfTrk2_seedBDT_unbiased << std::endl; 
+	  if(debug) std::cout << " low pt gsf Track2 idx = " << j << " gsfTrk2_seedBDT_unbiased = " << gsfTrk2_seedBDT_unbiased << std::endl; 
+	  if(gsfTrk2_seedBDT_unbiased < bdtUnbiasedSubLeadLep_) continue;
+		
 	  lepton2.SetPtEtaPhiM(gsfTrk->ptMode(), gsfTrk->etaMode(), gsfTrk->phiMode(), ElectronMass_);
 
 	  pat::PackedCandidateRef ltRef = (*gsfLinkLTHandle)[gsfTrk];
