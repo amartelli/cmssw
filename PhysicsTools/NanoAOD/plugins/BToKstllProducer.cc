@@ -658,7 +658,9 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	  if(gsfTrk2_seedBDT_unbiased < bdtUnbiasedSubLeadLep_) continue;
 
-	  if(debug) std::cout << " low pt gsf Track2 idx = " << j << " gsfTrk1_seedBDT_unbiased = " << gsfTrk2_seedBDT_unbiased << std::endl; 
+	  if(debug) std::cout << " low pt gsf Track2 idx = " << j << " gsfTrk2_seedBDT_unbiased = " << gsfTrk2_seedBDT_unbiased << std::endl; 
+	  if(gsfTrk2_seedBDT_unbiased < bdtUnbiasedSubLeadLep_) continue;
+		
 	  lepton2.SetPtEtaPhiM(gsfTrk->ptMode(), gsfTrk->etaMode(), gsfTrk->phiMode(), ElectronMass_);
 
 	  lepton2VZ = gsfTrk->vz();
