@@ -2,6 +2,12 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.NanoAOD.common_cff import *
 
+#unpackedPatTrigger = cms.EDProducer("PATTriggerObjectStandAloneUnpacker",
+#    patTriggerObjectsStandAlone = cms.InputTag('slimmedPatTrigger'),
+#    triggerResults              = cms.InputTag('TriggerResults::HLT'),
+#    unpackFilterLabels = cms.bool(True)
+#)
+
 BToKstll=cms.EDProducer("BToKstllProducer",
                         beamSpot = cms.InputTag("offlineBeamSpot"),
                         vertexCollection=cms.InputTag("offlineSlimmedPrimaryVertices"),
@@ -16,6 +22,14 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         lostSubLeadLepTrackCollection = cms.InputTag("lostTracks"),
                         lostChHadrTrackCollection = cms.InputTag("lostTracks"),
 
+                        bits = cms.InputTag("TriggerResults","","HLT"),
+                        prescales = cms.InputTag("patTrigger"),
+                        #objects = cms.InputTag("selectedPatTrigger"),
+                        objects = cms.InputTag("slimmedPatTrigger"),
+
+                        trgExclusiondR = cms.double(0.4),
+                        trgAcceptdz = cms.double(1.),
+
                         nSelectedTriplets = cms.int32(50),  #50
                         isLeptonElectron = cms.bool(False),
                         isLowPtEle = cms.bool(False),
@@ -27,7 +41,8 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         SubLeadEleMinPt = cms.double(1.),
                         SubLeadEleMaxEta = cms.double(2.4),
                         #case LowPtElectron in addition to electron
-                        LeadBDTUnbiased = cms.double(2.),
+                        LeadBDTUnbiased = cms.double(1.),
+                        SubLeadBDTUnbiased = cms.double(1.),
                         #case muon
                         LeadMuonMinPt = cms.double(1.),
                         LeadMuonMaxEta = cms.double(2.4),
@@ -98,6 +113,8 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                                  pion_lostTrack_index=Var("userInt('pion_lostTrack_index')", int,doc="LostTrack index of corresponding pion"),
                                  pion_isPFCand=Var("userInt('pion_isPFCand')", int,doc="flag is pion from PFCand"),
                                  
+                                 muTrg_index=Var("userInt('muTrg_index')", int,doc="index of reco muon matched to trigger muon for that triplet"), 
+
                                  lep1_pt=Var("userFloat('lep1_pt')", float,doc="pt of leading lepton"),
                                  lep1_eta=Var("userFloat('lep1_eta')", float,doc="eta of leading lepton"),
                                  lep1_phi=Var("userFloat('lep1_phi')", float,doc="phi of leading lepton"),
@@ -178,3 +195,4 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
 
 BToKstllSequence=cms.Sequence(BToKstll)
 BToKstllTables=cms.Sequence(BToKstllTable)
+
