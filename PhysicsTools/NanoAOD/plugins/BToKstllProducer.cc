@@ -293,7 +293,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
   ++nEvent;
   if(debug) std::cout << " new event = " << nEvent << std::endl;
 
-
+  edm::Handle<reco::VertexCollection> vertexHandle;
   iEvent.getByToken(vertexSrc_, vertexHandle);
   const reco::Vertex & PV = vertexHandle->front();
 
@@ -301,19 +301,6 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
   iEvent.getByToken(triggerBits_, triggerBits);
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-  /*
-  edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
-  iEvent.getByToken(triggerPrescales_, triggerPrescales);
-  if(debug){
-    std::cout << "\n == TRIGGER PATHS = " << std::endl;
-    for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i) {
-      std::cout << "Trigger " << names.triggerName(i) <<
-	", prescale " << triggerPrescales->getPrescaleForIndex(i) <<
-	": " << (triggerBits->accept(i) ? "PASS" : "fail (or not run)")
-		<< std::endl;
-    }
-  }
-  */
 
   std::vector<std::vector<float>> triggeringMuons;
 
@@ -413,8 +400,6 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theTTBuilder);
 
   edm::Handle<reco::BeamSpot> beamSpotHandle;
-  edm::Handle<reco::VertexCollection> vertexHandle;
-    
   iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
     
   if ( ! beamSpotHandle.isValid() ) {
