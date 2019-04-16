@@ -2,12 +2,6 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.NanoAOD.common_cff import *
 
-#unpackedPatTrigger = cms.EDProducer("PATTriggerObjectStandAloneUnpacker",
-#    patTriggerObjectsStandAlone = cms.InputTag('slimmedPatTrigger'),
-#    triggerResults              = cms.InputTag('TriggerResults::HLT'),
-#    unpackFilterLabels = cms.bool(True)
-#)
-
 BToKstll=cms.EDProducer("BToKstllProducer",
                         beamSpot = cms.InputTag("offlineBeamSpot"),
                         vertexCollection=cms.InputTag("offlineSlimmedPrimaryVertices"),
