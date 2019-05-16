@@ -5,10 +5,11 @@
 # with command line options: test_mc_1025 --mc -s NANO --eventcontent NANOAODSIM --datatier NANOAODSIM --filein /store/mc/RunIIAutumn18MiniAOD/BuToK_ToMuMu_MuFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/PUPoissonAve20_102X_upgrade2018_realistic_v15-v2/00000/035481CF-7C75-1046-B916-72ACA28654DE.root --no_exec --conditions 102X_upgrade2018_realistic_v15 -n 100 --era Run2_2018 --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False))) --customise_commands=process.NANOAODSIMoutput.fakeNameForCrab=cms.untracked.bool(True) --customise_commands=process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 
 runBToKstll = True
-eleFinalState = False
-lowPtEleFinalState = False
+eleFinalState = True
+lowPtEleFinalState = True
+lowPtAndPfEleFinalState = False
 kstarFinalState = False
-useLostSubLeadLepTracks = True  ## cannot be true if lowPtEleFinalState == true
+useLostSubLeadLepTracks = False  ## cannot be true if lowPtEleFinalState == true
 useLostChHadrTracks = True
 
 import FWCore.ParameterSet.Config as cms
@@ -30,13 +31,14 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(100)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
 fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18MiniAOD/BuToK_ToMuMu_MuFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/PUPoissonAve20_102X_upgrade2018_realistic_v15-v2/00000/F61219E1-1981-2B4A-B811-274A745C3443.root'),
-    secondaryFileNames = cms.untracked.vstring()
+
+       secondaryFileNames = cms.untracked.vstring()
 )
 
 process.options = cms.untracked.PSet(
@@ -96,6 +98,9 @@ if eleFinalState:
 if lowPtEleFinalState:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLowPtEleFinalState
     process = nanoAOD_customizeLowPtEleFinalState(process)
+if lowPtAndPfEleFinalState:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLowPtAndPfEleFinalState
+    process = nanoAOD_customizeLowPtAndPfEleFinalState(process)
 if kstarFinalState:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeKstarFinalState
     process = nanoAOD_customizeKstarFinalState(process)

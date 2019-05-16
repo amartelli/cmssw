@@ -8,8 +8,9 @@
 runBToKstll = True
 eleFinalState = True
 lowPtEleFinalState = False
+lowPtAndPfEleFinalState = True
 kstarFinalState = False
-useLostSubLeadLepTracks = True ## cannot be true if lowPtEleFinalState == true
+useLostSubLeadLepTracks = False ## cannot be true if lowPtEleFinalState == true
 useLostChHadrTracks = True
 
 import FWCore.ParameterSet.Config as cms
@@ -98,6 +99,9 @@ if eleFinalState:
 if lowPtEleFinalState:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLowPtEleFinalState
     process = nanoAOD_customizeLowPtEleFinalState(process)
+if lowPtAndPfEleFinalState:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLowPtAndPfEleFinalState
+    process = nanoAOD_customizeLowPtAndPfEleFinalState(process)
 if kstarFinalState:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeKstarFinalState
     process = nanoAOD_customizeKstarFinalState(process)

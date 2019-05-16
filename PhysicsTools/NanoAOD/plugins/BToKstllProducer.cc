@@ -70,7 +70,66 @@ public:
   
     
 private:
+
+  void Init();
+  void identifyTriggeringMuons(edm::Event&, const edm::EventSetup&, const reco::Vertex &);
+  void selectPatElectrons(edm::Event&, const edm::EventSetup&);
+  void selectPatMuons(edm::Event&, const edm::EventSetup&);
+  void selectPackedCandidate(edm::Event&, const edm::EventSetup&);
+  void selectLostTracks(edm::Event&, const edm::EventSetup&);
+  void selectLowPtGsfTracks(edm::Event&, const edm::EventSetup&);
+
+
+  bool getCandLepX_PFele(unsigned int loop_index,
+			 const reco::Candidate*& candLepX,
+			 reco::TransientTrack& leptonX_TT,
+			 float candLepX_Dxy,
+			 float candLepX_Dz,
+			 float candLepX_DxyS,
+			 float candLepX_DzS,
+			 bool isSubleading, unsigned int muonTrg_index);
+
+  bool getCandLepX_LowPtEle(unsigned int loop_index,
+			    reco::TransientTrack& leptonX_TT,
+			    float candLepX_Dxy,
+			    float candLepX_Dz,
+			    float candLepX_DxyS,
+			    float candLepX_DzS,
+			    bool isSubleading, unsigned int muonTrg_index);
     
+  bool getCandLepX_PFmuon(unsigned int loop_index,
+			  const reco::Candidate*& candLepX,
+			  reco::TransientTrack& leptonX_TT,
+			  float candLepX_Dxy,
+			  float candLepX_Dz,
+			  float candLepX_DxyS,
+			  float candLepX_DzS,
+			  bool isSubleading, unsigned int muonTrg_index, 
+			  const reco::Vertex& PV);
+
+
+  bool getCandX_PackedCand(unsigned int loop_index,
+			   const reco::Candidate*& candLepX,
+			   reco::TransientTrack& candX_TT,
+			   float candX_Dxy,
+			   float candX_Dz,
+			   float candX_DxyS,
+			   float candX_DzS,
+			   bool isSubleading, bool isKloop, unsigned int muonTrg_index, 
+			   const math::XYZPoint &leplepRefitVertex=math::XYZPoint(0,0,0), 
+			   float kaon_dxyFromRefitllVtx=0);
+
+  bool getCandX_LostTracks(unsigned int loop_index,
+			   const reco::Candidate*& candLepX,
+			   reco::TransientTrack& candX_TT,
+			   float candX_Dxy,
+			   float candX_Dz,
+			   float candX_DxyS,
+			   float candX_DzS,
+			   bool isSubleading, bool isKloop, unsigned int muonTrg_index, 
+			   const math::XYZPoint &leplepRefitVertex=math::XYZPoint(0,0,0), 
+			   float kaon_dxyFromRefitllVtx=0);
+
   virtual void produce(edm::Event&, const edm::EventSetup&);
     
   bool LepLepVertexRefitting(const reco::TransientTrack &lep1TT,
@@ -131,54 +190,55 @@ private:
   edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone>> triggerObjects_;
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
   
-  double trgExclusiondR_;
-  double trgAcceptdz_;
+  float trgExclusiondR_;
+  float trgAcceptdz_;
 
   int nSelectedTriplets_;
 
   bool isLepEle_;
   bool isLowPtEle_;
+  bool isLowPtAndPfEle_;
   bool isChKst_;
 
-  double bdtUnbiasedLeadLep_;
-  double bdtUnbiasedSubLeadLep_;
+  float bdtUnbiasedLeadLep_;
+  float bdtUnbiasedSubLeadLep_;
 
-  double ptMinLeadLep_;
-  double etaMaxLeadLep_;
+  float ptMinLeadLep_;
+  float etaMaxLeadLep_;
   
-  double ptMinSubLeadLep_;
-  double etaMaxSubLeadLep_;
+  float ptMinSubLeadLep_;
+  float etaMaxSubLeadLep_;
 
-  double ptMinKaon_;
-  double etaMaxKaon_;
-  double DCASigMinKaon_;
+  float ptMinKaon_;
+  float etaMaxKaon_;
+  float DCASigMinKaon_;
 
-  double ptMinPion_;
-  double etaMaxPion_;
-  double DCASigMinPion_;
+  float ptMinPion_;
+  float etaMaxPion_;
+  float DCASigMinPion_;
 
   bool diLepCharge_;
   bool KstCharge_;
-  double JPsiMassConstraint_;
-  double KstMassConstraint_;
+  float JPsiMassConstraint_;
+  float KstMassConstraint_;
   bool save2TrkRefit_;
 
   bool useLostSubLeadLepTracks_;
   bool useLostChHadrTracks_;
 
-  double vtxCL_min_;
-  double Bmass_min_;
-  double Bmass_max_;
-  double Bmass_Kst_min_;
-  double Bmass_Kst_max_;
+  float vtxCL_min_;
+  float Bmass_min_;
+  float Bmass_max_;
+  float Bmass_Kst_min_;
+  float Bmass_Kst_max_;
 
-  double diLepton_dz_max_;
-  double lepKaon_dz_max_;
-  double lepPion_dz_max_;
-  double kaonPion_dz_max_;
-  double kaonRefitllVertex_dxy_max_;
-  double kll_dxyPV_min_;
-  double IPPV_llRefitVtx_min_;
+  float diLepton_dz_max_;
+  float lepKaon_dz_max_;
+  float lepPion_dz_max_;
+  float kaonPion_dz_max_;
+  float kaonRefitllVertex_dxy_max_;
+  float kll_dxyPV_min_;
+  float IPPV_llRefitVtx_min_;
 
   float ElectronMass_ = 0.5109989e-3;
   float ElectronMassErr_ = 3.1*1e-12;
@@ -204,6 +264,39 @@ private:
 
   int nEvent;
   bool debug;
+
+  //
+  edm::Handle<std::vector<pat::Muon>> muonForTrgHandle;
+
+  edm::Handle<std::vector<pat::Electron>> electronHandle;
+  edm::Handle<std::vector<reco::GsfTrack>> lowPtGsfTracksHandle;
+  std::vector<edm::Handle<edm::ValueMap<float>>> mvaSeedsHandle;
+  edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkLTHandle;
+  edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkPCHandle;
+
+  edm::Handle<std::vector<pat::Muon>> muonHandle;
+  edm::Handle<edm::View<pat::PackedCandidate>> pfCandHandle;
+  edm::Handle<edm::View<pat::PackedCandidate>> lostSubLeadLepTrackHandle;
+  edm::Handle<edm::View<pat::PackedCandidate>> lostChHadrTrackHandle;
+
+  edm::ESHandle<TransientTrackBuilder> theTTBuilder;
+
+  TLorentzVector lepton1, lepton2, kaonTL, pionTL;
+  float chargeL1, chargeL2, chargeK, chargeP;
+  float vzL1, vzL2, vzK, vzP;
+  std::vector<float> vzTrgMuo;
+  float gsfTrk1_seedBDT_unbiased, gsfTrk1_seedBDT_ptbiased;
+  float gsfTrk2_seedBDT_unbiased, gsfTrk2_seedBDT_ptbiased;
+
+  //for the analysis
+  std::vector<int> triggeringRecoMuons;
+  std::map<int, std::vector<int>> selectedElectrons;
+  std::map<int, std::vector<int>> selectedMuons;
+  std::map<int, std::vector<int>> selectedPackedCandidates;
+  std::map<int, std::vector<int>> selectedLostTracks;
+  std::map<int, std::vector<int>> selectedLowPtGsfTracks;
+  std::map<int, std::map<std::pair<edm::ProductID,int>, unsigned int>> checkLeptonsDuplicate;
+  std::map<int, std::map<std::pair<edm::ProductID,int>, unsigned int>> checkLeptonsDuplicateTriplet;
 };
 
 
@@ -224,53 +317,63 @@ BToKstllProducer::BToKstllProducer(const edm::ParameterSet &iConfig):
   triggerObjects_(consumes<std::vector<pat::TriggerObjectStandAlone>>(iConfig.getParameter<edm::InputTag>("objects"))),
   triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales"))),
    ////////
-  trgExclusiondR_(iConfig.getParameter<double>("trgExclusiondR")),
-  trgAcceptdz_(iConfig.getParameter<double>("trgAcceptdz")),
+  trgExclusiondR_((float)iConfig.getParameter<double>("trgExclusiondR")),
+  trgAcceptdz_((float)iConfig.getParameter<double>("trgAcceptdz")),
   nSelectedTriplets_( iConfig.getParameter<int>( "nSelectedTriplets" ) ),
   isLepEle_( iConfig.getParameter<bool>( "isLeptonElectron" ) ),
   isLowPtEle_( iConfig.getParameter<bool>( "isLowPtEle" ) ),
+  isLowPtAndPfEle_( iConfig.getParameter<bool>( "isLowPtAndPfEle" ) ),
   isChKst_( iConfig.getParameter<bool>( "isChannelKst" ) ),
-  bdtUnbiasedLeadLep_( iConfig.getParameter<double>( "LeadBDTUnbiased") ),
-  bdtUnbiasedSubLeadLep_( iConfig.getParameter<double>( "SubLeadBDTUnbiased") ),
-  ptMinLeadLep_( iConfig.getParameter<double>( (isLepEle_ == true) ? "LeadEleMinPt" : "LeadMuonMinPt" ) ),
-  etaMaxLeadLep_( iConfig.getParameter<double>( (isLepEle_ == true) ? "LeadEleMaxEta" : "LeadMuonMaxEta" ) ),
-  ptMinSubLeadLep_( iConfig.getParameter<double>( (isLepEle_ == true) ? "SubLeadEleMinPt" : "SubLeadMuonMinPt" ) ),
-  etaMaxSubLeadLep_( iConfig.getParameter<double>( (isLepEle_ == true) ? "SubLeadEleMaxEta" : "SubLeadMuonMaxEta" ) ),
-  ptMinKaon_( iConfig.getParameter<double>( "KaonMinPt" ) ),
-  etaMaxKaon_( iConfig.getParameter<double>( "KaonMaxEta" ) ),
-  DCASigMinKaon_( iConfig.getParameter<double>( "KaonMinDCASig" ) ),
-  ptMinPion_( iConfig.getParameter<double>( "PionMinPt" ) ),
-  etaMaxPion_( iConfig.getParameter<double>( "PionMaxEta" ) ),
-  DCASigMinPion_( iConfig.getParameter<double>( "PionMinDCASig" ) ),
+  bdtUnbiasedLeadLep_( (float)iConfig.getParameter<double>( "LeadBDTUnbiased") ),
+  bdtUnbiasedSubLeadLep_( (float)iConfig.getParameter<double>( "SubLeadBDTUnbiased") ),
+  ptMinLeadLep_( (float)iConfig.getParameter<double>( (isLepEle_ == true) ? "LeadEleMinPt" : "LeadMuonMinPt" ) ),
+  etaMaxLeadLep_( (float)iConfig.getParameter<double>( (isLepEle_ == true) ? "LeadEleMaxEta" : "LeadMuonMaxEta" ) ),
+  ptMinSubLeadLep_( (float)iConfig.getParameter<double>( (isLepEle_ == true) ? "SubLeadEleMinPt" : "SubLeadMuonMinPt" ) ),
+  etaMaxSubLeadLep_( (float)iConfig.getParameter<double>( (isLepEle_ == true) ? "SubLeadEleMaxEta" : "SubLeadMuonMaxEta" ) ),
+  ptMinKaon_( (float)iConfig.getParameter<double>( "KaonMinPt" ) ),
+  etaMaxKaon_( (float)iConfig.getParameter<double>( "KaonMaxEta" ) ),
+  DCASigMinKaon_( (float)iConfig.getParameter<double>( "KaonMinDCASig" ) ),
+  ptMinPion_( (float)iConfig.getParameter<double>( "PionMinPt" ) ),
+  etaMaxPion_( (float)iConfig.getParameter<double>( "PionMaxEta" ) ),
+  DCASigMinPion_( (float)iConfig.getParameter<double>( "PionMinDCASig" ) ),
   diLepCharge_( iConfig.getParameter<bool>( "DiLeptonChargeCheck" ) ),
   KstCharge_( iConfig.getParameter<bool>( "KstarChargeCheck" ) ),
 
-  JPsiMassConstraint_( iConfig.getParameter<double>( "JPsiMassConstraint" ) ),
-  KstMassConstraint_( iConfig.getParameter<double>( "KstMassConstraint" ) ),
+  JPsiMassConstraint_( (float)iConfig.getParameter<double>( "JPsiMassConstraint" ) ),
+  KstMassConstraint_( (float)iConfig.getParameter<double>( "KstMassConstraint" ) ),
 
   save2TrkRefit_( iConfig.getParameter<bool>( "save2TrackRefit" ) ),
 //  save4TrkRefit_( iConfig.getParameter<bool>( "save4TrackRefit" ) ),
   useLostSubLeadLepTracks_( iConfig.getParameter<bool>( "useLostSubLeadLepTracks" ) ),
   useLostChHadrTracks_( iConfig.getParameter<bool>( "useLostChHadrTracks" ) ),
-  vtxCL_min_( iConfig.getParameter<double>( "vtxCL_min" ) ),
-  Bmass_min_( iConfig.getParameter<double>( "Bmass_min" ) ),
-  Bmass_max_( iConfig.getParameter<double>( "Bmass_max" ) ),
-  Bmass_Kst_min_( iConfig.getParameter<double>( "Bmass_Kst_min" ) ),
-  Bmass_Kst_max_( iConfig.getParameter<double>( "Bmass_Kst_max" ) ),
-  diLepton_dz_max_( iConfig.getParameter<double>( "diLepton_dz_max" ) ),
-  lepKaon_dz_max_( iConfig.getParameter<double>( "lepKaon_dz_max" ) ),
-  lepPion_dz_max_( iConfig.getParameter<double>( "lepPion_dz_max" ) ),
-  kaonPion_dz_max_( iConfig.getParameter<double>( "kaonPion_dz_max" ) ),
-  kaonRefitllVertex_dxy_max_( iConfig.getParameter<double>( "kaonRefitllVertex_dxy_max" ) ),
-  kll_dxyPV_min_( iConfig.getParameter<double>( "kll_dxyPV_min" ) ),
-  IPPV_llRefitVtx_min_( iConfig.getParameter<double>( "IPPV_llRefitVtx_min" ) )
+  vtxCL_min_( (float)iConfig.getParameter<double>( "vtxCL_min" ) ),
+  Bmass_min_( (float)iConfig.getParameter<double>( "Bmass_min" ) ),
+  Bmass_max_( (float)iConfig.getParameter<double>( "Bmass_max" ) ),
+  Bmass_Kst_min_( (float)iConfig.getParameter<double>( "Bmass_Kst_min" ) ),
+  Bmass_Kst_max_( (float)iConfig.getParameter<double>( "Bmass_Kst_max" ) ),
+  diLepton_dz_max_( (float)iConfig.getParameter<double>( "diLepton_dz_max" ) ),
+  lepKaon_dz_max_( (float)iConfig.getParameter<double>( "lepKaon_dz_max" ) ),
+  lepPion_dz_max_( (float)iConfig.getParameter<double>( "lepPion_dz_max" ) ),
+  kaonPion_dz_max_( (float)iConfig.getParameter<double>( "kaonPion_dz_max" ) ),
+  kaonRefitllVertex_dxy_max_( (float)iConfig.getParameter<double>( "kaonRefitllVertex_dxy_max" ) ),
+  kll_dxyPV_min_( (float)iConfig.getParameter<double>( "kll_dxyPV_min" ) ),
+  IPPV_llRefitVtx_min_( (float)iConfig.getParameter<double>( "IPPV_llRefitVtx_min" ) )
 {
 
-  if(useLostSubLeadLepTracks_ && isLowPtEle_){
-    //std::cout << " ERROR useLostSubLeadLepTracks_ and isLowPtEle_ not compatible at the moment " << std::endl;
-    throw cms::Exception("configError") << " ERROR useLostSubLeadLepTracks_ and isLowPtEle_ not compatible at the moment \n";
+  if(isLowPtAndPfEle_ && isLowPtEle_){
+    throw cms::Exception("configError") << " ERROR isLowPtAndPfEle_ and isLowPtEle_ not compatible at the moment \n";
   }
 
+  if(useLostSubLeadLepTracks_ && (isLowPtEle_ || isLowPtAndPfEle_)){
+    //std::cout << " ERROR useLostSubLeadLepTracks_ and isLowPtEle_ not compatible at the moment " << std::endl;
+    throw cms::Exception("configError") << " ERROR useLostSubLeadLepTracks_ and isLowPtEle_/isLowPtAndPfEle_ not compatible at the moment \n";
+  }
+
+  if(!isLepEle_ && (isLowPtEle_ || isLowPtAndPfEle_)){
+    throw cms::Exception("configError") << " ERROR isLepEle_ should be true with  isLowPtEle_/isLowPtAndPfEle_ \n";
+  }
+
+  
   lep1Mass_ = (isLepEle_) ? ElectronMass_ : MuonMass_;
   lep2Mass_ = lep1Mass_;
   lep1MassErr_ = (isLepEle_) ? ElectronMassErr_ : MuonMassErr_;
@@ -287,23 +390,47 @@ BToKstllProducer::BToKstllProducer(const edm::ParameterSet &iConfig):
   debug = false;
 }
 
+void BToKstllProducer::Init(){
 
-void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-    
-  ++nEvent;
-  if(debug) std::cout << " new event = " << nEvent << std::endl;
+  if(debug) std::cout << " BToKstllProducer::Init " << std::endl;
 
-  edm::Handle<reco::VertexCollection> vertexHandle;
-  iEvent.getByToken(vertexSrc_, vertexHandle);
-  const reco::Vertex & PV = vertexHandle->front();
+
+  muonForTrgHandle.clear();
+  electronHandle.clear();
+  lowPtGsfTracksHandle.clear();
+  mvaSeedsHandle.clear();
+  gsfLinkLTHandle.clear();
+  gsfLinkPCHandle.clear();
+  muonHandle.clear();
+  pfCandHandle.clear();
+  lostSubLeadLepTrackHandle.clear();
+  lostChHadrTrackHandle.clear();
+
+  //  theTTBuilder.clear();
+
+  vzTrgMuo.clear();
+  triggeringRecoMuons.clear();
+  selectedElectrons.clear();
+  selectedMuons.clear();
+  selectedPackedCandidates.clear();
+  selectedLostTracks.clear();
+  selectedLowPtGsfTracks.clear();
+  checkLeptonsDuplicate.clear();
+  checkLeptonsDuplicateTriplet.clear();
+  return;
+}
+
+
+void BToKstllProducer::identifyTriggeringMuons(edm::Event& iEvent, const edm::EventSetup& iSetup, 
+					       const reco::Vertex & PV){
+
+  if(debug) std::cout << " BToKstllProducer::identifyTriggeringMuons " << std::endl;
 
   edm::Handle<edm::TriggerResults> triggerBits;
   iEvent.getByToken(triggerBits_, triggerBits);
-
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
 
   std::vector<std::vector<float>> triggeringMuons;
-
   //taken from https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMiniAOD2016#Trigger
   edm::Handle<std::vector<pat::TriggerObjectStandAlone>> triggerObjects;
   iEvent.getByToken(triggerObjects_, triggerObjects);
@@ -345,16 +472,17 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
   }//trigger objects
 
   if(debug){
-    std::cout << " total n of triggering muons = " << triggeringMuons.size() << std::endl;
+    std::cout << "\n total n of triggering muons = " << triggeringMuons.size() << std::endl;
     for(auto ij : triggeringMuons){
-      std::cout << " size muon = " << ij.size() << std::endl;
-      for(auto il : ij) std::cout << " >>> comp = " << il << std::endl;
+      for(auto il : ij) std::cout << " >>> components (pt, eta, phi) = " << il << std::endl;
     }
   }
-  std::vector<int> triggeringRecoMuons(triggeringMuons.size(), -1);
+
+  triggeringRecoMuons.resize(triggeringMuons.size(), -1);
+  vzTrgMuo.resize(triggeringMuons.size(), -1);
   std::vector<float> dRMuonMatching(triggeringMuons.size(), -1);
 
-  edm::Handle<std::vector<pat::Muon>> muonForTrgHandle;
+  //  edm::Handle<std::vector<pat::Muon>> muonForTrgHandle;
   iEvent.getByToken(muonSrc_, muonForTrgHandle);
 
   for(unsigned int iTrg=0; iTrg<muonForTrgHandle->size(); ++iTrg){
@@ -370,6 +498,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
       if((dR < dRMuonMatching[ij] || dRMuonMatching[ij] == -1) && dR < 0.01){
 	dRMuonMatching[ij] = dR;
 	triggeringRecoMuons[ij] = iTrg;
+	vzTrgMuo[ij] = muon1.vz();
        	if(debug) std::cout << " dR = " << dR 
 			    << " reco = " << recoMuon.Pt() << " " << recoMuon.Eta() << " " << recoMuon.Phi() << " " 
 			    << " HLT = " << trgMuon.Pt() << " " << trgMuon.Eta() << " " << trgMuon.Phi()
@@ -377,6 +506,688 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
       }
     }
   }
+
+  return;
+}
+
+void BToKstllProducer::selectPatElectrons(edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+  if(debug) std::cout << " BToKstllProducer::selectPatElectrons " << std::endl;
+
+  //  edm::Handle<std::vector<pat::Electron>> electronHandle;
+  iEvent.getByToken(electronSrc_, electronHandle);
+
+  //loop over triggering muons
+  for (auto iTM : triggeringRecoMuons){
+    if(iTM == -1) continue;
+    const pat::Muon &trgMuon = (*muonForTrgHandle)[iTM];
+
+    if(debug)  std::cout << " electronHandle->size() = " << electronHandle->size() << std::endl;
+    for(unsigned int iEle=0; iEle<electronHandle->size(); ++iEle){
+      const pat::Electron & ele = (*electronHandle)[iEle];
+      float dR = deltaR(trgMuon.eta(), trgMuon.phi(), ele.eta(), ele.phi());
+      
+      if(debug) std::cout << " dR wrt trg muon = " << dR
+                          << " pt = " << ele.pt() << " eta = " << ele.eta() << std::endl;
+
+      if(dR < trgExclusiondR_ || std::fabs(trgMuon.vz() - ele.vz()) > trgAcceptdz_) continue;
+      if(ele.pt()<std::min(ptMinLeadLep_, ptMinSubLeadLep_) || abs(ele.eta()) > std::max(etaMaxLeadLep_, etaMaxSubLeadLep_)) continue;
+
+      selectedElectrons[iTM].push_back(iEle);
+
+      //just save ref a PFCand                                                                                                                                                                      
+      for(unsigned int ic = 0; ic < ele.numberOfSourceCandidatePtrs(); ++ic){
+	if(!ele.sourceCandidatePtr(ic).isNonnull() || !ele.sourceCandidatePtr(ic).isAvailable()) continue;
+	reco::CandidatePtr dummyCandLep = ele.sourceCandidatePtr(ic);
+	checkLeptonsDuplicate[iTM][std::pair<edm::ProductID,int>(dummyCandLep.id(), dummyCandLep.key())] = iEle;
+      }
+    }
+    if(debug) std::cout << " post selectPatElectrons size = " << selectedElectrons[iTM].size() << std::endl;
+  } //loop over trigger muons
+  return;
+}
+
+
+void BToKstllProducer::selectPatMuons(edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+  if(debug) std::cout << " BToKstllProducer::selectPatMuons " << std::endl;
+
+  //  edm::Handle<std::vector<pat::Muon>> muonHandle;
+  iEvent.getByToken(muonSrc_, muonHandle);
+
+  //loop over triggering muons
+  for (auto iTM : triggeringRecoMuons){
+    if(iTM == -1) continue;
+    const pat::Muon &trgMuon = (*muonForTrgHandle)[iTM];
+    
+    if(debug)  std::cout << " muonHandle->size() = " << muonHandle->size() << std::endl;
+    for(unsigned int iMuo=0; iMuo<muonHandle->size(); ++iMuo){
+      if(debug)  std::cout << " iMuo = " << iMuo << " iTM = " << iTM << std::endl;
+      if((unsigned int)iTM == iMuo) continue;
+      const pat::Muon & muon = (*muonHandle)[iMuo];
+      //selections for 1st lepton
+      //if(!(muon1.isLooseMuon() && muon1.isSoftMuon(PV))) continue;
+      float dR = deltaR(trgMuon.eta(), trgMuon.phi(), muon.eta(), muon.phi());
+     
+      if(debug) std::cout << " dR wrt trg muon = " << dR
+			  << " pt = " << muon.pt() << " eta = " << muon.eta() << std::endl;
+
+      if(dR < trgExclusiondR_ || std::fabs(trgMuon.vz() - muon.vz()) > trgAcceptdz_) continue;
+      if(muon.pt()<std::min(ptMinLeadLep_, ptMinSubLeadLep_) || abs(muon.eta()) > std::max(etaMaxLeadLep_, etaMaxSubLeadLep_)) continue;
+      
+      selectedMuons[iTM].push_back(iMuo);
+      
+      //just save ref a PFCand                                                                                                                                                                      
+      for(unsigned int ic = 0; ic < muon.numberOfSourceCandidatePtrs(); ++ic){
+	if(!muon.sourceCandidatePtr(ic).isNonnull() || !muon.sourceCandidatePtr(ic).isAvailable()) continue;
+	reco::CandidatePtr dummyCandLep = muon.sourceCandidatePtr(ic);
+	checkLeptonsDuplicate[iTM][std::pair<edm::ProductID,int>(dummyCandLep.id(), dummyCandLep.key())] = iMuo;
+      }
+    }
+    if(debug) std::cout << " post selectPatMuons size = " << selectedMuons[iTM].size() << std::endl;
+  }// loop over trigger muons
+
+  return;
+}
+
+void BToKstllProducer::selectPackedCandidate(edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+  if(debug) std::cout << " BToKstllProducer::selectPackedCandidate " << std::endl;
+
+  //  edm::Handle<edm::View<pat::PackedCandidate>> pfCandHandle;
+  iEvent.getByToken(PFCandSrc_, pfCandHandle);
+
+  //loop over triggering muons                                                        
+  for (auto iTM : triggeringRecoMuons){
+    if(iTM == -1) continue;
+    const pat::Muon &trgMuon = (*muonForTrgHandle)[iTM];
+
+    for(unsigned int iPcand=0; iPcand<pfCandHandle->size(); ++iPcand){
+
+      edm::ProductID pair1 = pfCandHandle.id();
+      int pair2 = iPcand;
+      std::pair<edm::ProductID, int> dummyPair(pair1, pair2);
+      std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkLD_it = checkLeptonsDuplicate[iTM].find(dummyPair);
+      if(checkLD_it != checkLeptonsDuplicate[iTM].end()) {
+	if(debug) std::cout << " found duplicate track" << std::endl;
+	continue;
+      }
+      //      if(debug) std::cout << " NON duplicate track " << std::endl;
+      
+      const pat::PackedCandidate & pfC = (*pfCandHandle)[iPcand];
+      float dR = deltaR(trgMuon.eta(), trgMuon.phi(), pfC.eta(), pfC.phi());
+      
+      if(dR < trgExclusiondR_ || std::fabs(trgMuon.vz() - pfC.vz()) > trgAcceptdz_) continue;
+
+      //ID criteria
+      //      if(debug) std::cout << " >>> pfC.hasTrackDetails() = " << pfC.hasTrackDetails() << " pfC.pdgId() = " << pfC.pdgId()  << std::endl;
+      if(!pfC.hasTrackDetails()) continue;
+      //exclude neutral should be safe do not ask too much ID                                                                       
+      if(abs(pfC.pdgId()) == 0) continue;
+
+      float minPt = isChKst_ ? std::min(ptMinKaon_, ptMinPion_) : ptMinKaon_;
+      float maxEta = isChKst_ ? std::max(etaMaxKaon_, etaMaxPion_) : etaMaxKaon_;
+      if(pfC.pt()<std::min(minPt, ptMinSubLeadLep_) || abs(pfC.eta())>std::max(maxEta, etaMaxSubLeadLep_)) continue;
+
+      // in the analysis consider pt > 3 if subleading lepton all otherwise
+      //if(pfC.pt() > 3.) continue;
+      
+      selectedPackedCandidates[iTM].push_back(iPcand);
+
+      //      checkLeptonsDuplicateCollection[iTM][dummyPair] = iMuo;
+    }
+    if(debug) std::cout << " post selectPackedCandidate size = " << selectedPackedCandidates[iTM].size() << std::endl;
+  }//triggering muon
+  
+  return;
+}
+
+void BToKstllProducer::selectLostTracks(edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+  if(debug) std::cout << " BToKstllProducer::selectLostTracks " << std::endl;
+
+  //  edm::Handle<edm::View<pat::PackedCandidate>> lostChHadrTrackHandle;
+  iEvent.getByToken(lostChHadrTrackSrc_, lostChHadrTrackHandle);
+
+  //loop over triggering muons
+  for (auto iTM : triggeringRecoMuons){
+    if(iTM == -1) continue;
+    const pat::Muon &trgMuon = (*muonForTrgHandle)[iTM];
+    
+    for(unsigned int iLtrk=0; iLtrk<lostChHadrTrackHandle->size(); ++iLtrk){
+
+      edm::ProductID pair1 = lostChHadrTrackHandle.id();
+      int pair2 = iLtrk;
+      std::pair<edm::ProductID, int> dummyPair(pair1, pair2);
+      std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkLD_itk = checkLeptonsDuplicate[iTM].find(dummyPair);
+      if(checkLD_itk != checkLeptonsDuplicate[iTM].end()){
+	if(debug) std::cout << " found duplicate lost track " << std::endl;
+	continue;
+      }
+      //      if(debug) std::cout << " NON duplicate lost track " << std::endl;
+
+      const pat::PackedCandidate & pfC = (*lostChHadrTrackHandle)[iLtrk];
+      float dR = deltaR(trgMuon.eta(), trgMuon.phi(), pfC.eta(), pfC.phi());
+
+      if(dR < trgExclusiondR_ || std::fabs(trgMuon.vz() - pfC.vz()) > trgAcceptdz_) continue;
+
+      if(!pfC.hasTrackDetails()) continue;
+      if(abs(pfC.pdgId()) != 211) continue; // && abs(kaon.pdgId()) != 11 && abs(kaon.pdgId()) != 13) continue; //Charged hadrons
+      float minPt = isChKst_ ? std::min(ptMinKaon_, ptMinPion_) : ptMinKaon_;
+      float maxEta = isChKst_ ? std::max(etaMaxKaon_, etaMaxPion_) : etaMaxKaon_;
+      if(pfC.pt()<std::min(minPt, ptMinSubLeadLep_) || abs(pfC.eta())>std::max(maxEta, etaMaxSubLeadLep_)) continue;
+	 
+      selectedLostTracks[iTM].push_back(iLtrk);
+    }
+    if(debug) std::cout << " post selectLostTracks size = " << selectedLostTracks[iTM].size() << std::endl;
+  }//triggering muon
+  return;
+}
+
+
+void BToKstllProducer::selectLowPtGsfTracks(edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+  if(debug) std::cout << " BToKstllProducer::selectLowPtGsfTracks " << std::endl;
+
+  // edm::Handle<std::vector<reco::GsfTrack>> lowPtGsfTracksHandle;
+  // std::vector<edm::Handle<edm::ValueMap<float>>> mvaSeedsHandle;
+  // edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkLTHandle;
+  // edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkPCHandle;
+
+  iEvent.getByToken(lowPtGsfTracksSrc_, lowPtGsfTracksHandle);
+  for (const auto& token : mvaSeeds_){
+    edm::Handle<edm::ValueMap<float> > h;
+    iEvent.getByToken(token, h);
+    mvaSeedsHandle.push_back(h);
+  }
+  iEvent.getByToken(lowPtGsfLinksLT_, gsfLinkLTHandle);
+  iEvent.getByToken(lowPtGsfLinksPC_, gsfLinkPCHandle);
+
+
+  //loop over triggering muons                                                      
+  for (auto iTM : triggeringRecoMuons){
+    if(iTM == -1) continue;
+    const pat::Muon &trgMuon = (*muonForTrgHandle)[iTM];
+
+
+    if(debug)  std::cout << " lowPtGsfTracksHandle->size() = " << lowPtGsfTracksHandle->size() << std::endl;    
+    for(unsigned int iLgsf=0; iLgsf<lowPtGsfTracksHandle->size(); ++iLgsf){
+      
+      if(mvaSeedsHandle.size() != 2 || !mvaSeedsHandle[0].isValid() || mvaSeedsHandle[0]->empty() ||
+	 !mvaSeedsHandle[1].isValid() || mvaSeedsHandle[1]->empty() || !lowPtGsfTracksHandle.isValid()) continue;
+      
+      const reco::GsfTrackRef gsfTrk(lowPtGsfTracksHandle, iLgsf);
+      float gsfTrk_seedBDT_unbiased = float((*mvaSeedsHandle[0])[gsfTrk]);
+      
+      if(gsfTrk_seedBDT_unbiased < std::min(bdtUnbiasedLeadLep_, bdtUnbiasedSubLeadLep_)) continue;
+      
+      float dR = deltaR(trgMuon.eta(), trgMuon.phi(), gsfTrk->etaMode(), gsfTrk->phiMode());
+
+      //      if(debug) std::cout << " dR wrt trg muon = " << dR << " dz = " <<  std::fabs(trgMuon.vz() - gsfTrk->vz())
+      //			  << " pt = " << gsfTrk->ptMode() << " eta = " << gsfTrk->etaMode() << std::endl;
+
+      if(dR < trgExclusiondR_ || std::fabs(trgMuon.vz() - gsfTrk->vz()) > trgAcceptdz_) continue;
+      
+      pat::PackedCandidateRef ltRef = (*gsfLinkLTHandle)[gsfTrk];
+      pat::PackedCandidateRef pcRef = (*gsfLinkPCHandle)[gsfTrk];
+      if(debug){
+	std::cout << " ltRef.isNonnull() = " << ltRef.isNonnull() << " ltRef.isAvailable() = " << ltRef.isAvailable()
+		  << " pcRef.isNonnull() = " << pcRef.isNonnull() << " pcRef.isAvailable() = " << pcRef.isAvailable()
+		  << std::endl;
+      }
+
+      if(isLowPtAndPfEle_){
+	edm::ProductID pair1lt = ltRef.id();
+	int pair2lt = ltRef.key();
+	std::pair<edm::ProductID, int> dummyPairlt(pair1lt, pair2lt);
+	std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkLT_itk = checkLeptonsDuplicate[iTM].find(dummyPairlt);
+	edm::ProductID pair1pc = pcRef.id();
+	int pair2pc = pcRef.key();
+	std::pair<edm::ProductID, int> dummyPairpc(pair1pc, pair2pc);
+	std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkPC_itk = checkLeptonsDuplicate[iTM].find(dummyPairpc);
+	
+	if(checkLT_itk != checkLeptonsDuplicate[iTM].end() || checkPC_itk != checkLeptonsDuplicate[iTM].end()){
+	  if(debug) std::cout << " found duplicate low pt gsf track " << std::endl;
+	  continue;
+	}
+	if(debug) std::cout << " NON duplicate low pt gsf track " << std::endl;
+
+	if(gsfTrk->ptMode()<std::min(ptMinLeadLep_, ptMinSubLeadLep_) || abs(gsfTrk->etaMode()) > std::max(etaMaxLeadLep_, etaMaxSubLeadLep_)) continue;
+      }
+
+      selectedLowPtGsfTracks[iTM].push_back(iLgsf);
+
+      /*
+      //just save ref a PFCand                                                                                                              
+      if(ltRef.isNonnull() && ltRef.isAvailable()){
+	checkLeptonsDuplicateCollection[std::pair<edm::ProductID,int>(ltRef.id(), ltRef.key())] = iLgsf;
+      }
+      if(pcRef.isNonnull() && pcRef.isAvailable()){
+	checkLeptonsDuplicateCollection[std::pair<edm::ProductID,int>(pcRef.id(), pcRef.key())] = iLgsf;
+	}
+      */
+    }
+    if(debug) std::cout << " post selectLowPtGsfTracks size = " << selectedLowPtGsfTracks[iTM].size() << std::endl;
+  }//triggering muon
+  return;
+}
+
+
+bool BToKstllProducer::getCandLepX_PFele(unsigned int loop_index,
+					 const reco::Candidate*& candLepX,
+					 reco::TransientTrack& leptonX_TT,
+					 float candLepX_Dxy,
+					 float candLepX_Dz,
+					 float candLepX_DxyS,
+					 float candLepX_DzS,
+					 bool isSubleading, unsigned int muonTrg_index){
+
+  if(debug) std::cout << " BToKstllProducer::getCandLepX_PFele " << std::endl;
+
+  const pat::Electron & eleX = (*electronHandle)[loop_index];
+  candLepX = &eleX;
+
+  if(!isSubleading){
+    lepton1.SetPtEtaPhiM(candLepX->pt(), candLepX->eta(), candLepX->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
+    chargeL1 = candLepX->charge();
+    vzL1 = candLepX->vz();
+  }
+  else{
+    lepton2.SetPtEtaPhiM(candLepX->pt(), candLepX->eta(), candLepX->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
+    chargeL2 = candLepX->charge();
+    vzL2 = candLepX->vz();
+  }
+
+  leptonX_TT = theTTBuilder->build(eleX.gsfTrack());
+  candLepX_Dxy = eleX.dB(pat::Electron::PV2D);
+  candLepX_Dz = eleX.dB(pat::Electron::PVDZ);
+  candLepX_DxyS = candLepX_Dxy / eleX.edB(pat::Electron::PV2D);
+  candLepX_DzS = candLepX_Dz / eleX.edB(pat::Electron::PVDZ);
+
+  if(!isSubleading && (lepton1.Pt()<ptMinLeadLep_ || abs(lepton1.Eta()) > etaMaxLeadLep_)) return false;
+  if(isSubleading){
+    if(lepton2.Pt()<ptMinSubLeadLep_ || abs(lepton2.Eta()) > etaMaxSubLeadLep_) return false;
+
+    //Lepton 1 is always saved as the leading one
+    //should be already ok by looping on subleading from leading+1
+    if(lepton1.Pt() < lepton2.Pt()) return false; 
+    if(debug && chargeL1 != chargeL2) std::cout << " lepton1Charge = " << chargeL1 << " lepton2Charge = " << chargeL2 << std::endl;
+    if(diLepCharge_ && chargeL1*chargeL2 > 0) return false;
+
+  }
+  
+
+  //just save ref a PFCand
+  for(unsigned int ic = 0; ic < eleX.numberOfSourceCandidatePtrs(); ++ic){
+    if(!eleX.sourceCandidatePtr(ic).isNonnull() || !eleX.sourceCandidatePtr(ic).isAvailable()) continue;
+    reco::CandidatePtr dummyCandLep = eleX.sourceCandidatePtr(ic);
+    std::pair<edm::ProductID,int> keyVal(dummyCandLep.id(), dummyCandLep.key());
+    checkLeptonsDuplicateTriplet[muonTrg_index][keyVal] = loop_index;
+  }
+
+
+  if(debug) std::cout << " passed lepton subleading = " << isSubleading << " - pfEle - " << std::endl;
+  return true;
+}
+
+
+bool BToKstllProducer::getCandLepX_LowPtEle(unsigned int loop_index,
+					    reco::TransientTrack& leptonX_TT,
+					    float candLepX_Dxy,
+					    float candLepX_Dz,
+					    float candLepX_DxyS,
+					    float candLepX_DzS,
+					    bool isSubleading, unsigned int muonTrg_index){
+
+  if(debug) std::cout << " BToKstllProducer::getCandLepX_LowPtEle " << std::endl;
+
+  if(mvaSeedsHandle.size() != 2 || !mvaSeedsHandle[0].isValid() || mvaSeedsHandle[0]->empty() ||
+     !mvaSeedsHandle[1].isValid() || mvaSeedsHandle[1]->empty() || !lowPtGsfTracksHandle.isValid()) return false;
+
+  const reco::GsfTrackRef gsfTrk(lowPtGsfTracksHandle, loop_index);
+  if(!isSubleading){
+    gsfTrk1_seedBDT_unbiased = float((*mvaSeedsHandle[0])[gsfTrk]);
+    gsfTrk1_seedBDT_ptbiased = float((*mvaSeedsHandle[1])[gsfTrk]);
+
+    lepton1.SetPtEtaPhiM(gsfTrk->ptMode(), gsfTrk->etaMode(), gsfTrk->phiMode(), ElectronMass_);
+    chargeL1 = gsfTrk->chargeMode();
+    vzL1 = gsfTrk->vz();
+  }
+  else{
+    gsfTrk2_seedBDT_unbiased = float((*mvaSeedsHandle[0])[gsfTrk]);
+    gsfTrk2_seedBDT_ptbiased = float((*mvaSeedsHandle[1])[gsfTrk]);
+
+    lepton2.SetPtEtaPhiM(gsfTrk->ptMode(), gsfTrk->etaMode(), gsfTrk->phiMode(), ElectronMass_);
+    chargeL2 = gsfTrk->chargeMode();
+    vzL2 = gsfTrk->vz();
+  }
+
+  leptonX_TT = theTTBuilder->build(gsfTrk);
+  candLepX_Dxy = gsfTrk->dxy();            
+  candLepX_Dz = gsfTrk->dz(); 
+  candLepX_DxyS = candLepX_Dxy / gsfTrk->dxyError();
+  candLepX_DzS = candLepX_Dz / gsfTrk->dzError();
+
+
+  if(!isSubleading){
+    if(lepton1.Pt()<ptMinLeadLep_ || abs(lepton1.Eta()) > etaMaxLeadLep_) return false;
+    if(gsfTrk1_seedBDT_unbiased < bdtUnbiasedLeadLep_) return false;
+
+    //pfEle + lowptGsf high pT objects already covered by pfEle
+    if(isLowPtAndPfEle_ && lepton1.Pt() > 5.) return false;
+  }
+  if(isSubleading){
+    if(lepton2.Pt()<ptMinSubLeadLep_ || abs(lepton2.Eta()) > etaMaxSubLeadLep_) return false;
+    if(gsfTrk2_seedBDT_unbiased < bdtUnbiasedSubLeadLep_) return false;
+
+    if(lepton1.Pt() < lepton2.Pt()) return false;
+    if(diLepCharge_ && chargeL1*chargeL2 > 0) return false;
+
+    if(isLowPtAndPfEle_ && deltaR(lepton1.Eta(), lepton1.Phi(), lepton2.Eta(), lepton2.Phi()) < 0.01) return false;
+
+    //pfEle + lowptGsf high pT objects already covered by pfEle
+    if(isLowPtAndPfEle_ && lepton2.Pt() > 5.) return false;
+  }
+
+  //add reference to low pt gsf used to clean tracks in the kaon/pion search
+  pat::PackedCandidateRef ltRef = (*gsfLinkLTHandle)[gsfTrk];
+  pat::PackedCandidateRef pcRef = (*gsfLinkPCHandle)[gsfTrk];
+
+  //just save ref a PFCand                                                                        
+  if(ltRef.isNonnull() && ltRef.isAvailable()){
+    checkLeptonsDuplicateTriplet[muonTrg_index][std::pair<edm::ProductID,int>(ltRef.id(), ltRef.key())] = loop_index;
+  }
+  if(pcRef.isNonnull() && pcRef.isAvailable()){
+    checkLeptonsDuplicateTriplet[muonTrg_index][std::pair<edm::ProductID,int>(pcRef.id(), pcRef.key())] = loop_index;
+  }
+
+  if(debug) std::cout << " passed lepton subleading = " << isSubleading << " - low pt gsf - " << std::endl;
+  return true;
+
+}
+
+
+bool BToKstllProducer::getCandLepX_PFmuon(unsigned int loop_index,
+					  const reco::Candidate*& candLepX,
+					  reco::TransientTrack& leptonX_TT,
+					  float candLepX_Dxy,
+					  float candLepX_Dz,
+					  float candLepX_DxyS,
+					  float candLepX_DzS,
+					  bool isSubleading, unsigned int muonTrg_index, const reco::Vertex& PV){
+
+  if(debug) std::cout << " BToKstllProducer::getCandLepX_PFmuon " << std::endl;
+
+  const pat::Muon & muonX = (*muonHandle)[loop_index];
+  candLepX = &muonX;
+
+  if(!isSubleading){
+    lepton1.SetPtEtaPhiM(candLepX->pt(), candLepX->eta(), candLepX->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
+    chargeL1 = candLepX->charge();
+    vzL1 = candLepX->vz();
+  }
+  else{
+    lepton2.SetPtEtaPhiM(candLepX->pt(), candLepX->eta(), candLepX->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
+    chargeL2 = candLepX->charge();
+    vzL2 = candLepX->vz();
+  }
+  if(debug) std::cout << " post1 " << std::endl;
+
+  leptonX_TT = theTTBuilder->build(muonX.bestTrack());
+  candLepX_Dxy = muonX.dB(pat::Muon::PV2D);
+  candLepX_Dz = muonX.dB(pat::Muon::PVDZ);
+  candLepX_DxyS = candLepX_Dxy/muonX.edB(pat::Muon::PV2D);
+  candLepX_DzS = candLepX_Dz/muonX.edB(pat::Muon::PVDZ);
+
+  if(debug) std::cout << " post2 " << std::endl;
+
+  if(!isSubleading){
+    if(lepton1.Pt()<ptMinLeadLep_ || abs(lepton1.Eta()) > etaMaxLeadLep_) return false;
+    if( !muonX.isLooseMuon() || !muonX.isSoftMuon(PV)) return false;
+  }
+  if(isSubleading){
+    if(lepton2.Pt()<ptMinSubLeadLep_ || abs(lepton2.Eta()) > etaMaxSubLeadLep_) return false;
+
+    //Lepton 1 is always saved as the leading one
+    //should be already ok by looping on subleading from leading+1
+    if(lepton1.Pt() < lepton2.Pt()) return false; 
+    if(debug && chargeL1 != chargeL2) std::cout << " lepton1Charge = " << chargeL1 << " lepton2Charge = " << chargeL2 << std::endl;
+    if(diLepCharge_ && chargeL1*chargeL2 > 0) return false;
+  }
+  
+  //just save ref a PFCand
+  for(unsigned int ic = 0; ic < muonX.numberOfSourceCandidatePtrs(); ++ic){
+    if(!muonX.sourceCandidatePtr(ic).isNonnull() || !muonX.sourceCandidatePtr(ic).isAvailable()) continue;
+    reco::CandidatePtr dummyCandLep = muonX.sourceCandidatePtr(ic);
+    std::pair<edm::ProductID,int> keyVal(dummyCandLep.id(), dummyCandLep.key());
+    checkLeptonsDuplicateTriplet[muonTrg_index][keyVal] = loop_index;
+    //removableL2.push_back(keyVal);                                                                       
+  }
+  if(debug) std::cout << " passed lepton subleading = " << isSubleading << " - pfMuon - " << std::endl;
+  return true;
+}
+
+
+
+bool BToKstllProducer::getCandX_PackedCand(unsigned int loop_index,
+					   const reco::Candidate*& candX,
+					   reco::TransientTrack& candX_TT,
+					   float candX_Dxy,
+					   float candX_Dz,
+					   float candX_DxyS,
+					   float candX_DzS,
+					   bool isSubleading, bool isKloop, unsigned int muonTrg_index, 
+					   const math::XYZPoint &leplepRefitVertex, float kaon_dxyFromRefitllVtx){
+  
+  if(debug) std::cout << " BToKstllProducer::getCandLepX_PackedCand " << std::endl;
+
+  const pat::PackedCandidate &cand = (*pfCandHandle)[loop_index];
+  candX = &cand;
+
+  edm::ProductID pair1 = pfCandHandle.id();
+  int pair2 = loop_index;
+  std::pair<edm::ProductID, int> dummyPair(pair1, pair2);
+  std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkLD_it = checkLeptonsDuplicateTriplet[muonTrg_index].find(dummyPair);
+  if(checkLD_it != checkLeptonsDuplicateTriplet[muonTrg_index].end()) {
+    if(debug) std::cout << " found duplicate L2" << std::endl;
+    return false;
+  }
+  if(debug) std::cout << " NON duplicate L2 " << std::endl;
+
+
+  if(isSubleading){
+    lepton2.SetPtEtaPhiM(candX->pt(), candX->eta(), candX->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
+    chargeL2 = candX->charge();
+    vzL2 = candX->vz();
+  }
+  else if(isKloop){
+    kaonTL.SetPtEtaPhiM(candX->pt(), candX->eta(), candX->phi(), KaonMass_);
+    chargeK = candX->charge();
+    vzK = candX->vz();
+  }
+  else{
+    pionTL.SetPtEtaPhiM(candX->pt(), candX->eta(), candX->phi(), PionMass_);
+    chargeP = candX->charge();
+    vzP = candX->vz();
+  }
+
+  candX_TT = theTTBuilder->build(cand.bestTrack());
+  candX_Dxy = cand.dxy();
+  candX_Dz = cand.dz();
+  candX_DxyS = candX_Dxy/cand.dxyError();
+  candX_DzS = candX_Dz/cand.dzError();
+
+  
+  if(isSubleading){
+    if(lepton2.Pt()<ptMinSubLeadLep_ || abs(lepton2.Eta()) > etaMaxSubLeadLep_) return false;
+
+    //Lepton 1 is always saved as the leading one
+    //should be already ok by looping on subleading from leading+1
+    if(lepton1.Pt() < lepton2.Pt()) return false; 
+    if(debug && chargeL1 != chargeL2) std::cout << " lepton1Charge = " << chargeL1 << " lepton2Charge = " << chargeL2 << std::endl;
+    if(diLepCharge_ && chargeL1*chargeL2 > 0) return false;
+
+    //assume in mixed config you want to cover only low pt with pf candidates (tracks)
+    if(lepton2.Pt() > 3.) return false;
+
+    //lepton1 and lepton2 belong to different collections need to check they are different
+    if(deltaR(lepton1.Eta(), lepton1.Phi(), lepton2.Eta(), lepton2.Phi()) < 0.01) return false;
+
+    if(diLepton_dz_max_ > -1. && std::abs(vzL1 - vzL2) > diLepton_dz_max_) return false;
+  }
+  else if(isKloop){
+    if(abs(candX->pdgId()) != 211) return false;
+    if(kaonTL.Pt() < ptMinKaon_ || abs(kaonTL.Eta()) > etaMaxKaon_) return false;
+
+    if(deltaR(lepton1.Eta(), lepton1.Phi(), kaonTL.Eta(), kaonTL.Phi()) < 0.01 ||
+       deltaR(lepton2.Eta(), lepton2.Phi(), kaonTL.Eta(), kaonTL.Phi()) < 0.01 ) return false;
+
+    if(save2TrkRefit_){
+      kaon_dxyFromRefitllVtx = cand.dxy(leplepRefitVertex);
+      if(kaonRefitllVertex_dxy_max_ != -1 &&
+	 std::abs(kaon_dxyFromRefitllVtx) > kaonRefitllVertex_dxy_max_) return false;
+    }
+  }
+  else{
+    if(abs(candX->pdgId())!=211) return false;
+    if(pionTL.Pt() < ptMinPion_ || abs(pionTL.Eta()) > etaMaxPion_) return false;
+
+    if(KstCharge_ && chargeK * chargeP>0) return false;
+
+    if(deltaR(lepton1.Eta(), lepton1.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01 ||
+       deltaR(lepton2.Eta(), lepton2.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01 ||
+       deltaR(kaonTL.Eta(), kaonTL.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01) return false;
+  }
+  
+
+  if(debug) std::cout << " passed pfcandidate subleading = " << isSubleading  << " isKloop = " << isKloop << " - pfCand - " << std::endl;
+  return true;
+}
+
+
+
+bool BToKstllProducer::getCandX_LostTracks(unsigned int loop_index,
+					   const reco::Candidate*& candX,
+					   reco::TransientTrack& candX_TT,
+					   float candX_Dxy,
+					   float candX_Dz,
+					   float candX_DxyS,
+					   float candX_DzS,
+					   bool isSubleading, bool isKloop, unsigned int muonTrg_index, 
+					   const math::XYZPoint &leplepRefitVertex, float kaon_dxyFromRefitllVtx){
+  
+
+  if(debug) std::cout << " BToKstllProducer::getCandLepX_LostTracks " << std::endl;
+
+  const pat::PackedCandidate &cand = (*lostChHadrTrackHandle)[loop_index];
+  candX = &cand;
+
+
+  edm::ProductID pair1 = lostChHadrTrackHandle.id();
+  int pair2 = loop_index;
+  std::pair<edm::ProductID, int> dummyPair(pair1, pair2);
+  std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkLD_it = checkLeptonsDuplicateTriplet[muonTrg_index].find(dummyPair);
+  if(checkLD_it != checkLeptonsDuplicateTriplet[muonTrg_index].end()) {
+    if(debug) std::cout << " found duplicate L2" << std::endl;
+    return false;
+  }
+  if(debug) std::cout << " NON duplicate L2 " << std::endl;
+
+
+  if(isSubleading){
+    lepton2.SetPtEtaPhiM(candX->pt(), candX->eta(), candX->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
+    chargeL2 = candX->charge();
+    vzL2 = candX->vz();
+  }
+  else if(isKloop){
+    kaonTL.SetPtEtaPhiM(candX->pt(), candX->eta(), candX->phi(), KaonMass_);
+    chargeK = candX->charge();
+    vzK = candX->vz();
+  }
+  else{
+    pionTL.SetPtEtaPhiM(candX->pt(), candX->eta(), candX->phi(), PionMass_);
+    chargeP = candX->charge();
+    vzP = candX->vz();
+  }
+
+  candX_TT = theTTBuilder->build(cand.bestTrack());
+  candX_Dxy = cand.dxy();
+  candX_Dz = cand.dz();
+  candX_DxyS = candX_Dxy/cand.dxyError();
+  candX_DzS = candX_Dz/cand.dzError();
+
+  if(isSubleading){
+    if(lepton2.Pt()<ptMinSubLeadLep_ || abs(lepton2.Eta()) > etaMaxSubLeadLep_) return false;
+    
+    //Lepton 1 is always saved as the leading one
+    //should be already ok by looping on subleading from leading+1
+    if(lepton1.Pt() < lepton2.Pt()) return false; 
+    if(debug && chargeL1 != chargeL2) std::cout << " lepton1Charge = " << chargeL1 << " lepton2Charge = " << chargeL2 << std::endl;
+    if(diLepCharge_ && chargeL1*chargeL2 > 0) return false;
+
+    //assume in mixed config you want to cover only low pt with pf candidates (tracks)
+    if(lepton2.Pt() > 3.) return false;
+
+    //lepton1 and lepton2 belong to different collections need to check they are different      
+    if(deltaR(lepton1.Eta(), lepton1.Phi(), lepton2.Eta(), lepton2.Phi()) < 0.01) return false;
+    if(diLepton_dz_max_ > -1. && std::abs(vzL1 - vzL2) > diLepton_dz_max_) return false;
+  }
+  else if(isKloop){
+    if(abs(candX->pdgId()) != 211) return false;
+    if(kaonTL.Pt() < ptMinKaon_ || abs(kaonTL.Eta()) > etaMaxKaon_) return false;
+
+    if(deltaR(lepton1.Eta(), lepton1.Phi(), kaonTL.Eta(), kaonTL.Phi()) < 0.01 ||
+       deltaR(lepton2.Eta(), lepton2.Phi(), kaonTL.Eta(), kaonTL.Phi()) < 0.01 ) return false;
+
+    if(save2TrkRefit_){
+      kaon_dxyFromRefitllVtx = cand.dxy(leplepRefitVertex);
+      if(kaonRefitllVertex_dxy_max_ != -1 &&
+	 std::abs(kaon_dxyFromRefitllVtx) > kaonRefitllVertex_dxy_max_) return false;
+    }
+  }
+  else{
+    if(abs(candX->pdgId())!=211) return false;
+    if(pionTL.Pt() < ptMinPion_ || abs(pionTL.Eta()) > etaMaxPion_) return false;
+
+    if(KstCharge_ && chargeK * chargeP>0) return false;
+
+    if(deltaR(lepton1.Eta(), lepton1.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01 ||
+       deltaR(lepton2.Eta(), lepton2.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01 ||
+       deltaR(kaonTL.Eta(), kaonTL.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01) return false;
+
+  }
+  
+
+  if(debug) std::cout << " passed losttrack subleading = " << isSubleading  << " isKloop = " << isKloop << " - lostTrack - " << std::endl;
+  return true;
+}
+
+
+
+void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+    
+  ++nEvent;
+  if(debug) std::cout << "\n new event = " << nEvent << std::endl;
+
+  edm::Handle<reco::VertexCollection> vertexHandle;
+  iEvent.getByToken(vertexSrc_, vertexHandle);
+  const reco::Vertex & PV = vertexHandle->front();
+
+  Init();
+
+  identifyTriggeringMuons(iEvent, iSetup, PV);
+
+  if(triggeringRecoMuons.size() == 0){
+    if(debug) std::cout << " NO reco muon natched to triggering muon " << std::endl;
+    return;
+  }
+
+  if(isLepEle_ && !isLowPtEle_) selectPatElectrons(iEvent, iSetup);
+  if(!isLepEle_) selectPatMuons(iEvent, iSetup);
+
+  if(isLowPtEle_ || isLowPtAndPfEle_) selectLowPtGsfTracks(iEvent, iSetup);
+  selectPackedCandidate(iEvent, iSetup);
+  if(useLostChHadrTracks_) selectLostTracks(iEvent, iSetup);
 
   //just check dR > 0.4 and dz < 1
   /*
@@ -394,7 +1205,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
   */
 
   edm::ESHandle<MagneticField> bFieldHandle;
-  edm::ESHandle<TransientTrackBuilder> theTTBuilder;
+  //  edm::ESHandle<TransientTrackBuilder> theTTBuilder;
   
   iSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle);
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theTTBuilder);
@@ -408,413 +1219,152 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
   
   reco::BeamSpot beamSpot = *beamSpotHandle;
 
-  edm::Handle<std::vector<pat::Electron>> electronHandle;  
-  edm::Handle<std::vector<reco::GsfTrack>> lowPtGsfTracksHandle;
-  std::vector<edm::Handle<edm::ValueMap<float>>> mvaSeedsHandle;
-  edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkLTHandle;
-  edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkPCHandle;
-
-  edm::Handle<std::vector<pat::Muon>> muonHandle;
-  edm::Handle<edm::View<pat::PackedCandidate>> pfCandHandle;
-  edm::Handle<edm::View<pat::PackedCandidate>> lostSubLeadLepTrackHandle;
-  edm::Handle<edm::View<pat::PackedCandidate>> lostChHadrTrackHandle;
-  
-  
-  if(isLowPtEle_){
-    iEvent.getByToken(lowPtGsfTracksSrc_, lowPtGsfTracksHandle);
-    for (const auto& token : mvaSeeds_){
-      edm::Handle<edm::ValueMap<float> > h;
-      iEvent.getByToken(token, h);
-      mvaSeedsHandle.push_back(h);
-    }
-
-    iEvent.getByToken(lowPtGsfLinksLT_, gsfLinkLTHandle);
-    iEvent.getByToken(lowPtGsfLinksPC_, gsfLinkPCHandle);
-  }
-  else{
-    if(isLepEle_) iEvent.getByToken(electronSrc_, electronHandle);
-    else iEvent.getByToken(muonSrc_, muonHandle);
-  }
-  iEvent.getByToken(PFCandSrc_, pfCandHandle);
-  if(useLostSubLeadLepTracks_ && !isLowPtEle_) iEvent.getByToken(lostSubLeadLepTrackSrc_, lostSubLeadLepTrackHandle);
-  if(useLostChHadrTracks_) iEvent.getByToken(lostChHadrTrackSrc_, lostChHadrTrackHandle);
-  
-  unsigned int leptonNumber = (isLepEle_ && isLowPtEle_) ? lowPtGsfTracksHandle->size() : (isLepEle_ ? electronHandle->size() : muonHandle->size());   
-  unsigned int pfCandNumber = pfCandHandle->size();
-  unsigned int subLeadLeptonTrackNumber = useLostSubLeadLepTracks_ ? (leptonNumber + pfCandNumber + lostSubLeadLepTrackHandle->size()) : leptonNumber;
-  unsigned int lostChHadrTrackNumber = useLostChHadrTracks_ ? lostChHadrTrackHandle->size() : 0;
-    
   // Output collection
   std::unique_ptr<pat::CompositeCandidateCollection> result( new pat::CompositeCandidateCollection );
   std::vector<float> resultTag;
   std::pair<float, int> worstTag_val_idx;
 
-  std::map<std::pair<edm::ProductID,int>, unsigned int> checkLeptonsDuplicate;
+  //  std::map<std::pair<edm::ProductID,int>, unsigned int> checkLeptonsDuplicate;
   //std::vector<std::pair<edm::ProductID,int>> removableL2;
 
-  if(debug){
-    std::cout << " leptonNumber = " << leptonNumber << " pfCandNumber = " << pfCandNumber
-	      << " subLeadLeptonTrackNumber = " << subLeadLeptonTrackNumber << " lostChHadrTrackNumber = " << lostChHadrTrackNumber << std::endl; 
-    std::cout << " isLepEle_ = " << isLepEle_ << " isLowPtEle_ = " << isLowPtEle_ << " isChKst_ = " << isChKst_ << std::endl; 
-  }
-
   //could be changed asking effectively leptons + trigger
-  if(leptonNumber>0){
+  //  if(leptonNumber>0){
 
-    //loop over triggering muons
-    for (auto iTM : triggeringRecoMuons){
-      if(iTM == -1) continue;
-      const pat::Muon &trgMuon = (*muonForTrgHandle)[iTM];
-      TLorentzVector trgMuonTL(trgMuon.pt(), trgMuon.eta(), trgMuon.phi(), MuonMass_);
-      float trgMuonVZ = trgMuon.vz();
+  //loop over triggering muons
+  for (auto iTM : triggeringRecoMuons){
+    if(iTM == -1) continue;
+    /*
+    const pat::Muon &trgMuon = (*muonForTrgHandle)[iTM];
+    TLorentzVector trgMuonTL(trgMuon.pt(), trgMuon.eta(), trgMuon.phi(), MuonMass_);
+    float trgMuonVZ = trgMuon.vz();
+    */
+
+    unsigned int leptonNumber = (isLepEle_ && isLowPtEle_) ? (selectedLowPtGsfTracks[iTM].size()) : (isLepEle_ ? selectedElectrons[iTM].size() : selectedMuons[iTM].size());
+    if(isLepEle_ && isLowPtAndPfEle_) leptonNumber = selectedElectrons[iTM].size()+selectedLowPtGsfTracks[iTM].size();
+    unsigned int pfCandNumber = selectedPackedCandidates[iTM].size();
+    unsigned int subLeadLeptonTrackNumber = useLostSubLeadLepTracks_ ? (leptonNumber + pfCandNumber + selectedLostTracks[iTM].size()) : leptonNumber;
+    unsigned int lostChHadrTrackNumber = useLostChHadrTracks_ ? selectedLostTracks[iTM].size() : 0;
+    
+    if(debug){
+      std::cout << " leptonNumber = " << leptonNumber << " pfCandNumber = " << pfCandNumber
+		<< " subLeadLeptonTrackNumber = " << subLeadLeptonTrackNumber << " lostChHadrTrackNumber = " << lostChHadrTrackNumber << std::endl; 
+      std::cout << " isLepEle_ = " << isLepEle_ << " isLowPtEle_ = " << isLowPtEle_ 
+		<< " isLowPtAndPfEle_ = " << isLowPtAndPfEle_ << " isChKst_ = " << isChKst_ << std::endl; 
+    }
+
     
     // loop on leading lepton from pat::Lepton 
     // subleading from pat::Lepton or PFcandidate+LT
     // and then kaon (+pion) for K or Kstar
     // to build triplets
     for (unsigned int i = 0; i < leptonNumber; ++i) {
-      checkLeptonsDuplicate.clear();
+      //checkLeptonsDuplicate.clear();
 
       float candLep1Dxy = -99.;
       float candLep1Dz = -99.;      
       float candLep1DxyS = -99.;
       float candLep1DzS = -99.;
       const reco::Candidate* candLep1;
-      TLorentzVector lepton1;
       reco::TransientTrack lepton1TT; 
-      int lepton1Charge = -99;
-      float lepton1VZ = -99.;
-      float gsfTrk1_seedBDT_unbiased = -99.;
-      float gsfTrk1_seedBDT_ptbiased = -99.;
 
-      if(isLowPtEle_){
-	if(mvaSeedsHandle.size() != 2 || !mvaSeedsHandle[0].isValid() || mvaSeedsHandle[0]->empty() ||
-	   !mvaSeedsHandle[1].isValid() || mvaSeedsHandle[1]->empty() || !lowPtGsfTracksHandle.isValid()) continue;
+      bool isLep1LowPt = bool((isLowPtEle_) || (isLepEle_ && isLowPtAndPfEle_ && i >= selectedElectrons[iTM].size()));
+      if(debug) std::cout << " isLep1LowPt = " << isLep1LowPt << std::endl;
 
-	const reco::GsfTrackRef gsfTrk(lowPtGsfTracksHandle, i);
-	gsfTrk1_seedBDT_unbiased = float((*mvaSeedsHandle[0])[gsfTrk]);
-	gsfTrk1_seedBDT_ptbiased = float((*mvaSeedsHandle[1])[gsfTrk]);
+      bool objectPassed = false;
 
-	//if(debug) std::cout << " low pt gsf Track1  idx = " << i << " gsfTrk1_seedBDT_unbiased = " << gsfTrk1_seedBDT_unbiased << std::endl; 
-	if(gsfTrk1_seedBDT_unbiased < bdtUnbiasedLeadLep_) continue;
+      if(isLepEle_ || isLowPtAndPfEle_){
 
-	lepton1.SetPtEtaPhiM(gsfTrk->ptMode(), gsfTrk->etaMode(), gsfTrk->phiMode(), ElectronMass_);
-	lepton1VZ = gsfTrk->vz();
-	if(trgMuonTL.DeltaR(lepton1) < trgExclusiondR_ || std::fabs(trgMuonVZ - lepton1VZ) > trgAcceptdz_) continue;
 
-	pat::PackedCandidateRef ltRef = (*gsfLinkLTHandle)[gsfTrk];
-	pat::PackedCandidateRef pcRef = (*gsfLinkPCHandle)[gsfTrk];
+	if(isLep1LowPt)
+	  objectPassed = getCandLepX_LowPtEle(selectedLowPtGsfTracks[iTM].at(i-selectedElectrons[iTM].size()), lepton1TT, 
+					      candLep1Dxy, candLep1Dz,candLep1DxyS, candLep1DzS,
+					      false, iTM);
 	
-	if(debug){
-	  std::cout << " ltRef.isNonnull() = " << ltRef.isNonnull() << " ltRef.isAvailable() = " << ltRef.isAvailable()
-		    << " pcRef.isNonnull() = " << pcRef.isNonnull() << " pcRef.isAvailable() = " << pcRef.isAvailable()
-	 	    << std::endl;
-	}
-		
-	//just save ref a PFCand       
-	if(ltRef.isNonnull() && ltRef.isAvailable()){ 
-	  checkLeptonsDuplicate[std::pair<edm::ProductID,int>(ltRef.id(), ltRef.key())] = i;
-	}
-	if(pcRef.isNonnull() && pcRef.isAvailable()){ 
-	  checkLeptonsDuplicate[std::pair<edm::ProductID,int>(pcRef.id(), pcRef.key())] = i;
-	}
-
-	//could implement ele ID criteria here
-	lepton1TT = theTTBuilder->build(gsfTrk); // it is build from the reco::Track - use buildfromGSF otherwise
-	lepton1Charge = gsfTrk->chargeMode();
-
-	/*
-	candLep1Dxy = gsfTrk.dxy();
-	candLep1Dz = gsfTrk.dz();
-	candLep1DxyS = candLep1Dxy / gsfTrk.dxyError();
-	candLep1DzS = candLep1Dz / gsfTrk.dzError();
-	*/
+	else
+	  objectPassed = getCandLepX_PFele(selectedElectrons[iTM].at(i), candLep1, lepton1TT, 
+					   candLep1Dxy, candLep1Dz,candLep1DxyS, candLep1DzS,
+					   false, iTM);
+	
       }
-      else{
-	if(isLepEle_){
-	  const pat::Electron & ele1 = (*electronHandle)[i];
-	  candLep1 = &ele1;
-
-	  lepton1.SetPtEtaPhiM(candLep1->pt(), candLep1->eta(), candLep1->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
-	  lepton1VZ = candLep1->vz();
-	  if(trgMuonTL.DeltaR(lepton1) < trgExclusiondR_ || std::fabs(trgMuonVZ - lepton1VZ) > trgAcceptdz_) continue;
-	  
-	  if(debug)
-	    std::cout << " ele1.sourceCandidatePtr(i).isNonnull() = " << ele1.sourceCandidatePtr(i).isNonnull()
-		      << " ele1.sourceCandidatePtr(i).isAvailable() = " << ele1.sourceCandidatePtr(i).isAvailable() << std::endl;
-	  
-	  //just save ref a PFCand
-	  for(unsigned int ic = 0; ic < ele1.numberOfSourceCandidatePtrs(); ++ic){
-	    reco::CandidatePtr dummyCandLep1 = ele1.sourceCandidatePtr(ic);
-	    if(!ele1.sourceCandidatePtr(ic).isNonnull() || !ele1.sourceCandidatePtr(ic).isAvailable()) continue;
-	    checkLeptonsDuplicate[std::pair<edm::ProductID,int>(dummyCandLep1.id(), dummyCandLep1.key())] = i;
-	  }
-	  
-	  //could implement ele ID criteria here	  
-	  lepton1TT = theTTBuilder->build(ele1.gsfTrack()); // it is build from the reco::Track - use buildfromGSF otherwise
-	  candLep1Dxy = ele1.dB(pat::Electron::PV2D);
-	  candLep1Dz = ele1.dB(pat::Electron::PVDZ);
-	  candLep1DxyS = candLep1Dxy / ele1.edB(pat::Electron::PV2D);
-	  candLep1DzS = candLep1Dz / ele1.edB(pat::Electron::PVDZ);
-	}
-	else{
-	  if((unsigned int)iTM == i) continue;
-	  const pat::Muon & muon1 = (*muonHandle)[i];
-	  candLep1 = &muon1;
-
-	  //have muon softID on leading muon !!
-	  if(!(muon1.isLooseMuon() && muon1.isSoftMuon(PV))) continue;
-	  lepton1VZ = candLep1->vz();
-	  lepton1.SetPtEtaPhiM(candLep1->pt(), candLep1->eta(), candLep1->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
-	  if(trgMuonTL.DeltaR(lepton1) < trgExclusiondR_ || std::fabs(trgMuonVZ - lepton1VZ) > trgAcceptdz_) continue;
-
-	  if(debug) std::cout << " muon1.sourceCandidatePtr(i).isNonnull() = " << muon1.sourceCandidatePtr(i).isNonnull() << std::endl;
-	  
-	  //just save ref a PFCand
-	  for(unsigned int ic = 0; ic < muon1.numberOfSourceCandidatePtrs(); ++ic){
-	    if(!muon1.sourceCandidatePtr(ic).isNonnull() || !muon1.sourceCandidatePtr(ic).isAvailable()) continue;
-	    reco::CandidatePtr dummyCandLep1 = muon1.sourceCandidatePtr(ic);
-	    checkLeptonsDuplicate[std::pair<edm::ProductID,int>(dummyCandLep1.id(), dummyCandLep1.key())] = i;
-	  }
-
-	  lepton1TT = theTTBuilder->build(muon1.bestTrack()); // it is build from the reco::Track - generalTracks
-	  candLep1Dxy = muon1.dB(pat::Muon::PV2D);
-	  candLep1Dz = muon1.dB(pat::Muon::PVDZ);
-	  candLep1DxyS = candLep1Dxy/muon1.edB(pat::Muon::PV2D);
-	  candLep1DzS = candLep1Dz/muon1.edB(pat::Muon::PVDZ);
-
-	}
-      }
+      else if(isLepEle_ && !isLowPtAndPfEle_ && isLowPtEle_)      
+	objectPassed = getCandLepX_LowPtEle(selectedLowPtGsfTracks[iTM].at(i), lepton1TT, 
+					    candLep1Dxy, candLep1Dz,candLep1DxyS, candLep1DzS,
+					    false, iTM);
       
-      if(!isLowPtEle_){
-	//lepton1.SetPtEtaPhiM(candLep1->pt(), candLep1->eta(), candLep1->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
-	lepton1Charge = candLep1->charge();
-	//lepton1VZ = candLep1->vz();
-      }
-      if(lepton1.Pt()<ptMinLeadLep_ || abs(lepton1.Eta()) > etaMaxLeadLep_) continue;
-      
+      else if(!isLepEle_)
+	objectPassed = getCandLepX_PFmuon(selectedMuons[iTM].at(i), candLep1, lepton1TT,
+					 candLep1Dxy, candLep1Dz,candLep1DxyS, candLep1DzS,
+					  false, iTM, PV);
+
+      if(!objectPassed) continue;
       if(debug) std::cout << " passed lepton 1 " << std::endl;
-
-      //removableL2.clear();
+      //      if(debug && !isLowPtAndPfEle_ && !isLowPtEle_) std::cout << " candLep1->charge() = " << candLep1ref->charge() << std::endl;
 
       for (unsigned int j = i+1; j < subLeadLeptonTrackNumber; ++j) {
-	bool isLep2PFL = (j < leptonNumber || useLostSubLeadLepTracks_ == false) ? true : false;
-	bool isLep2PFC = (isLep2PFL == false && j < (pfCandNumber+leptonNumber)) ? true : false;
-	bool isLep2LT = (j >= (pfCandNumber+leptonNumber)) ? true : false;
+	bool isLep2LowPt = bool((isLowPtEle_ && !isLowPtAndPfEle_) || (isLepEle_ && isLowPtAndPfEle_ && j >= selectedElectrons[iTM].size()));
+	bool isLep2PFL = bool(j < leptonNumber || useLostSubLeadLepTracks_ == false);
+	bool isLep2PFC = bool(isLep2PFL == false && j < (pfCandNumber+leptonNumber));
+	bool isLep2LT = bool(j >= (pfCandNumber+leptonNumber));
 
 	if(debug) std::cout << " i = " << i << " j = " << j << " leptonNumber = " << leptonNumber <<std::endl;
 
-	if(debug) std::cout << " isLep2PFL = " << isLep2PFL << " isLep2PFC = " << isLep2PFC << " isLep2LT = " << isLep2LT << std::endl;
+	if(debug) std::cout << " isLep2LowPt = " << isLep2LowPt << " isLep2PFL = " << isLep2PFL << " isLep2PFC = " << isLep2PFC << " isLep2LT = " << isLep2LT << std::endl;
 
-	//cross clean also wrt 2nd lepton
-	/*
-	if(removableL2.size() != 0){
-	  if(debug) std::cout << " pre clear checkLeptonsDuplicate.size = " << checkLeptonsDuplicate.size() << " removableL2 size = " << removableL2.size() << std::endl;
-
-	  for(auto iLD : removableL2)
-	    checkLeptonsDuplicate.erase(iLD);
-	  removableL2.clear();
-
-	  if(debug)
-	    std::cout << " post clear checkLeptonsDuplicate.size = " << checkLeptonsDuplicate.size() << " removableL2 size = " << removableL2.size() << std::endl;
-	}
-	*/
-
+ 
 	float candLep2Dxy = -99.;
 	float candLep2Dz = -99.;
 	float candLep2DxyS = -99.;
 	float candLep2DzS = -99.;
 	const reco::Candidate* candLep2;
-	TLorentzVector lepton2;
 	reco::TransientTrack lepton2TT; 
-	int lepton2Charge = -99;      
-	float lepton2VZ = -99.;
-	float gsfTrk2_seedBDT_unbiased = -99.;
-	float gsfTrk2_seedBDT_ptbiased = -99.;
 
-	if(isLowPtEle_){
-	  if(i == j) continue;
-	  if(mvaSeedsHandle.size() != 2 || !mvaSeedsHandle[0].isValid() || mvaSeedsHandle[0]->empty() ||
-	     !mvaSeedsHandle[1].isValid() || mvaSeedsHandle[1]->empty() || !lowPtGsfTracksHandle.isValid()) continue;
+	if(isLep2PFL || isLep2LowPt){
+	  if(isLepEle_ || isLowPtAndPfEle_){
 
-	  const reco::GsfTrackRef gsfTrk(lowPtGsfTracksHandle, j);
-	  gsfTrk2_seedBDT_unbiased = float((*mvaSeedsHandle[0])[gsfTrk]);
-	  gsfTrk2_seedBDT_ptbiased = float((*mvaSeedsHandle[1])[gsfTrk]);
-
-	  if(gsfTrk2_seedBDT_unbiased < bdtUnbiasedSubLeadLep_) continue;
-
-	  if(debug) std::cout << " low pt gsf Track2 idx = " << j << " gsfTrk1_seedBDT_unbiased = " << gsfTrk2_seedBDT_unbiased << std::endl; 
-	  lepton2.SetPtEtaPhiM(gsfTrk->ptMode(), gsfTrk->etaMode(), gsfTrk->phiMode(), ElectronMass_);
-
-	  lepton2VZ = gsfTrk->vz();
-          if(trgMuonTL.DeltaR(lepton2) < trgExclusiondR_ || std::fabs(trgMuonVZ - lepton2VZ) > trgAcceptdz_) continue;
-
-
-	  pat::PackedCandidateRef ltRef = (*gsfLinkLTHandle)[gsfTrk];
-	  pat::PackedCandidateRef pcRef = (*gsfLinkPCHandle)[gsfTrk];
-	
-	  if(debug){
-	    std::cout << " ltRef.isNonnull() = " << ltRef.isNonnull() << " ltRef.isAvailable() = " << ltRef.isAvailable()
-		      << " pcRef.isNonnull() = " << pcRef.isNonnull() << " pcRef.isAvailable() = " << pcRef.isAvailable()
-		      << std::endl;
-	  }
-		
-	  //just save ref a PFCand       
-	  if(ltRef.isNonnull() && ltRef.isAvailable()){ 
-	    checkLeptonsDuplicate[std::pair<edm::ProductID,int>(ltRef.id(), ltRef.key())] = j;
-	  }
-	  if(pcRef.isNonnull() && pcRef.isAvailable()){ 
-	    checkLeptonsDuplicate[std::pair<edm::ProductID,int>(pcRef.id(), pcRef.key())] = j;
-	  }
-
-	  lepton2TT = theTTBuilder->build(gsfTrk); // it is build from the reco::Track - use buildfromGSF otherwise 
-	  lepton2Charge = gsfTrk->chargeMode();
-
-	  /*
-	  candLep2Dxy = gsfTrk.dxy();
-	  candLep2Dz = gsfTrk.dz();
-	  candLep2DxyS = candLep2Dxy / gsfTrk.dxyError();
-	  candLep2DzS = candLep2Dz / gsfTrk.dzError();
-	  */
-	}
-	else if(isLep2PFL || isLep2PFC || isLep2LT){
-	  if(isLep2PFL){
-	    if(i == j) continue;
-	    if(isLepEle_){
-	      const pat::Electron & ele2 = (*electronHandle)[j];
-	      candLep2 = &ele2;
-	      
-	      lepton2.SetPtEtaPhiM(candLep2->pt(), candLep2->eta(), candLep2->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
-	      lepton2VZ = candLep2->vz();
-	      if(trgMuonTL.DeltaR(lepton2) < trgExclusiondR_ || std::fabs(trgMuonVZ - lepton2VZ) > trgAcceptdz_) continue;
-
-	      //just save ref a PFCand
-	      for(unsigned int ic = 0; ic < ele2.numberOfSourceCandidatePtrs(); ++ic){
-		if(!ele2.sourceCandidatePtr(ic).isNonnull() || !ele2.sourceCandidatePtr(ic).isAvailable()) continue;
-		reco::CandidatePtr dummyCandLep2 = ele2.sourceCandidatePtr(ic);
-		std::pair<edm::ProductID,int> keyVal(dummyCandLep2.id(), dummyCandLep2.key());
-		checkLeptonsDuplicate[keyVal] = j;
-		//removableL2.push_back(keyVal);
-	      }
-	      
-	      lepton2TT = theTTBuilder->build(ele2.gsfTrack()); // it is build from the reco::Track - use buildfromGSF otherwise
-	      candLep2Dxy = ele2.dB(pat::Electron::PV2D);
-	      candLep2Dz = ele2.dB(pat::Electron::PVDZ);
-	      candLep2DxyS = candLep2Dxy/ele2.edB(pat::Electron::PV2D);
-	      candLep2DzS = candLep2Dz/ele2.edB(pat::Electron::PVDZ);
-	    }
-	    else{
-	      if((unsigned int)iTM == j) continue;
-	      const pat::Muon & muon2 = (*muonHandle)[j];
-	      candLep2 = &muon2;
-
-	      lepton2.SetPtEtaPhiM(candLep2->pt(), candLep2->eta(), candLep2->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
-	      lepton2VZ = candLep2->vz();
-	      if(trgMuonTL.DeltaR(lepton2) < trgExclusiondR_ || std::fabs(trgMuonVZ - lepton2VZ) > trgAcceptdz_) continue;
-	      
-	      //just save ref a PFCand
-	      for(unsigned int ic = 0; ic < muon2.numberOfSourceCandidatePtrs(); ++ic){
-		if(!muon2.sourceCandidatePtr(ic).isNonnull() || !muon2.sourceCandidatePtr(ic).isAvailable()) continue;
-		reco::CandidatePtr dummyCandLep2 = muon2.sourceCandidatePtr(ic);
-		std::pair<edm::ProductID,int> keyVal(dummyCandLep2.id(), dummyCandLep2.key());
-		checkLeptonsDuplicate[keyVal] = j;
-		//removableL2.push_back(keyVal);
-	      }
-	      
-	      //could implement muon ID criteria here
-	      
-	      lepton2TT = theTTBuilder->build(muon2.bestTrack()); // it is build from the reco::Track - generalTracks
-	      candLep2Dxy = muon2.dB(pat::Muon::PV2D);
-	      candLep2Dz = muon2.dB(pat::Muon::PVDZ);
-	      candLep2DxyS = candLep2Dxy/muon2.edB(pat::Muon::PV2D);
-	      candLep2DzS = candLep2Dz/muon2.edB(pat::Muon::PVDZ);
-	    }
-	  }
-	  else if(isLep2PFC || isLep2LT){
+	    if(isLep2LowPt)
+	      objectPassed = getCandLepX_LowPtEle(selectedLowPtGsfTracks[iTM].at(j-selectedElectrons[iTM].size()), lepton2TT,
+						  candLep2Dxy, candLep2Dz,candLep2DxyS, candLep2DzS,
+						  true, iTM);
 	    
-	    edm::ProductID pair1 = isLep2PFC ? pfCandHandle.id() : lostSubLeadLepTrackHandle.id();
-	    int pair2 = isLep2PFC ? (j-leptonNumber) : (j-leptonNumber-pfCandNumber);
-	    std::pair<edm::ProductID, int> dummyPair(pair1, pair2);
-	    std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkLD_it = checkLeptonsDuplicate.find(dummyPair);
-	    if(checkLD_it != checkLeptonsDuplicate.end()) { 
-	      if(debug) std::cout << " found duplicate L2" << std::endl; 
-	      continue;
-	    }
-	    if(debug) std::cout << " NON duplicate L2 " << std::endl;
-	    
-	    if(isLepEle_){
-	      const pat::PackedCandidate & ele2 = isLep2PFC ? (*pfCandHandle)[j-leptonNumber] : (*lostSubLeadLepTrackHandle)[j-leptonNumber-pfCandNumber];
-	      candLep2 = &ele2;
-	      
-	      lepton2.SetPtEtaPhiM(candLep2->pt(), candLep2->eta(), candLep2->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
-	      lepton2VZ = candLep2->vz();
-	      if(trgMuonTL.DeltaR(lepton2) < trgExclusiondR_ || std::fabs(trgMuonVZ - lepton2VZ) > trgAcceptdz_) continue;
+	    else
+	      objectPassed = getCandLepX_PFele(selectedElectrons[iTM].at(j), candLep2, lepton2TT,
+					       candLep2Dxy, candLep2Dz,candLep2DxyS, candLep2DzS,
+					       true, iTM);
 
-	      //could implement ele ID criteria here
-	      if(isLep2LT && debug) std::cout << " >>> ele2.hasTrackDetails() = " << ele2.hasTrackDetails() << " ele2.pdgId() = " << ele2.pdgId()  << std::endl;
-	      if(!ele2.hasTrackDetails()) continue;
-	      //exclude neutral should be safe do not ask too much ID
-	      if(abs(ele2.pdgId()) == 0) continue;
-	      //FIXME
-	      if(ele2.pt() > 3.) continue;
-	      
-	      lepton2TT = theTTBuilder->build(ele2.bestTrack());
-	      candLep2Dxy = ele2.dxy();
-	      candLep2Dz = ele2.dz();
-	      candLep2DxyS = candLep2Dxy/ele2.dxyError();
-	      candLep2DzS = candLep2Dz/ele2.dzError();
-	    }
-	    else{
-	      const pat::PackedCandidate & muon2 = isLep2PFC ? (*pfCandHandle)[j-leptonNumber] : (*lostSubLeadLepTrackHandle)[j-leptonNumber-pfCandNumber];
-	      candLep2 = &muon2;
-	      
-	      lepton2.SetPtEtaPhiM(candLep2->pt(), candLep2->eta(), candLep2->phi(), (isLepEle_) ? ElectronMass_ : MuonMass_);
-	      lepton2VZ = candLep2->vz();
-	      if(trgMuonTL.DeltaR(lepton2) < trgExclusiondR_ || std::fabs(trgMuonVZ - lepton2VZ) > trgAcceptdz_) continue;
-
-	      if(debug)	    std::cout << " muon2 taken " << std::endl;
-	      //could implement muon ID criteria here
-	      if(isLep2LT && debug) std::cout << " >>> muon2.hasTrackDetails() = " << muon2.hasTrackDetails() << " muon2.pdgId() = " << muon2.pdgId()  << std::endl;
-	      if(!muon2.hasTrackDetails()) continue;
-	      //exclude neutral should be safe do not ask too much ID
-	      if(abs(muon2.pdgId()) == 0) continue;   
-	      //muonID for pT > 3 in EB => recover with pfCand
-	      //FIXME
-	      //if(std::abs(muon2.eta()) > 1.497 || muon2.pt() > 3.) continue;
-	      if(muon2.pt() > 3.) continue;
-	      if(debug) std::cout << " muon2 ok for candLep2 " << std::endl;
-	      
-	      lepton2TT = theTTBuilder->build(muon2.bestTrack()); 
-	      candLep2Dxy = muon2.dxy();
-	      candLep2Dz = muon2.dz();
-	      candLep2DxyS = candLep2Dxy/muon2.dxyError();
-	      candLep2DzS = candLep2Dz/muon2.dzError();
-	    }
 	  }
+	  else if(isLepEle_ && !isLowPtAndPfEle_ && isLowPtEle_)
+	    objectPassed = getCandLepX_LowPtEle(selectedLowPtGsfTracks[iTM].at(j), lepton2TT,
+						candLep2Dxy, candLep2Dz,candLep2DxyS, candLep2DzS,
+						true, iTM);
+	  
+	  else if(!isLepEle_)
+	    objectPassed = getCandLepX_PFmuon(selectedMuons[iTM].at(j), candLep2, lepton2TT,
+					      candLep2Dxy, candLep2Dz,candLep2DxyS, candLep2DzS,
+					      true, iTM, PV);
 	}
-	else{
-	  std::cout << " ERROR: not assigned subleading lepton " << std::endl;
-	  return;
-	}
+	else if(isLep2PFC || isLep2LT){
+	  if(isLep2PFC) 
+	    objectPassed = getCandX_PackedCand(selectedPackedCandidates[iTM].at(j-leptonNumber), candLep2, lepton2TT,
+					       candLep2Dxy, candLep2Dz,candLep2DxyS, candLep2DzS,
+					       true, false, iTM);
+	  
+	  else
+	    objectPassed = getCandX_LostTracks(selectedLostTracks[iTM].at(j-leptonNumber-pfCandNumber), candLep2, lepton2TT,
+					       candLep2Dxy, candLep2Dz,candLep2DxyS, candLep2DzS,
+					       true, false, iTM);
 
-	if(!isLowPtEle_){
-	  lepton2Charge = candLep2->charge();
+	  //	  if(debug) std::cout << " candLep2->pt() = " << candLep2->pt() << std::endl;
+
 	}
-	
-	if(lepton1.Pt() < lepton2.Pt()) continue; //Lepton 1 is always saved as the leading one
-	if(lepton2.Pt() < ptMinSubLeadLep_ || abs(lepton2.Eta()) > etaMaxSubLeadLep_) continue;
-	if(debug && lepton1Charge != lepton2Charge) std::cout << " lepton1Charge = " << lepton1Charge << " lepton2Charge = " << lepton2Charge << std::endl;
-	if(diLepCharge_ && lepton1Charge*lepton2Charge > 0) continue;
-	// lepton1 and lepton2 belong to different collections need to check they are different
-	if(!isLep2PFL && deltaR(lepton1.Eta(), lepton1.Phi(), lepton2.Eta(), lepton2.Phi()) < 0.01) continue;
+	else{ std::cout << " lepton 2 problem " << std::endl; }      
+
+	if(!objectPassed) continue;
 	if(debug) std::cout << " passed lepton 2 " << std::endl;
-
-	if(!isLowPtEle_ && !isLep2PFL && diLepton_dz_max_ > -1. && std::abs(lepton2VZ - lepton1VZ) > diLepton_dz_max_) continue;
 
 	float maxl1l2_dxyS = std::max(candLep2DxyS, candLep1DxyS);
 
 	if(debug){
-	  std::cout << " 1_vz =  " << lepton1VZ << " 2_vz = " << lepton2VZ << std::endl; 
+	  std::cout << " 1_vz =  " << vzL1 << " 2_vz = " << vzL2 << std::endl; 
 	  //study first then in case if > 1 continue;
 	}
 	
@@ -828,7 +1378,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	math::XYZVector refitLepLep_2trks;
 	RefCountedKinematicVertex refitVertexLepLep_2trks;
 
-	if(debug) std::cout << " before save2TrkRefit_ " << std::endl;
+	if(debug) std::cout << " before save2TrkRefit_ (= " << save2TrkRefit_ << ")" << std::endl;
 	if(save2TrkRefit_){
 	  passedDiLepton = LepLepVertexRefitting(lepton1TT,
 						 lepton2TT,
@@ -836,7 +1386,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 						 refitLepLep_2trks);
 	  
 	  if (passedDiLepton){
-	    pair<double,double> LepLepLS = computeLS(refitVertexLepLep_2trks, PV);
+	    pair<double,double> LepLepLS = computeLS(refitVertexLepLep_2trks, beamSpot);
 	    LepLepLSBS = LepLepLS.first;
 	    LepLepLSBSErr = LepLepLS.second;
 	    
@@ -845,7 +1395,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 				       int(rint(refitVertexLepLep_2trks->degreesOfFreedom())));
 	  }
 	}
-	if(!isLep2PFL && !isLowPtEle_ && save2TrkRefit_ && IPPV_llRefitVtx_min_ != -1 && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
+	if(!isLep2PFL && !isLowPtEle_ && !isLowPtAndPfEle_ && save2TrkRefit_ && 
+	   IPPV_llRefitVtx_min_ != -1 && LepLepLSBS/LepLepLSBSErr < IPPV_llRefitVtx_min_) continue;
 
 	if(save2TrkRefit_ && !passedDiLepton) continue;
 	const math::XYZPoint &leplepRefitVertex = (save2TrkRefit_ && passedDiLepton) ? math::XYZPoint(refitVertexLepLep_2trks->position()) : math::XYZPoint(0.,0.,0.);
@@ -858,61 +1409,59 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	  if(!isLep2PFL && (j-leptonNumber) == k) continue;
 	  bool isKPFCand = k<pfCandNumber;
-	  const pat::PackedCandidate & kaon = isKPFCand ? (*pfCandHandle)[k] : (*lostChHadrTrackHandle)[k-pfCandNumber];
-	  
-	  edm::ProductID pair1k = isKPFCand ? pfCandHandle.id() : lostChHadrTrackHandle.id();
-          int pair2k = isKPFCand ? k : (k-pfCandNumber);
-	  std::pair<edm::ProductID, int> dummyPairk(pair1k, pair2k);
-	  std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkLD_itk = checkLeptonsDuplicate.find(dummyPairk);
-          if(checkLD_itk != checkLeptonsDuplicate.end()){ 
-	    if(debug) std::cout << " found duplicate k " << std::endl; 
-	    continue;
-	  }
-	  if(debug) std::cout << " NON duplicate K " << std::endl;
 
-	  if(!kaon.hasTrackDetails()) continue;
-	  if(abs(kaon.pdgId()) != 211) // && abs(kaon.pdgId()) != 11 && abs(kaon.pdgId()) != 13) continue; //Charged hadrons
-	    if(kaon.pt()<ptMinKaon_ || abs(kaon.eta())>etaMaxKaon_) continue;
-	  if(deltaR(lepton1.Eta(), lepton1.Phi(), kaon.eta(), kaon.phi()) < 0.01 || 
-	     deltaR(lepton2.Eta(), lepton2.Phi(), kaon.eta(), kaon.phi()) < 0.01 ) continue;
+	  const reco::Candidate* kaon;
+	  reco::TransientTrack kaonTT;
+	  float candKaonDxy = -1;
+          float candKaonDz = -1;
+          float candKaonDxyS = -1;
+          float candKaonDzS = -1;
+	  float kaon_dxyFromRefitllVtx = -1;
 
-	  TLorentzVector kaonTL;
-	  kaonTL.SetPtEtaPhiM(kaon.pt(), kaon.eta(), kaon.phi(), KaonMass_); 
-	  if(trgMuonTL.DeltaR(kaonTL) < trgExclusiondR_ || std::fabs(trgMuonVZ - kaon.vz()) > trgAcceptdz_) continue;
+	  if(isKPFCand)
+	    objectPassed = getCandX_PackedCand(selectedPackedCandidates[iTM].at(k), kaon, kaonTT,
+					       candKaonDxy, candKaonDz, candKaonDxyS, candKaonDzS,
+					       false, true, iTM, (save2TrkRefit_) ? leplepRefitVertex : math::XYZPoint(0,0,0), 
+					       kaon_dxyFromRefitllVtx);
 
-	  float kaon_dxyFromRefitllVtx = save2TrkRefit_ ? kaon.dxy(leplepRefitVertex) : -1;
-	  if(!isLep2PFL && save2TrkRefit_ && kaonRefitllVertex_dxy_max_ != -1 &&
-	     std::abs(kaon_dxyFromRefitllVtx) > kaonRefitllVertex_dxy_max_) continue;
+	  else
+	    objectPassed = getCandX_LostTracks(selectedLostTracks[iTM].at(k-pfCandNumber),  kaon, kaonTT,
+                                               candKaonDxy, candKaonDz, candKaonDxyS, candKaonDzS,
+                                               false, true, iTM, (save2TrkRefit_) ? leplepRefitVertex : math::XYZPoint(0,0,0), 
+					       kaon_dxyFromRefitllVtx);
 
-	  float kaon_dxyS = kaon.dxy()/kaon.dxyError();
-	  float maxl1l2k_dxyS = std::max(maxl1l2_dxyS, kaon_dxyS);
-	  if(!isLowPtEle_ && !isLep2PFL && kll_dxyPV_min_ != -1 && std::abs(maxl1l2k_dxyS) < kll_dxyPV_min_) continue;
+	  if(!objectPassed) continue;
+
+	  //keep these here for the moment
+	  float maxl1l2k_dxyS = std::max(maxl1l2_dxyS, candKaonDxyS);
+	  if(!isLowPtEle_ && !isLowPtAndPfEle_ && !isLep2PFL && kll_dxyPV_min_ != -1 && std::abs(maxl1l2k_dxyS) < kll_dxyPV_min_) continue;
+
+	  if(!isLowPtEle_ && !isLowPtAndPfEle_ && !isLep2PFL && lepKaon_dz_max_ > -1. && 
+	     std::max(std::abs(vzL2 - vzK), std::abs(vzL1 - vzK)) > lepKaon_dz_max_ ) continue;
 
 	  if(debug) std::cout << " passed kaon " << std::endl;	  
 
-	  if(!isLowPtEle_ && !isLep2PFL && lepKaon_dz_max_ > -1. && 
-	     std::max(std::abs(lepton2VZ - kaon.vz()), std::abs(lepton1VZ - kaon.vz())) > lepKaon_dz_max_ ) continue;
-
 	  if(debug){
-	    std::cout << " kaon.vz() =  " << kaon.vz() << std::endl;
+	    std::cout << " kaon.vz() =  " << vzK << std::endl;
 	    //if > 1.5 continue
 	  }
 	  
-
-	  const reco::TransientTrack kaonTT = theTTBuilder->build(kaon.bestTrack());
 	  pair<double,double> DCA = computeDCA(kaonTT, beamSpot);
 	  double DCABS = DCA.first;
 	  double DCABSErr = DCA.second;
 	  
 	  if(fabs(DCABS/DCABSErr)<DCASigMinKaon_) continue;
 	  
+
 	  //for Kst
-	  int candPionL = -1;
+	  const reco::Candidate* pion;
 	  double candPionDxy = -1;
 	  double candPionDz = -1;
 	  double candPionDxyS = -1;
 	  double candPionDzS = -1;
-	  const reco::Candidate* candPion;
+
+	  int candPionIndex = -1;
+
 	  bool isPionPFCand = false;
 	  double DCABS_pion = -1;
 	  double DCABSErr_pion = -1;
@@ -949,52 +1498,37 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  if(debug) std::cout << " before pion " << std::endl;	  
 	  if(isChKst_){
 	    for (unsigned int l = 0; l < (pfCandNumber+lostChHadrTrackNumber); ++l) {
-	      candPionL = l;
-	      if(!isLep2PFL && (k == l || (j-leptonNumber) == l)) continue;
+	      candPionIndex = l;
+	      if(k == l || (!isLep2PFL && (j-leptonNumber) == l)) continue;
 	      
 	      isPionPFCand = l<pfCandNumber;
 
-	      edm::ProductID pair1p = isPionPFCand ? pfCandHandle.id() : lostChHadrTrackHandle.id();
-	      int pair2p = isPionPFCand ? l : (l-pfCandNumber);
-	      std::pair<edm::ProductID, int> dummyPairp(pair1p, pair2p);
-	      std::map<std::pair<edm::ProductID,int>, unsigned int>::iterator checkLD_itp = checkLeptonsDuplicate.find(dummyPairp);
-	      if(checkLD_itp != checkLeptonsDuplicate.end()) { 
-		if(debug) std::cout << " found duplicate pi " << std::endl; 
-		continue;
-	      }
-	      if(debug) std::cout << " NON duplicate Pi " << std::endl;
+	      reco::TransientTrack pionTT;
 
-	      const pat::PackedCandidate & pion = isPionPFCand ? (*pfCandHandle)[l] : (*lostChHadrTrackHandle)[l-pfCandNumber];
-	      candPion = &pion;
-	      candPionDxy = pion.dxy();
-	      candPionDz = pion.dz();
-	      candPionDxyS = pion.dxyError();
-	      candPionDzS = pion.dzError();
+	      if(isPionPFCand)
+		objectPassed = getCandX_PackedCand(selectedPackedCandidates[iTM].at(l), pion, pionTT,
+						   candPionDxy, candPionDz, candPionDxyS, candPionDzS,
+						   false, false, iTM);
 
-	      if(!pion.hasTrackDetails()) continue;
-	      if(abs(pion.pdgId())!=211) continue; //Charged hadrons
-	      if(pion.pt() < ptMinPion_ || abs(pion.eta()) > etaMaxPion_) continue;
-	      if(KstCharge_ && kaon.charge()*pion.charge()>0) continue;
-	      if(deltaR(lepton1.Eta(), lepton1.Phi(), pion.eta(), pion.phi()) < 0.01 || 
-		 deltaR(lepton2.Eta(), lepton2.Phi(), pion.eta(), pion.phi()) < 0.01 ||
-		 deltaR(kaon, pion) < 0.01) continue;
-	      
-	      TLorentzVector pionTL;
-	      pionTL.SetPtEtaPhiM(pion.pt(), pion.eta(), pion.phi(), PionMass_);
-	      if(trgMuonTL.DeltaR(pionTL) < trgExclusiondR_ || std::fabs(trgMuonVZ - pion.vz()) > trgAcceptdz_) continue;
+	      else
+		objectPassed = getCandX_LostTracks(selectedLostTracks[iTM].at(l-pfCandNumber), pion, pionTT,
+						   candPionDxy, candPionDz, candPionDxyS, candPionDzS,
+						   false, false, iTM);
 
-	      if(!isLowPtEle_ && !isLep2PFL && lepPion_dz_max_ > -1. &&
-		 std::max(std::abs(lepton2VZ - pion.vz()), std::abs(lepton1VZ - pion.vz())) > lepPion_dz_max_ ) continue;
-	      if(kaonPion_dz_max_ > -1. && std::abs(kaon.vz() - pion.vz()) > kaonPion_dz_max_) continue;
+	      if(!objectPassed) continue;
+
+	      //for the moment keep these here
+	      if(!isLowPtEle_ && !isLowPtAndPfEle_ && !isLep2PFL && lepPion_dz_max_ > -1. &&
+		 std::max(std::abs(vzL2 - vzP), std::abs(vzL1 - vzP)) > lepPion_dz_max_ ) continue;
+	      if(kaonPion_dz_max_ > -1. && std::abs(vzK - vzP) > kaonPion_dz_max_) continue;
 
 	      if(debug){
-		std::cout << " pion.vz() =  " << pion.vz() << std::endl;
+		std::cout << " pion.vz() =  " << vzP << std::endl;
 		//if > 1.5 continue
 	      }
 
 	      if(debug) std::cout << " passed pion " << std::endl;
 	      
-	      const reco::TransientTrack pionTT = theTTBuilder->build(pion.bestTrack());
 	      pair<double,double> DCA_pion = computeDCA(pionTT, beamSpot);
 	      DCABS_pion = DCA_pion.first;
 	      DCABSErr_pion = DCA_pion.second;
@@ -1099,23 +1633,29 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	  if(debug) std::cout << " now filling " << std::endl;
 	  pat::CompositeCandidate BToKstLLCand;
-	  if(!isLowPtEle_){
+
+	  if(!isLowPtEle_ && (!isLowPtAndPfEle_ || (isLowPtAndPfEle_ && !isLep1LowPt && !isLep2LowPt))){
 	    BToKstLLCand.addDaughter( *(candLep1) , "lep1");
 	    BToKstLLCand.addDaughter( *(candLep2) , "lep2");
 	  }
-	  BToKstLLCand.addDaughter( kaon, "kaon");
+	  BToKstLLCand.addDaughter( *(kaon), "kaon");
 
 	  BToKstLLCand.addUserInt("isEleCh", (int)isLepEle_);
 	  BToKstLLCand.addUserInt("isKstCh", (int)isChKst_);
 	  BToKstLLCand.addUserInt("isLowPtEle", (int)isLowPtEle_);
+	  BToKstLLCand.addUserInt("isLowPtAndPfEle", (int)isLowPtAndPfEle_);
 	  
-	  BToKstLLCand.addUserInt("lep1_index", i);
-	  BToKstLLCand.addUserInt("lep2_index", isLep2PFL ? j : -1);
+	  BToKstLLCand.addUserInt("lep1_index", !isLep1LowPt ? i : -1);
+	  BToKstLLCand.addUserInt("lep1_lowPt_index", (isLep1LowPt && isLowPtAndPfEle_) ? (i - selectedElectrons.size()) : ((isLep1LowPt && isLowPtEle_) ? i : -1));
+	  BToKstLLCand.addUserInt("lep2_index", (isLep2PFL && !isLep2LowPt) ? j : -1);
+	  BToKstLLCand.addUserInt("lep2_lowPt_index", (isLep2LowPt && isLowPtAndPfEle_) ? (j - selectedElectrons.size()) : ((isLep2LowPt && isLowPtEle_) ? j : -1));
 	  BToKstLLCand.addUserInt("lep2_pfCand_index", isLep2PFC ? j-leptonNumber : -1);
 	  BToKstLLCand.addUserInt("lep2_lostTrack_index", isLep2LT ? j-leptonNumber-pfCandNumber : -1);
 	  BToKstLLCand.addUserInt("kaon_index", isKPFCand ? k : -1);
 	  BToKstLLCand.addUserInt("kaon_lostTrack_index", isKPFCand ? -1 : k-pfCandNumber);
 
+	  BToKstLLCand.addUserInt("lep1_isLowPt", (int)isLep1LowPt);
+	  BToKstLLCand.addUserInt("lep2_isLowPt", (int)isLep2LowPt);
 	  BToKstLLCand.addUserInt("lep2_isPFLep", (int)isLep2PFL);
 	  BToKstLLCand.addUserInt("lep2_isPFCand", (int)isLep2PFC);
 	  BToKstLLCand.addUserInt("kaon_isPFCand", (int)isKPFCand);
@@ -1129,9 +1669,9 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  if(debug) std::cout << " post BDT " << std::endl;
 
 	  if(isChKst_){
-	    BToKstLLCand.addDaughter( *(candPion), "pion");	      
-	    BToKstLLCand.addUserInt("pion_index", isPionPFCand ? candPionL : -1);
-	    BToKstLLCand.addUserInt("pion_lostTrack_index", isPionPFCand ? -1 : candPionL-pfCandNumber);
+	    BToKstLLCand.addDaughter( *(pion), "pion");	      
+	    BToKstLLCand.addUserInt("pion_index", isPionPFCand ? candPionIndex : -1);
+	    BToKstLLCand.addUserInt("pion_lostTrack_index", isPionPFCand ? -1 : candPionIndex-pfCandNumber);
 	    BToKstLLCand.addUserInt("pion_isPFCand", (int)isPionPFCand);
 	  }
 	  else{
@@ -1139,52 +1679,53 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	    BToKstLLCand.addUserInt("pion_lostTrack_index", -1);
 	    BToKstLLCand.addUserInt("pion_isPFCand", -1);
 	  }
-
+	
 	  BToKstLLCand.addUserInt("muTrg_index", iTM);
+	  BToKstLLCand.addUserFloat("muTrg_vz", vzTrgMuo[iTM]);
 	  
 	  BToKstLLCand.addUserFloat("lep1_pt",     lepton1.Pt());
 	  BToKstLLCand.addUserFloat("lep1_eta",    lepton1.Eta());
 	  BToKstLLCand.addUserFloat("lep1_phi",    lepton1.Phi());
-	  BToKstLLCand.addUserInt("lep1_charge",   lepton1Charge);
+	  BToKstLLCand.addUserInt("lep1_charge",   chargeL1);
 	  BToKstLLCand.addUserFloat("lep1_dxy",    candLep1Dxy);
 	  BToKstLLCand.addUserFloat("lep1_dxyS",   candLep1DxyS);
 	  BToKstLLCand.addUserFloat("lep1_dz",     candLep1Dz);
 	  BToKstLLCand.addUserFloat("lep1_dzS",    candLep1DzS);
-	  BToKstLLCand.addUserFloat("lep1_vz",     lepton1VZ);
+	  BToKstLLCand.addUserFloat("lep1_vz",     vzL1);
 
 	  BToKstLLCand.addUserFloat("lep2_pt",     lepton2.Pt());
 	  BToKstLLCand.addUserFloat("lep2_eta",    lepton2.Eta());
 	  BToKstLLCand.addUserFloat("lep2_phi",    lepton2.Phi());
-	  BToKstLLCand.addUserInt("lep2_charge",   lepton2Charge);
+	  BToKstLLCand.addUserInt("lep2_charge",   chargeL2);
 	  BToKstLLCand.addUserFloat("lep2_dxy",    candLep2Dxy);
 	  BToKstLLCand.addUserFloat("lep2_dxyS",   candLep2DxyS);
 	  BToKstLLCand.addUserFloat("lep2_dz",     candLep2Dz);
 	  BToKstLLCand.addUserFloat("lep2_dzS",    candLep2DzS);
-	  BToKstLLCand.addUserFloat("lep2_vz",     lepton2VZ);
+	  BToKstLLCand.addUserFloat("lep2_vz",     vzL2);
 
 	  BToKstLLCand.addUserFloat("kaon_pt",    kaonTL.Pt());
 	  BToKstLLCand.addUserFloat("kaon_eta",   kaonTL.Eta());
 	  BToKstLLCand.addUserFloat("kaon_phi",   kaonTL.Phi());
-	  BToKstLLCand.addUserInt("kaon_charge",  kaon.charge());
-	  BToKstLLCand.addUserFloat("kaon_DCASig", DCABS/DCABSErr);
-	  // BToKstLLCand.addUserFloat("kaon_dxy",    kaon.dxy());
-	  BToKstLLCand.addUserFloat("kaon_dxyS",   kaon_dxyS);
-	  // BToKstLLCand.addUserFloat("kaon_dz",    kaon.dz());
-	  BToKstLLCand.addUserFloat("kaon_dzS",   kaon.dz()/kaon.dzError());
-	  BToKstLLCand.addUserFloat("kaon_vz",    kaon.vz());
+	  BToKstLLCand.addUserInt("kaon_charge",  chargeK);
+	  BToKstLLCand.addUserFloat("kaon_DCASig",DCABS/DCABSErr);
+	  BToKstLLCand.addUserFloat("kaon_dxy",   candKaonDxy);
+	  BToKstLLCand.addUserFloat("kaon_dxyS",  candKaonDxyS );
+	  BToKstLLCand.addUserFloat("kaon_dz",    candKaonDz);
+	  BToKstLLCand.addUserFloat("kaon_dzS",   candKaonDzS);
+	  BToKstLLCand.addUserFloat("kaon_vz",    vzK);
 	  BToKstLLCand.addUserFloat("kaon_dxy_wrtllVtx", kaon_dxyFromRefitllVtx);
 
 	  //if Kst
-	  BToKstLLCand.addUserFloat("pion_pt", isChKst_ ? candPion->pt() : -1);
-	  BToKstLLCand.addUserFloat("pion_eta", isChKst_ ? candPion->eta() : -1);
-	  BToKstLLCand.addUserFloat("pion_phi", isChKst_ ? candPion->phi() : -1);
-	  BToKstLLCand.addUserInt("pion_charge", isChKst_ ? candPion->charge() : -1);
+	  BToKstLLCand.addUserFloat("pion_pt", isChKst_ ? pionTL.Pt() : -1);
+	  BToKstLLCand.addUserFloat("pion_eta", isChKst_ ? pionTL.Eta() : -1);
+	  BToKstLLCand.addUserFloat("pion_phi", isChKst_ ? pionTL.Phi() : -1);
+	  BToKstLLCand.addUserInt("pion_charge", isChKst_ ? chargeP : -1);
 	  BToKstLLCand.addUserFloat("pion_DCASig", isChKst_ ? DCABS_pion/DCABSErr_pion : -1);
 	  BToKstLLCand.addUserFloat("pion_dxy", isChKst_ ? candPionDxy : -1);
 	  BToKstLLCand.addUserFloat("pion_dxyS", isChKst_ ? candPionDxyS : -1);
 	  BToKstLLCand.addUserFloat("pion_dz", isChKst_ ? candPionDz : -1);
 	  BToKstLLCand.addUserFloat("pion_dzS", isChKst_ ? candPionDzS : -1);
-	  BToKstLLCand.addUserFloat("pion_vz", isChKst_ ? candPion->vz() : -1);
+	  BToKstLLCand.addUserFloat("pion_vz", isChKst_ ? vzP : -1);
 
 	  BToKstLLCand.addUserInt("fitLepLep", (int)save2TrkRefit_);
 	  BToKstLLCand.addUserInt("fitLepLepPassed", (int)passedDiLepton);
@@ -1264,8 +1805,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	
       }//subleading lepton
     }// loop over leading lepton
-    }//triggering muons
-  }//if leptons > 1
+  }//triggering muons
+    //  }//if leptons > 1
 
   iEvent.put(std::move(result));
 }
