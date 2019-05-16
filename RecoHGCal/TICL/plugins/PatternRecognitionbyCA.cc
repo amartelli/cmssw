@@ -40,6 +40,8 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
                                     ticl::constants::nPhiBins,
                                     layerClusters,
                                     mask,
+				    -1, 0, nEtaBins_, 0, nPhiBins_,
+				    math::XYZPoint(0., 0., 0.),
                                     2,
                                     2,
                                     min_cos_theta_,
@@ -47,6 +49,7 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
                                     missing_layers_,
                                     rhtools_.lastLayerFH());
   theGraph_->findNtuplets(foundNtuplets, min_clusters_per_ntuplet_);
+
   //#ifdef FP_DEBUG
   const auto &doublets = theGraph_->getAllDoublets();
   int tracksterId = 0;
@@ -87,3 +90,5 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
     }
   }
 }
+
+

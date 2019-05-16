@@ -30,7 +30,16 @@ namespace ticl {
                                 const std::vector<float>& mask,
                                 const ticl::TICLLayerTiles& tiles,
                                 std::vector<Trackster>& result) = 0;
-    enum VerbosityLevel { None = 0, Basic, Advanced, Expert, Guru };
+  
+    virtual void makeTrackstersSeeded(const edm::Event& ev,
+				      const edm::EventSetup& es,
+				      const std::vector<reco::CaloCluster>& layerClusters,
+				      const std::vector<float>& mask,
+				      const ticl::TICLLayerTiles& tiles,
+				      std::vector<Trackster>& result,
+    				      std::vector<std::vector<float>>& pointRefDir) = 0;
+
+  enum VerbosityLevel { None = 0, Basic, Advanced, Expert, Guru };
 
   protected:
     int algo_verbosity_;

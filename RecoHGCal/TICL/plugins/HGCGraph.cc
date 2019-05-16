@@ -11,6 +11,8 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
                                       int nPhiBins,
                                       const std::vector<reco::CaloCluster> &layerClusters,
                                       const std::vector<float> &mask,
+				      int zS, int etaS, int etaE, int phiS, int phiE,
+                                      const math::XYZPoint &refDir,
                                       int deltaIEta,
                                       int deltaIPhi,
                                       float minCosTheta,
@@ -22,6 +24,8 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
   allDoublets_.clear();
   theRootDoublets_.clear();
   for (int zSide = 0; zSide < 2; ++zSide) {
+    if(zS != -1 && zSide != zS) continue;
+
     for (int il = 0; il < maxNumberOfLayers - 1; ++il) {
       for (int outer_layer = 0; outer_layer < std::min(1 + missing_layers, maxNumberOfLayers - 1 - il); ++outer_layer) {
         int currentInnerLayerId = il + maxNumberOfLayers * zSide;
@@ -29,15 +33,16 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
         auto const &outerLayerHisto = histo[currentOuterLayerId];
         auto const &innerLayerHisto = histo[currentInnerLayerId];
 
-        for (int oeta = 0; oeta < nEtaBins; ++oeta) {
+	for (int oeta = etaS; oeta < etaE; ++oeta) {
           auto offset = oeta * nPhiBins;
-          for (int ophi = 0; ophi < nPhiBins; ++ophi) {
+	  for (int ophi_it = phiS; ophi_it < phiE; ++ophi_it) {
+	    int ophi = (phiS != 0 && phiE != nPhiBins) ? (( (ophi_it - ((phiE-phiS-1)/2)) % nPhiBins + nPhiBins) % nPhiBins) : ophi_it;
             for (auto outerClusterId : outerLayerHisto[offset + ophi]) {
               // Skip masked clusters
               if (mask[outerClusterId] == 0.)
                 continue;
               const auto etaRangeMin = std::max(0, oeta - deltaIEta);
-              const auto etaRangeMax = std::min(oeta + deltaIEta, nEtaBins);
+              const auto etaRangeMax = std::min(oeta + deltaIEta + 1, nEtaBins);
 
               for (int ieta = etaRangeMin; ieta < etaRangeMax; ++ieta) {
                 // wrap phi bin
@@ -70,7 +75,7 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
                           << std::endl;
                     }
                     bool isRootDoublet = thisDoublet.checkCompatibilityAndTag(
-                        allDoublets_, neigDoublets, minCosTheta, minCosPointing, verbosity_ > Advanced);
+		      allDoublets_, neigDoublets, refDir, minCosTheta, minCosPointing, verbosity_ > Advanced);
                     if (isRootDoublet)
                       theRootDoublets_.push_back(doubletId);
                   }

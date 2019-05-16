@@ -1,6 +1,7 @@
 <use   name="Geometry/CaloGeometry"/>
 <use   name="RecoLocalCalo/HGCalRecProducers"/>
 <use   name="RecoLocalCalo/HGCalRecAlgos"/>
+<use   name="CommonTools/Utils"/>
 <use   name="FWCore/Framework"/>
 <use   name="FWCore/ParameterSet"/>
 <use   name="FWCore/PluginManager"/>
@@ -11,6 +12,8 @@
 <use   name="FWCore/MessageLogger"/>
 <use   name="FWCore/MessageService"/>
 <use   name="Geometry/HGCalGeometry"/>
+<use   name="TrackingTools/Records"/>
+<use   name="Geometry/Records"/>
 <!--<use   name="RecoHGCal/TICL"/>-->
 
 <library   file="*.cc" name="RecoHGCalTICLPlugins">

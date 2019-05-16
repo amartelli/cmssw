@@ -6,6 +6,8 @@
 #include <memory>  // unique_ptr
 #include "RecoHGCal/TICL/interface/PatternRecognitionAlgoBase.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
+#include "DataFormats/Math/interface/Vector3D.h"
+
 
 class HGCGraph;
 
@@ -31,4 +33,6 @@ namespace ticl {
     int min_clusters_per_ntuplet_;
   };
 }  // namespace ticl
+
+
 #endif
