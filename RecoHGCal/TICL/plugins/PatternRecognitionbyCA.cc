@@ -47,7 +47,9 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev, const edm::Eve
   }
   std::vector<HGCDoublet::HGCntuplet> foundNtuplets;
   fillHistogram(layerClusters, mask);
-  theGraph_.makeAndConnectDoublets(histogram_, nEtaBins_, nPhiBins_, layerClusters, 2, 2,
+  theGraph_.makeAndConnectDoublets(histogram_, nEtaBins_, nPhiBins_, layerClusters, 
+				   -1, 0, nEtaBins_, 0, nPhiBins_,
+                                   math::XYZPoint(0., 0., 0.), 2, 2,
                                    min_cos_theta_, min_cos_pointing_, missing_layers_,
                                    rhtools_.lastLayerFH());
   theGraph_.findNtuplets(foundNtuplets, min_clusters_per_ntuplet_);
@@ -80,4 +82,73 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev, const edm::Eve
     tracksterId++;
   }
   //#endif
+}
+
+
+void PatternRecognitionbyCA::makeTrackstersSeeded(const edm::Event &ev, const edm::EventSetup &es,
+                                                  const std::vector<reco::CaloCluster> &layerClusters,
+                                                  const std::vector<std::pair<unsigned int, float>> &mask,
+                                                  std::vector<Trackster> &result,
+                                                  std::vector<std::vector<float>> &pointRefDir) {
+  rhtools_.getEventSetup(es);
+
+  clearHistogram();
+  theGraph_.setVerbosity(algo_verbosity_);
+  theGraph_.clear();
+  if (algo_verbosity_ > None) {
+    LogDebug("HGCPatterRecoByCA") << "Making Tracksters with CA" << std::endl;
+  }
+
+  fillHistogram(layerClusters, mask);
+  for(auto iRef : pointRefDir){
+    std::vector<HGCDoublet::HGCntuplet> foundNtuplets;
+
+    //    for(auto ij : iRef) std::cout << ij << std::endl;
+
+    int etaRef = getEtaBin(iRef[0]);
+    int phiRef = getPhiBin(iRef[1]);
+
+    int etaBinRange = 2;
+    int phiBinRange = 3;
+    int zside = int(iRef[0] > 0);
+
+    theGraph_.makeAndConnectDoublets(histogram_, nEtaBins_, nPhiBins_, layerClusters,
+                                     zside, std::max(0, etaRef-etaBinRange), std::min(etaRef+etaBinRange+1, nEtaBins_),
+                                     phiRef, phiRef+1+2*phiBinRange,
+				     math::XYZPoint(iRef[2], iRef[3], iRef[4]), 2, 2,
+                                     min_cos_theta_, min_cos_pointing_, missing_layers_,
+                                     rhtools_.lastLayerFH());
+    theGraph_.findNtuplets(foundNtuplets, min_clusters_per_ntuplet_);
+    std::cout << " " << std::endl;
+
+    //#ifdef FP_DEBUG
+    const auto &doublets = theGraph_.getAllDoublets();
+    int tracksterId = 0;
+    for (auto &ntuplet : foundNtuplets) {
+      std::set<unsigned int> effective_cluster_idx;
+      for (auto &doublet : ntuplet) {
+        auto innerCluster = doublets[doublet].innerClusterId();
+        auto outerCluster = doublets[doublet].outerClusterId();
+        effective_cluster_idx.insert(innerCluster);
+        effective_cluster_idx.insert(outerCluster);
+        if (algo_verbosity_ > Advanced) {
+          LogDebug("HGCPatterRecoByCA")
+            << "New doublet " << doublet << " for trackster: " << result.size() << " InnerCl "
+            << innerCluster << " " << layerClusters[innerCluster].x() << " "
+            << layerClusters[innerCluster].y() << " " << layerClusters[innerCluster].z()
+            << " OuterCl " << outerCluster << " " << layerClusters[outerCluster].x() << " "
+            << layerClusters[outerCluster].y() << " " << layerClusters[outerCluster].z() << " "
+            << tracksterId << std::endl;
+        }
+      }
+      // Put back indices, in the form of a Trackster, into the results vector
+      Trackster tmp;
+      tmp.vertices.reserve(effective_cluster_idx.size());
+      std::copy(std::begin(effective_cluster_idx), std::end(effective_cluster_idx),
+                std::back_inserter(tmp.vertices));
+      result.push_back(tmp);
+      tracksterId++;
+    }
+  }//loop over seeds => could keep track of the trk idx
+  //#endif                                                                                                                                                         
 }

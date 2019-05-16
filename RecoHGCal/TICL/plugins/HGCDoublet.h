@@ -8,6 +8,7 @@
 #include <cmath>
 #include <vector>
 
+#include "DataFormats/Math/interface/Vector3D.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 
@@ -56,7 +57,8 @@ class HGCDoublet {
   void tagAsInnerNeighbor(unsigned int otherDoublet) { innerNeighbors_.push_back(otherDoublet); }
 
   bool checkCompatibilityAndTag(std::vector<HGCDoublet> &allDoublets,
-                                const std::vector<int> &innerDoublets, float minCosTheta,
+                                const std::vector<int> &innerDoublets, 
+				const math::XYZPoint &refDir, float minCosTheta,
                                 float minCosPointing = 1., bool debug = false) {
     int nDoublets = innerDoublets.size();
     int constexpr VSIZE = 4;
@@ -78,7 +80,7 @@ class HGCDoublet {
         zi[j] = otherDoublet.innerZ();
       }
       for (int j = 0; j < vs; ++j) {
-        ok[j] = areAligned(xi[j], yi[j], zi[j], xo, yo, zo, minCosTheta, minCosPointing, debug);
+        ok[j] = areAligned(xi[j], yi[j], zi[j], xo, yo, zo, minCosTheta, minCosPointing, refDir, debug);
         if (debug) {
           LogDebug("HGCDoublet") << "Are aligned for InnerDoubletId: " << i + j << " is " << ok[j] << std::endl;
         }
@@ -104,7 +106,7 @@ class HGCDoublet {
   }
 
   int areAligned(double xi, double yi, double zi, double xo, double yo, double zo,
-                 float minCosTheta, float minCosPointing, bool debug = false) const {
+                 float minCosTheta, float minCosPointing, const math::XYZPoint &refDir, bool debug = false) const {
     auto dx1 = xo - xi;
     auto dy1 = yo - yi;
     auto dz1 = zo - zi;
@@ -131,9 +133,14 @@ class HGCDoublet {
     // The compatibility is checked only for the innermost doublets: the
     // one with the outer doublets comes in by the alignment requirement of
     // the doublets themeselves
-    auto dot_pointing = dx2 * xi + dy2 * yi + dz2 * zi;
-    auto mag_pointing = std::sqrt(xi * xi + yi * yi + zi * zi);
+
+    const math::XYZVector firstDoublet(dx2, dy2, dz2);
+    const math::XYZVector pointingDir = math::XYZPoint(innerX(), innerY(), innerZ()) - refDir;
+
+    auto dot_pointing = pointingDir.Dot(firstDoublet);
+    auto mag_pointing = sqrt(pointingDir.Mag2());
     auto cosTheta_pointing = dot_pointing / (mag2 * mag_pointing);
+
     if (debug) {
       LogDebug("HGCDoublet") << "dot_pointing: " << dot_pointing << " mag_pointing: " << mag_pointing
                 << " mag2: " << mag2 << " cosTheta_pointing: " << cosTheta_pointing

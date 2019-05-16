@@ -26,6 +26,13 @@ class PatternRecognitionAlgoBase {
                               const std::vector<reco::CaloCluster>& layerClusters,
                               const std::vector<std::pair<unsigned int, float> >& mask,
                               std::vector<Trackster>& result) = 0;
+
+  virtual void makeTrackstersSeeded(const edm::Event& ev, const edm::EventSetup& es,
+                                    const std::vector<reco::CaloCluster>& layerClusters,
+                                    const std::vector<std::pair<unsigned int, float> >& mask,
+                                    std::vector<Trackster>& result,
+                                    std::vector<std::vector<float>>& pointRefDir) = 0;
+
   enum VerbosityLevel { None = 0, Basic, Advanced, Expert, Guru };
 
  protected:

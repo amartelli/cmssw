@@ -12,8 +12,10 @@ class HGCGraph {
  public:
   void makeAndConnectDoublets(const std::vector<std::vector<std::vector<unsigned int>>> &h,
                               int nEtaBins, int nPhiBins,
-                              const std::vector<reco::CaloCluster> &layerClusters, int deltaIEta,
-                              int deltaIPhi, float minCosThetai, float maxCosPointing,
+                              const std::vector<reco::CaloCluster> &layerClusters, 
+			      int zS, int etaS, int etaE, int phiS, int phiE,
+                              const math::XYZPoint &refDir,
+			      int deltaIEta, int deltaIPhi, float minCosThetai, float maxCosPointing,
                               int missing_layers, int maxNumberOfLayers);
 
   std::vector<HGCDoublet> &getAllDoublets() { return allDoublets_; }

@@ -12,6 +12,7 @@
 #include "RecoHGCal/TICL/interface/PatternRecognitionAlgoBase.h"
 #include "RecoHGCal/TICL/interface/Constants.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
+#include "DataFormats/Math/interface/Vector3D.h"
 
 class PatternRecognitionbyCA final : public PatternRecognitionAlgoBase {
  public:
@@ -38,6 +39,12 @@ class PatternRecognitionbyCA final : public PatternRecognitionAlgoBase {
                       const std::vector<reco::CaloCluster>& layerClusters,
                       const std::vector<std::pair<unsigned int, float> >& mask,
                       std::vector<Trackster>& result) override;
+
+  void makeTrackstersSeeded(const edm::Event& ev, const edm::EventSetup& es,
+                            const std::vector<reco::CaloCluster>& layerClusters,
+                            const std::vector<std::pair<unsigned int, float> >& mask,
+                            std::vector<Trackster>& result,
+                            std::vector<std::vector<float>>& pointRefDir) override;
 
  private:
   int getEtaBin(float eta) const {
