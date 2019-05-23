@@ -13,6 +13,9 @@
 #include "RecoHGCal/TICL/interface/Constants.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "DataFormats/Math/interface/Vector3D.h"
+#include "RecoHGCal/TICL/interface/SeedingRegion.h"
+#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
+
 
 class PatternRecognitionbyCA final : public PatternRecognitionAlgoBase {
  public:
@@ -35,16 +38,27 @@ class PatternRecognitionbyCA final : public PatternRecognitionAlgoBase {
   void fillHistogram(const std::vector<reco::CaloCluster>& layerClusters,
                      const std::vector<std::pair<unsigned int, float> >& mask);
 
+  std::vector<SeedingRegion> createSeedingRegions(std::vector<PropagationSeedingPoint>& points);
+
   void makeTracksters(const edm::Event& ev, const edm::EventSetup& es,
                       const std::vector<reco::CaloCluster>& layerClusters,
                       const std::vector<std::pair<unsigned int, float> >& mask,
                       std::vector<Trackster>& result) override;
 
-  void makeTrackstersSeeded(const edm::Event& ev, const edm::EventSetup& es,
-                            const std::vector<reco::CaloCluster>& layerClusters,
-                            const std::vector<std::pair<unsigned int, float> >& mask,
-                            std::vector<Trackster>& result,
-                            std::vector<std::vector<float>>& pointRefDir) override;
+  void makeTracksters(const edm::Event& ev, const edm::EventSetup& es,
+                      const std::vector<reco::CaloCluster>& layerClusters,
+                      const std::vector<std::pair<unsigned int, float> >& mask,
+                      std::vector<Trackster>& result,
+		      std::vector<PropagationSeedingPoint>& points) override;
+
+
+  void makeTracksters(const edm::Event& ev, const edm::EventSetup& es,
+                      const std::vector<reco::CaloCluster>& layerClusters,
+                      const std::vector<std::pair<unsigned int, float> >& mask,
+                      std::vector<Trackster>& result,
+		      std::vector<PropagationSeedingPoint>& points,
+		      std::vector<SeedingRegion>& regions) override;
+
 
  private:
   int getEtaBin(float eta) const {

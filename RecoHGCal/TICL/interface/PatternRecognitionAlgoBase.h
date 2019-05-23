@@ -10,6 +10,8 @@
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "RecoHGCal/TICL/interface/Trackster.h"
+#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
+#include "RecoHGCal/TICL/interface/SeedingRegion.h"
 
 namespace edm {
 class Event;
@@ -27,11 +29,18 @@ class PatternRecognitionAlgoBase {
                               const std::vector<std::pair<unsigned int, float> >& mask,
                               std::vector<Trackster>& result) = 0;
 
-  virtual void makeTrackstersSeeded(const edm::Event& ev, const edm::EventSetup& es,
-                                    const std::vector<reco::CaloCluster>& layerClusters,
-                                    const std::vector<std::pair<unsigned int, float> >& mask,
-                                    std::vector<Trackster>& result,
-                                    std::vector<std::vector<float>>& pointRefDir) = 0;
+  virtual void makeTracksters(const edm::Event& ev, const edm::EventSetup& es,
+                              const std::vector<reco::CaloCluster>& layerClusters,
+                              const std::vector<std::pair<unsigned int, float> >& mask,
+                              std::vector<Trackster>& result,
+			      std::vector<PropagationSeedingPoint>& points) = 0;
+
+  virtual void makeTracksters(const edm::Event& ev, const edm::EventSetup& es,
+			      const std::vector<reco::CaloCluster>& layerClusters,
+			      const std::vector<std::pair<unsigned int, float> >& mask,
+			      std::vector<Trackster>& result,
+			      std::vector<PropagationSeedingPoint>& points,
+			      std::vector<SeedingRegion>& regions) = 0;
 
   enum VerbosityLevel { None = 0, Basic, Advanced, Expert, Guru };
 

@@ -10,7 +10,10 @@
 #include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
 #include "TrackingTools/GeomPropagators/interface/Propagator.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
-#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
+#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
+
+#include "FWCore/Framework/interface/Frameworkfwd.h"
 
 class HGCalTrackExtrapolator : public edm::stream::EDProducer<> {
  public:
@@ -18,10 +21,13 @@ class HGCalTrackExtrapolator : public edm::stream::EDProducer<> {
   ~HGCalTrackExtrapolator() override {}
   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
 
+
+  void beginRun(edm::Run const& iEvent, edm::EventSetup const&) override;
+  void endRun(edm::Run const&, edm::EventSetup const&) override;
   void produce(edm::Event &, const edm::EventSetup &) override;
 
   void buildFirstLayers();
-  bool propagateToFirstLayers(const reco::TrackRef &tk, std::vector<float>& impactP);
+  bool propagateToFirstLayers(const reco::TrackRef &tk, PropagationSeedingPoint& impactP);
 
  private:
   edm::EDGetTokenT<reco::TrackCollection> trks_token_;
@@ -33,12 +39,15 @@ class HGCalTrackExtrapolator : public edm::stream::EDProducer<> {
 
   const StringCutObjectSelector<reco::Track> cutTk_;
   const std::string propName_;
-  const CaloGeometry *geom_;
+  const HGCalDDDConstants* hgcons_;
 
-  GeomDet* firstDisk[2];
-  edm::ESHandle<CaloGeometry> caloGeom_;
+  GeomDet* firstDisk_[2];
+  std::string detectorName_;
+
   edm::ESHandle<Propagator> propagator_;
   edm::ESHandle<MagneticField> bfield_;
+
+  float zValPos[2];
 };
 
 #endif

@@ -8,16 +8,16 @@
 #include <cmath>
 #include <vector>
 
-#include "DataFormats/Math/interface/Vector3D.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
+#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
 
 class HGCDoublet {
  public:
   using HGCntuplet = std::vector<unsigned int>;
 
   HGCDoublet(const int innerClusterId, const int outerClusterId, const int doubletId,
-             const std::vector<reco::CaloCluster> *layerClusters)
+             const std::vector<reco::CaloCluster> *layerClusters, int seedIndex)
       : layerClusters_(layerClusters),
         theDoubletId_(doubletId),
         innerClusterId_(innerClusterId),
@@ -30,6 +30,7 @@ class HGCDoublet {
         outerY_((*layerClusters)[outerClusterId].y()),
         innerZ_((*layerClusters)[innerClusterId].z()),
         outerZ_((*layerClusters)[outerClusterId].z()),
+        seedIndex_(seedIndex),
         alreadyVisited_(false) {}
 
   double innerX() const { return innerX_; }
@@ -48,6 +49,8 @@ class HGCDoublet {
 
   double outerR() const { return outerZ_; }
 
+  int seedIndex() const { return seedIndex_; }
+
   int innerClusterId() const { return innerClusterId_; }
 
   int outerClusterId() const { return outerClusterId_; }
@@ -58,7 +61,7 @@ class HGCDoublet {
 
   bool checkCompatibilityAndTag(std::vector<HGCDoublet> &allDoublets,
                                 const std::vector<int> &innerDoublets, 
-				const math::XYZPoint &refDir, float minCosTheta,
+				GlobalVector& refDir, float minCosTheta,
                                 float minCosPointing = 1., bool debug = false) {
     int nDoublets = innerDoublets.size();
     int constexpr VSIZE = 4;
@@ -66,6 +69,7 @@ class HGCDoublet {
     double xi[VSIZE];
     double yi[VSIZE];
     double zi[VSIZE];
+    double seedi[VSIZE];
     auto xo = outerX();
     auto yo = outerY();
     auto zo = outerZ();
@@ -78,8 +82,10 @@ class HGCDoublet {
         xi[j] = otherDoublet.innerX();
         yi[j] = otherDoublet.innerY();
         zi[j] = otherDoublet.innerZ();
+	seedi[j] = otherDoublet.seedIndex();
       }
       for (int j = 0; j < vs; ++j) {
+	if(seedi[j] != seedIndex_) continue;
         ok[j] = areAligned(xi[j], yi[j], zi[j], xo, yo, zo, minCosTheta, minCosPointing, refDir, debug);
         if (debug) {
           LogDebug("HGCDoublet") << "Are aligned for InnerDoubletId: " << i + j << " is " << ok[j] << std::endl;
@@ -106,7 +112,7 @@ class HGCDoublet {
   }
 
   int areAligned(double xi, double yi, double zi, double xo, double yo, double zo,
-                 float minCosTheta, float minCosPointing, const math::XYZPoint &refDir, bool debug = false) const {
+                 float minCosTheta, float minCosPointing, GlobalVector& refDir, bool debug = false) const {
     auto dx1 = xo - xi;
     auto dy1 = yo - yi;
     auto dz1 = zo - zi;
@@ -134,11 +140,11 @@ class HGCDoublet {
     // one with the outer doublets comes in by the alignment requirement of
     // the doublets themeselves
 
-    const math::XYZVector firstDoublet(dx2, dy2, dz2);
-    const math::XYZVector pointingDir = math::XYZPoint(innerX(), innerY(), innerZ()) - refDir;
+    const GlobalVector firstDoublet(dx2, dy2, dz2);
+    const GlobalVector pointingDir = (refDir.mag2() == 0) ? (GlobalPoint(innerX(), innerY(), innerZ()) - GlobalPoint(0,0,0)) : refDir;
 
-    auto dot_pointing = pointingDir.Dot(firstDoublet);
-    auto mag_pointing = sqrt(pointingDir.Mag2());
+    auto dot_pointing = pointingDir.dot(firstDoublet);
+    auto mag_pointing = sqrt(pointingDir.mag2());
     auto cosTheta_pointing = dot_pointing / (mag2 * mag_pointing);
 
     if (debug) {
@@ -178,7 +184,9 @@ class HGCDoublet {
   const double outerY_;
   const double innerZ_;
   const double outerZ_;
+  int seedIndex_;
   bool alreadyVisited_;
+
 };
 
 #endif /*HGCDoublet_H_ */
