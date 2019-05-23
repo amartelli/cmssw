@@ -8,23 +8,24 @@
 #include "DataFormats/TICL/interface/Common.h"
 #include "DataFormats/TICL/interface/TICLLayerTile.h"
 #include "HGCDoublet.h"
+#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
+#include "RecoHGCal/TICL/interface/SeedingRegion.h"
 
 class HGCGraph {
-<<<<<<< HEAD
 public:
   void makeAndConnectDoublets(const ticl::TICLLayerTiles &h,
                               int nEtaBins,
                               int nPhiBins,
                               const std::vector<reco::CaloCluster> &layerClusters,
                               const std::vector<float> &mask,
-			      int zS, int etaS, int etaE, int phiS, int phiE,
-                              const math::XYZPoint &refDir,
                               int deltaIEta,
                               int deltaIPhi,
                               float minCosThetai,
                               float maxCosPointing,
                               int missing_layers,
                               int maxNumberOfLayers);
+                              std::vector<PropagationSeedingPoint>& points,
+			      std::vector<SeedingRegion>& regions);
 
   std::vector<HGCDoublet> &getAllDoublets() { return allDoublets_; }
   void findNtuplets(std::vector<HGCDoublet::HGCntuplet> &foundNtuplets, const unsigned int minClustersPerNtuplet);

@@ -7,18 +7,16 @@
 #include <cmath>
 #include <vector>
 
-#include "DataFormats/Math/interface/Vector3D.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
+#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
 
 class HGCDoublet {
 public:
   using HGCntuplet = std::vector<unsigned int>;
 
-  HGCDoublet(const int innerClusterId,
-             const int outerClusterId,
-             const int doubletId,
-             const std::vector<reco::CaloCluster> *layerClusters)
+  HGCDoublet(const int innerClusterId, const int outerClusterId, const int doubletId,
+             const std::vector<reco::CaloCluster> *layerClusters, int seedIndex)
       : layerClusters_(layerClusters),
         theDoubletId_(doubletId),
         innerClusterId_(innerClusterId),
@@ -95,6 +93,7 @@ private:
   const double outerZ_;
   int seedIndex_;
   bool alreadyVisited_;
+
 };
 
 #endif /*HGCDoublet_H_ */

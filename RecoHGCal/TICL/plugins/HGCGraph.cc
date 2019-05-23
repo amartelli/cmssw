@@ -11,38 +11,39 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
                                       int nPhiBins,
                                       const std::vector<reco::CaloCluster> &layerClusters,
                                       const std::vector<float> &mask,
-				      int zS, int etaS, int etaE, int phiS, int phiE,
-                                      const math::XYZPoint &refDir,
-                                      int deltaIEta,
-                                      int deltaIPhi,
-                                      float minCosTheta,
-                                      float minCosPointing,
-                                      int missing_layers,
-                                      int maxNumberOfLayers) {
+                                      int deltaIEta, int deltaIPhi, float minCosTheta,
+                                      float minCosPointing, int missing_layers, int maxNumberOfLayers,
+				      std::vector<PropagationSeedingPoint>& points, std::vector<SeedingRegion>& regions) {
+
   isOuterClusterOfDoublets_.clear();
   isOuterClusterOfDoublets_.resize(layerClusters.size());
   allDoublets_.clear();
   theRootDoublets_.clear();
-  for (int zSide = 0; zSide < 2; ++zSide) {
-    if(zS != -1 && zSide != zS) continue;
+  int indexRegion = -1;
+  for(auto seedR : regions){
+    ++indexRegion;
 
     for (int il = 0; il < maxNumberOfLayers - 1; ++il) {
+
       for (int outer_layer = 0; outer_layer < std::min(1 + missing_layers, maxNumberOfLayers - 1 - il); ++outer_layer) {
-        int currentInnerLayerId = il + maxNumberOfLayers * zSide;
+        int currentInnerLayerId = il + maxNumberOfLayers * seedR.zSide;
         int currentOuterLayerId = currentInnerLayerId + 1 + outer_layer;
         auto const &outerLayerHisto = histo[currentOuterLayerId];
         auto const &innerLayerHisto = histo[currentInnerLayerId];
 
-	for (int oeta = etaS; oeta < etaE; ++oeta) {
+	int etaS = seedR.etaStart;
+	int phiS = seedR.phiStart;
+
+	for (int oeta = std::max(0, etaS); oeta < std::min(nEtaBins, etaS + seedR.etaLength); ++oeta) {
           auto offset = oeta * nPhiBins;
-	  for (int ophi_it = phiS; ophi_it < phiE; ++ophi_it) {
-	    int ophi = (phiS != 0 && phiE != nPhiBins) ? (( (ophi_it - ((phiE-phiS-1)/2)) % nPhiBins + nPhiBins) % nPhiBins) : ophi_it;
+	  for (int ophi_it = phiS; ophi_it < phiS + seedR.phiLength; ++ophi_it) {
+	    int ophi = (( ophi_it % nPhiBins + nPhiBins) % nPhiBins);
             for (auto outerClusterId : outerLayerHisto[offset + ophi]) {
               // Skip masked clusters
               if (mask[outerClusterId] == 0.)
                 continue;
               const auto etaRangeMin = std::max(0, oeta - deltaIEta);
-              const auto etaRangeMax = std::min(oeta + deltaIEta + 1, nEtaBins);
+              const auto etaRangeMax = std::min(oeta + deltaIEta, nEtaBins);
 
               for (int ieta = etaRangeMin; ieta < etaRangeMax; ++ieta) {
                 // wrap phi bin
@@ -58,7 +59,8 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
                     if (mask[innerClusterId] == 0.)
                       continue;
                     auto doubletId = allDoublets_.size();
-                    allDoublets_.emplace_back(innerClusterId, outerClusterId, doubletId, &layerClusters);
+                    allDoublets_.emplace_back(innerClusterId, outerClusterId, doubletId,
+                                              &layerClusters, points[indexRegion].index);
                     if (verbosity_ > Advanced) {
                       LogDebug("HGCGraph")
                           << "Creating doubletsId: " << doubletId << " layerLink in-out: [" << currentInnerLayerId
@@ -75,7 +77,8 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
                           << std::endl;
                     }
                     bool isRootDoublet = thisDoublet.checkCompatibilityAndTag(
-		      allDoublets_, neigDoublets, refDir, minCosTheta, minCosPointing, verbosity_ > Advanced);
+	                allDoublets_, neigDoublets, points[indexRegion].v,
+			minCosTheta, minCosPointing, verbosity_ > Advanced);
                     if (isRootDoublet)
                       theRootDoublets_.push_back(doubletId);
                   }
@@ -95,6 +98,10 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
   // #endif
 }
 
+
+//RA: as argument also give vector with tracks indices
+// return vector of reco tracksters = as done now
+// return also vector of tracks indices of reco tracksters
 void HGCGraph::findNtuplets(std::vector<HGCDoublet::HGCntuplet> &foundNtuplets,
                             const unsigned int minClustersPerNtuplet) {
   HGCDoublet::HGCntuplet tmpNtuplet;

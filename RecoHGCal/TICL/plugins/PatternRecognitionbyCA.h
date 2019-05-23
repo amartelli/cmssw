@@ -7,6 +7,9 @@
 #include "RecoHGCal/TICL/interface/PatternRecognitionAlgoBase.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "DataFormats/Math/interface/Vector3D.h"
+#include "RecoHGCal/TICL/interface/SeedingRegion.h"
+#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
+
 
 
 class HGCGraph;
@@ -17,12 +20,31 @@ namespace ticl {
     PatternRecognitionbyCA(const edm::ParameterSet& conf);
     ~PatternRecognitionbyCA() override;
 
+    std::vector<SeedingRegion> createSeedingRegions(std::vector<PropagationSeedingPoint>& points);
+
     void makeTracksters(const edm::Event& ev,
                         const edm::EventSetup& es,
                         const std::vector<reco::CaloCluster>& layerClusters,
                         const std::vector<float>& mask,
                         const ticl::TICLLayerTiles& tiles,
                         std::vector<Trackster>& result) override;
+
+    void makeTracksters(const edm::Event& ev,
+                        const edm::EventSetup& es,
+                        const std::vector<reco::CaloCluster>& layerClusters,
+                        const std::vector<float>& mask,
+                        const ticl::TICLLayerTiles& tiles,
+                        std::vector<Trackster>& result, 
+			std::vector<PropagationSeedingPoint>& points) override;
+
+    void makeTracksters(const edm::Event& ev,
+                        const edm::EventSetup& es,
+                        const std::vector<reco::CaloCluster>& layerClusters,
+                        const std::vector<float>& mask,
+                        const ticl::TICLLayerTiles& tiles,
+                        std::vector<Trackster>& result,
+			std::vector<PropagationSeedingPoint>& points,
+			std::vector<SeedingRegion>& regions) override;
 
   private:
     hgcal::RecHitTools rhtools_;

@@ -49,7 +49,9 @@ HGCalTrackExtrapolator::HGCalTrackExtrapolator(const edm::ParameterSet& ps)
       consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("original_layerclusters_mask"));
   produces<std::vector<Trackster>>("TrackstersByCA");
   produces<std::vector<float>>();  // Mask to be applied at the next iteration
+  //  std::cout << " HGCalTrackExtrapolator::costruttore " << std::endl;
 
+  detectorName_ = "HGCalEESensitive";
 }
 
 void HGCalTrackExtrapolator::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -71,59 +73,61 @@ void HGCalTrackExtrapolator::fillDescriptions(edm::ConfigurationDescriptions& de
 }
 
 
-void HGCalTrackExtrapolator::buildFirstLayers(){
+void HGCalTrackExtrapolator::beginRun(edm::Run const& iEvent, edm::EventSetup const& es){
+  //  std::cout << "beginRun" << std::endl;
 
-  const CaloSubdetectorGeometry *subGeom = geom_->getSubdetectorGeometry(DetId::HGCalEE, ForwardSubdetector::ForwardEmpty);
+  edm::ESHandle<HGCalDDDConstants> hdc;
+  es.get<IdealGeometryRecord>().get(detectorName_, hdc);
+  hgcons_ = hdc.product();
 
-  std::vector<float>  rmax(2, 0), rmin(2, 9e9), zDisk(2, 0);
-  const std::vector<DetId> & ids = subGeom->getValidDetIds();
+  buildFirstLayers();
 
-  for (auto & i : ids) {
-    int layer =  HGCSiliconDetId(i).layer();
-    if(layer != 1) continue;
-
-    const GlobalPoint & pos = geom_->getPosition(i);
-    float z = pos.z();
-    int side = int(z > 0);
-    zDisk[side] = z;
-
-    float rho = pos.perp();
-    if (rho > rmax[side]) rmax[side] = rho;
-    if (rho < rmin[side]) rmin[side] = rho;
-  }
-
-  for (int iSide=0; iSide<2; ++iSide){
-    firstDisk[iSide] = new GeomDet(Disk::build(Disk::PositionType(0,0,zDisk[iSide]), Disk::RotationType(), 
-					       SimpleDiskBounds(rmin[iSide], rmax[iSide], zDisk[iSide]-0.5, zDisk[iSide]+0.5)).get() );
-  }
+  es.get<IdealMagneticFieldRecord>().get(bfield_);
+  es.get<TrackingComponentsRecord>().get(propName_, propagator_);
 }
 
 
-bool HGCalTrackExtrapolator::propagateToFirstLayers(const reco::TrackRef &tk, std::vector<float>& impactP){
+void HGCalTrackExtrapolator::endRun(edm::Run const&, edm::EventSetup const&){
+
+  for (int iSide = 0; iSide < 2; ++iSide)
+    delete firstDisk_[iSide];
+}
+
+
+void HGCalTrackExtrapolator::buildFirstLayers(){
+
+  //  std::cout << " HGCalTrackExtrapolator::buildFirstLayers " << std::endl;
+
+  float zVal = hgcons_->waferZ(1, true);
+  std::pair<double, double> rMinMax = hgcons_->rangeR(zVal, true);
+  //  std::cout << " z = " << zVal << " min = " << rMinMax.first << " max = " << rMinMax.second << std::endl;
+
+  for (int iSide=0; iSide<2; ++iSide){
+    float zSide = (iSide == 0) ? (-1.*zVal) : zVal;
+    firstDisk_[iSide] = new GeomDet(Disk::build(Disk::PositionType(0,0,zSide), Disk::RotationType(),
+						SimpleDiskBounds(rMinMax.first, rMinMax.second, zSide-0.5, zSide+0.5)).get() );
+  }
+
+}
+
+
+bool HGCalTrackExtrapolator::propagateToFirstLayers(const reco::TrackRef &tk, PropagationSeedingPoint& impactP){
 
   FreeTrajectoryState fts = trajectoryStateTransform::outerFreeState(*tk, bfield_.product());
 
   //PropagationDirection direction = alongMomentum;
   const Propagator &prop = (*propagator_);
   int iSide = int(tk->eta() > 0);
-  TrajectoryStateOnSurface tsos = prop.propagate(fts, firstDisk[iSide]->surface());
 
+  TrajectoryStateOnSurface tsos = prop.propagate(fts, firstDisk_[iSide]->surface());
   if (!tsos.isValid()){
     //printf(" Destination zside %+1d, z = %+8.2f\n", iSide, firstDisk[iSide]->toGlobal(LocalPoint(0,0,0)).z());
     //printf("         --> propagation failed.\n");    
     return false;
   }
 
-  GlobalPoint gp = tsos.globalPosition();
-  //    printf( " Prop point: global eta %+5.2f phi %+5.2f  x = %+8.2f y = %+8.2f z = %+8.2f rho = %8.2f\n", 
-
-  const math::XYZVector dirRefProp = math::XYZVector(tsos.globalMomentum().x(), tsos.globalMomentum().y(), tsos.globalMomentum().z());
-
-  impactP[0] = dirRefProp.eta();
-  impactP[1] = dirRefProp.phi();
-  impactP[2] = gp.x();
-  impactP[3] = gp.y();
-  impactP[4] = gp.z();
+  impactP.p = GlobalPoint(tsos.globalPosition());
+  impactP.v = GlobalVector(tsos.globalMomentum().x(), tsos.globalMomentum().y(), tsos.globalMomentum().z());
 
   return true;
 }
@@ -149,42 +153,33 @@ void HGCalTrackExtrapolator::produce(edm::Event& evt, const edm::EventSetup& es)
   const auto& inputClusterMask = *filtered_layerclusters_mask_h;
   std::unique_ptr<std::vector<std::pair<unsigned int, float>>> filteredLayerClusters;
 
-  //all this block should be done once per run not per event
-  //to propagate tracks to 1st layer
-  es.get<CaloGeometryRecord>().get(caloGeom_);
-  geom_ = caloGeom_.product();
-  es.get<TrackingComponentsRecord>().get(propName_, propagator_);
-  es.get<IdealMagneticFieldRecord>().get(bfield_);
-  buildFirstLayers();
-
   //should create a better container also keeping track of the track idx
-  std::vector<std::vector<float>> pointRefDir;
-  unsigned int itrack = 0;
+  std::vector<PropagationSeedingPoint> pointRefDir;
+  int itrack = -1;
   if(tracks_h->size() == 0) std::cout << " empty trks " << std::endl;
-  for (const reco::Track &tk : *tracks_h) { ++itrack;
+  for (const reco::Track &tk : *tracks_h) {
+    ++itrack;
     if (!cutTk_(tk)){
       continue;
     }
 
-    std::vector<float> locDir(5,0.);
-    bool keepTrack = propagateToFirstLayers(reco::TrackRef(tracks_h,itrack-1), locDir);
+    PropagationSeedingPoint point;
+    bool keepTrack = propagateToFirstLayers(reco::TrackRef(tracks_h,itrack), point);
 
-    //std::cout << " propagated:   eta = " << locDir[0] << " phi= " << locDir[1] << std::endl;
-    if(keepTrack) pointRefDir.emplace_back(locDir);
+    if(keepTrack){
+      point.index = itrack;
+      pointRefDir.emplace_back(point);
+    }
   }
 
-  for (int iSide =0; iSide < 2; ++iSide)
-    delete firstDisk[iSide];
-
-  if(pointRefDir.size() != 0)  myAlgo_->makeTrackstersSeeded(evt, es, layerClusters, inputClusterMask, *result, pointRefDir);
-  //  else {std::cout << " non seeding track - continue " << std::endl;}
+  if(pointRefDir.size() != 0)  myAlgo_->makeTracksters(evt, es, layerClusters, inputClusterMask, *result, pointRefDir);
 
   // Now update the global mask and put it into the event
   output_mask->reserve(original_layerclusters_mask_h->size());
   // Copy over the previous state
   std::copy(std::begin(*original_layerclusters_mask_h), std::end(*original_layerclusters_mask_h),
 	    std::back_inserter(*output_mask));
-  
+
   
   evt.put(std::move(result), "TrackstersByCA");
   evt.put(std::move(output_mask));
