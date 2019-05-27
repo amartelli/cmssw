@@ -1661,10 +1661,10 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  BToKstLLCand.addUserInt("kaon_isPFCand", (int)isKPFCand);
 	  
 	  if(debug) std::cout << " before BDT " << std::endl;
-	  BToKstLLCand.addUserFloat("lep1_seedBDT_unbiased", isLowPtEle_ ? gsfTrk1_seedBDT_unbiased : -99);
-	  BToKstLLCand.addUserFloat("lep1_seedBDT_ptbiased", isLowPtEle_ ? gsfTrk1_seedBDT_ptbiased : -99);
-	  BToKstLLCand.addUserFloat("lep2_seedBDT_unbiased", isLowPtEle_ ? gsfTrk2_seedBDT_unbiased : -99);
-	  BToKstLLCand.addUserFloat("lep2_seedBDT_ptbiased", isLowPtEle_ ? gsfTrk2_seedBDT_ptbiased : -99);
+	  BToKstLLCand.addUserFloat("lep1_seedBDT_unbiased", (isLowPtEle_ || isLowPtAndPfEle_) ? gsfTrk1_seedBDT_unbiased : -99);
+	  BToKstLLCand.addUserFloat("lep1_seedBDT_ptbiased", (isLowPtEle_ || isLowPtAndPfEle_) ? gsfTrk1_seedBDT_ptbiased : -99);
+	  BToKstLLCand.addUserFloat("lep2_seedBDT_unbiased", (isLowPtEle_ || isLowPtAndPfEle_) ? gsfTrk2_seedBDT_unbiased : -99);
+	  BToKstLLCand.addUserFloat("lep2_seedBDT_ptbiased", (isLowPtEle_ || isLowPtAndPfEle_) ? gsfTrk2_seedBDT_ptbiased : -99);
 	  
 	  if(debug) std::cout << " post BDT " << std::endl;
 
