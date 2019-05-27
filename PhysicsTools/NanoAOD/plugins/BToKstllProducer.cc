@@ -1179,7 +1179,7 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
   if(triggeringRecoMuons.size() == 0){
     if(debug) std::cout << " NO reco muon natched to triggering muon " << std::endl;
-    return;
+    //return;
   }
 
   if(isLepEle_ && !isLowPtEle_) selectPatElectrons(iEvent, iSetup);
