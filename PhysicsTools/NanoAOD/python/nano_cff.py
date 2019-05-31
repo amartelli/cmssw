@@ -346,6 +346,13 @@ def nanoAOD_customizeLowPtEleFinalState(process):
         process.BToKstll.isLowPtEle=cms.bool(True)
     return process
 
+def nanoAOD_customizeLowPtAndPfEleFinalState(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
+    if(hasattr(process,'BToKstll')):
+        process.BToKstll.isLowPtAndPfEle=cms.bool(True)
+    return process
+
 def nanoAOD_customizeKstarFinalState(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables)
