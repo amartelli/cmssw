@@ -258,7 +258,7 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
 
 finalElectrons = cms.EDFilter("PATElectronRefSelector",
     src = cms.InputTag("slimmedElectronsWithUserData"),
-    cut = cms.string("pt > 5 ")
+    cut = cms.string("pt > 1 ")
 )
 
 electronMVATTH= cms.EDProducer("EleBaseMVAValueMapProducer",
@@ -349,6 +349,7 @@ electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         convVeto = Var("passConversionVeto()",bool,doc="pass conversion veto"),
         lostHits = Var("gsfTrack.hitPattern.numberOfLostHits('MISSING_INNER_HITS')","uint8",doc="number of missing inner hits"),
         isPFcand = Var("pfCandidateRef().isNonnull()",bool,doc="electron is PF candidate"),
+        fBrem = Var("fbrem()",float,doc="brem fraction from the gsf fit",precision=8),
     ),
     externalVariables = cms.PSet(
         mvaTTH = ExtVar(cms.InputTag("electronMVATTH"),float, doc="TTH MVA lepton ID score",precision=14),
@@ -357,7 +358,7 @@ electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
 # scale and smearing only when available
 for modifier in run2_nanoAOD_94X2016,:
     modifier.toModify(electronTable.variables,
-        pt = Var("pt*userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, precision=-1, doc="p_{T}"),
+        #pt = Var("pt*userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, precision=-1, doc="p_{T}"),
         energyErr = Var("userFloat('ecalTrkEnergyErrPostCorr')", float, precision=6, doc="energy error of the cluster-track combination"),
         eCorr = Var("userFloat('ecalTrkEnergyPostCorr')/userFloat('ecalTrkEnergyPreCorr')", float, doc="ratio of the calibrated energy/miniaod energy"),
     )
@@ -367,7 +368,7 @@ for modifier in run2_nanoAOD_94X2016,:
 #for technical reasons
 for modifier in run2_nanoAOD_94XMiniAODv1,run2_nanoAOD_94XMiniAODv2,run2_miniAOD_80XLegacy:
     modifier.toModify(electronTable.variables,            
-        pt = Var("pt*userFloat('ecalTrkEnergyPostCorrNew')/userFloat('ecalTrkEnergyPreCorrNew')", float, precision=-1, doc="p_{T}"),
+        #pt = Var("pt*userFloat('ecalTrkEnergyPostCorrNew')/userFloat('ecalTrkEnergyPreCorrNew')", float, precision=-1, doc="p_{T}"),
         energyErr = Var("userFloat('ecalTrkEnergyErrPostCorrNew')", float, precision=6, doc="energy error of the cluster-track combination"),
         eCorr = Var("userFloat('ecalTrkEnergyPostCorrNew')/userFloat('ecalTrkEnergyPreCorrNew')", float, doc="ratio of the calibrated energy/miniaod energy"),
 )
@@ -398,6 +399,7 @@ run2_nanoAOD_94X2016.toModify(electronTable.variables,
     vidNestedWPBitmapSpring15 = Var("userInt('VIDNestedWPBitmapSpring15')",int,doc=_bitmapVIDForEleSpring15_docstring),
     vidNestedWPBitmapSum16 = Var("userInt('VIDNestedWPBitmapSum16')",int,doc=_bitmapVIDForEleSum16_docstring),
 )
+
 run2_miniAOD_80XLegacy.toModify(electronTable.variables,
     jetRelIso = Var("(1./userFloat('ptRatio'))-1.",float,doc="Relative isolation in matched jet (1/ptRatio-1, 0 if no matched jet (2016 definition))",precision=8),
     cutBased_Sum16 = Var("userInt('cutbasedID_Sum16_veto')+userInt('cutbasedID_Sum16_loose')+userInt('cutbasedID_Sum16_medium')+userInt('cutbasedID_Sum16_tight')",int,doc="cut-based Summer16 ID (0:fail, 1:veto, 2:loose, 3:medium, 4:tight)"),

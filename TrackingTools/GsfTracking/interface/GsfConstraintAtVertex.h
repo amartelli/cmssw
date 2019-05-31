@@ -12,6 +12,8 @@
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "RecoTracker/TransientTrackingRecHit/interface/TRecHit2DPosConstraint.h"
+#include "TrackingTools/PatternTools/interface/TransverseImpactPointExtrapolator.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 
 class TrackerGeometry;
 class MagneticField;
@@ -29,6 +31,11 @@ public:
   /// (multi)TSOS after include a vertex
   TrajectoryStateOnSurface constrainAtVertex (const reco::GsfTrack&,
 					      const reco::Vertex&) const;
+
+  /// (multi)TSOS after include a vertex without accessing trackExtra
+  TrajectoryStateOnSurface simpleConstrainAtVertex (const reco::TransientTrack&,
+						    const reco::Vertex&) const;
+
   /// (multi)TSOS after including a point with covariance matrix
   TrajectoryStateOnSurface constrainAtPoint (const reco::GsfTrack&,
 					     const GlobalPoint& globalPosition,
