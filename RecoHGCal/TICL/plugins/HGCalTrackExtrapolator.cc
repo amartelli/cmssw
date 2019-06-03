@@ -1,8 +1,3 @@
-// Author: Felice Pantaleo - felice.pantaleo@cern.ch
-// Date: 09/2018
-// Copyright CERN
-
-// user include files
 #include <vector>
 
 #include "FWCore/Framework/interface/ESHandle.h"
@@ -112,7 +107,7 @@ bool HGCalTrackExtrapolator::propagateToFirstLayers(const reco::TrackRef &tk, Pr
   TrajectoryStateOnSurface tsos = prop.propagate(fts, firstDisk_[iSide]->surface());
   if (!tsos.isValid()){
     //printf(" Destination zside %+1d, z = %+8.2f\n", iSide, firstDisk[iSide]->toGlobal(LocalPoint(0,0,0)).z());
-    //printf("         --> propagation failed.\n");    
+    //printf("         --> propagation failed.\n");
     return false;
   }
 
@@ -164,24 +159,24 @@ void HGCalTrackExtrapolator::produce(edm::Event& evt, const edm::EventSetup& es)
     }
   }
 
-  if(pointRefDir.size() != 0)  
+  if(pointRefDir.size() != 0)
     myAlgo_->makeTracksters(evt, es, layerClusters, inputClusterMask, layer_clusters_tiles, *result, pointRefDir);
 
 
-  // Now update the global mask and put it into the event                       
+  // Now update the global mask and put it into the event
   output_mask->reserve(original_layerclusters_mask_h->size());
-  // Copy over the previous state                                               
+  // Copy over the previous state
   std::copy(std::begin(*original_layerclusters_mask_h),
             std::end(*original_layerclusters_mask_h),
             std::back_inserter(*output_mask));
 
-  //RA maybe not 
+  //RA maybe not
   /*
-  // Mask the used elements, accordingly                                        
+  // Mask the used elements, accordingly
   for (auto const& trackster : *result) {
     for (auto const v : trackster.vertices) {
-      // TODO(rovere): for the moment we mask the layer cluster completely. In  
-      // the future, properly compute the fraction of usage.                    
+      // TODO(rovere): for the moment we mask the layer cluster completely. In
+      // the future, properly compute the fraction of usage.
       (*output_mask)[v] = 0.;
     }
   }

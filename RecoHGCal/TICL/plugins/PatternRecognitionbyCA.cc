@@ -23,14 +23,14 @@ PatternRecognitionbyCA::PatternRecognitionbyCA(const edm::ParameterSet &conf) : 
 PatternRecognitionbyCA::~PatternRecognitionbyCA(){};
 
 
-std::vector<SeedingRegion> PatternRecognitionbyCA::createSeedingRegions(std::vector<PropagationSeedingPoint>& points, 
+std::vector<SeedingRegion> PatternRecognitionbyCA::createSeedingRegions(std::vector<PropagationSeedingPoint>& points,
 									const ticl::TICLLayerTiles &tiles){
   std::vector<SeedingRegion> regions;
   for(auto point : points){
     // 0 for z<0 and rhtools_.lastLayerFH() for z > 0
     //take values from ticl::constants::nLayers
     //assuming that coherence is checked elsewhere
-    int firstLayer = (point.p.z() > 0) ? 52 : 0;
+    int firstLayer = (point.p.z() > 0) ? rhtools_.lastLayerFH() : 0;
     auto etaBin = tiles[firstLayer].getEtaBin(point.p.eta());
     auto phiBin = tiles[firstLayer].getPhiBin(point.p.phi());
     regions.emplace_back(etaBin - 2, 5, phiBin - 2, 5, int(point.p.z() > 0));
@@ -102,7 +102,7 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev, const edm::Eve
                                     min_cos_theta_,
                                     min_cos_pointing_,
                                     missing_layers_,
-                                    rhtools_.lastLayerFH(), 
+                                    rhtools_.lastLayerFH(),
 				    points, regions);
 
   //RAFIX
