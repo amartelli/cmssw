@@ -360,6 +360,15 @@ def nanoAOD_customizeKstarFinalState(process):
         process.BToKstll.isChannelKst=cms.bool(True)
     return process
 
+
+def nanoAOD_customizeLostLeadMuonTracks(process):
+    process = nanoAOD_customizeCommon(process)
+    process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
+    if(hasattr(process,'BToKstll')):
+        process.BToKstll.useLostLeadMuonTracks=cms.bool(True)
+    return process
+
+
 def nanoAOD_customizeLostSubLeadLepTracks(process):
     process = nanoAOD_customizeCommon(process)
     process.nanoSequence = cms.Sequence( LostTrackSequence + LostTrackTables + process.nanoSequence )
@@ -410,4 +419,4 @@ _102x_sequence.insert(_102x_sequence.index(simpleCleanerTable)+1,extraFlagsTable
 
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:
     modifier.toReplaceWith(nanoSequenceCommon, _102x_sequence)
-#run2_miniAOD_80XLegacy.toReplaceWith( nanoSequence, _80x_sequence)
+#run2_miniAOD_80XLegacy.toReplaceWith( nanoSequence, _80x_sequence) 

@@ -69,6 +69,7 @@ BToKstll=cms.EDProducer("BToKstllProducer",
                         KstMassConstraint = cms.double(0.89581), #2-trk refitting uses nominal K*(892) mass
                         save2TrackRefit = cms.bool(True),
                         #save4TrackRefit = cms.bool(False),
+                        useLostLeadMuonTracks = cms.bool(False),                        
                         useLostSubLeadLepTracks = cms.bool(False),
                         useLostChHadrTracks = cms.bool(False),
                         vtxCL_min = cms.double(1.e-3),  #e-3
@@ -197,5 +198,4 @@ BToKstllTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                              )
 
 BToKstllSequence=cms.Sequence(BToKstll)
-BToKstllTables=cms.Sequence(BToKstllTable)
-
+BToKstllTables=cms.Sequence(BToKstllTable) 
