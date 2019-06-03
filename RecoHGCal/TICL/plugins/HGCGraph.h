@@ -23,7 +23,7 @@ public:
                               float minCosThetai,
                               float maxCosPointing,
                               int missing_layers,
-                              int maxNumberOfLayers);
+                              int maxNumberOfLayers,
                               std::vector<PropagationSeedingPoint>& points,
 			      std::vector<SeedingRegion>& regions);
 

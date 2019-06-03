@@ -20,7 +20,8 @@ namespace ticl {
     PatternRecognitionbyCA(const edm::ParameterSet& conf);
     ~PatternRecognitionbyCA() override;
 
-    std::vector<SeedingRegion> createSeedingRegions(std::vector<PropagationSeedingPoint>& points);
+    std::vector<SeedingRegion> createSeedingRegions(std::vector<PropagationSeedingPoint>& points, 
+						    const ticl::TICLLayerTiles &tiles);
 
     void makeTracksters(const edm::Event& ev,
                         const edm::EventSetup& es,

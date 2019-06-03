@@ -1,5 +1,6 @@
 #ifndef __RecoHGCal_TICL_HGCalTrackExtrapolator_H__
 #define __RecoHGCal_TICL_HGCalTrackExtrapolator_H__
+
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 #include "RecoHGCal/TICL/interface/PatternRecognitionAlgoBase.h"
 #include "DataFormats/TrackReco/interface/Track.h"
@@ -32,10 +33,11 @@ class HGCalTrackExtrapolator : public edm::stream::EDProducer<> {
  private:
   edm::EDGetTokenT<reco::TrackCollection> trks_token_;
   edm::EDGetTokenT<std::vector<reco::CaloCluster>> clusters_token_;
-  edm::EDGetTokenT<std::vector<std::pair<unsigned int, float>>> filtered_layerclusters_mask_token_;
+  edm::EDGetTokenT<std::vector<float>> filtered_layerclusters_mask_token_;
   edm::EDGetTokenT<std::vector<float>> original_layerclusters_mask_token_;
+  edm::EDGetTokenT<ticl::TICLLayerTiles> layer_clusters_tiles_token_;
 
-  std::unique_ptr<PatternRecognitionAlgoBase> myAlgo_;
+  std::unique_ptr<ticl::PatternRecognitionAlgoBase> myAlgo_;
 
   const StringCutObjectSelector<reco::Track> cutTk_;
   const std::string propName_;

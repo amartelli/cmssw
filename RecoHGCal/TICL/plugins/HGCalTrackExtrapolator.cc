@@ -15,9 +15,8 @@
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 
 #include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
-
+#include "DataFormats/TICL/interface/Trackster.h"
 #include "RecoHGCal/TICL/interface/PatternRecognitionAlgoBase.h"
-#include "RecoHGCal/TICL/interface/Trackster.h"
 #include "RecoHGCal/TICL/plugins/HGCalTrackExtrapolator.h"
 
 #include "PatternRecognitionbyCA.h"
@@ -36,20 +35,16 @@
 DEFINE_FWK_MODULE(HGCalTrackExtrapolator);
 
 HGCalTrackExtrapolator::HGCalTrackExtrapolator(const edm::ParameterSet& ps)
-  : myAlgo_(std::make_unique<PatternRecognitionbyCA>(ps)),
+  : myAlgo_(std::make_unique<ticl::PatternRecognitionbyCA>(ps)),
     cutTk_(ps.getParameter<std::string>("cutTk")),
     propName_(ps.getParameter<std::string>("propagator")) {
-  trks_token_ = consumes<reco::TrackCollection>(
-      ps.getParameter<edm::InputTag>("tracker_tracks"));
-  clusters_token_ = consumes<std::vector<reco::CaloCluster>>(
-      ps.getParameter<edm::InputTag>("hgcal_layerclusters"));
-  filtered_layerclusters_mask_token_ = consumes<std::vector<std::pair<unsigned int, float>>>(
-      ps.getParameter<edm::InputTag>("filtered_layerclusters_mask"));
-  original_layerclusters_mask_token_ =
-      consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("original_layerclusters_mask"));
-  produces<std::vector<Trackster>>("TrackstersByCA");
+  trks_token_ = consumes<reco::TrackCollection>(ps.getParameter<edm::InputTag>("tracker_tracks"));
+  clusters_token_ = consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"));
+  filtered_layerclusters_mask_token_ = consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("filtered_mask"));
+  original_layerclusters_mask_token_ = consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("original_mask"));
+  layer_clusters_tiles_token_ = consumes<ticl::TICLLayerTiles>(ps.getParameter<edm::InputTag>("layer_clusters_tiles"));
+  produces<std::vector<Trackster>>();
   produces<std::vector<float>>();  // Mask to be applied at the next iteration
-  //  std::cout << " HGCalTrackExtrapolator::costruttore " << std::endl;
 
   detectorName_ = "HGCalEESensitive";
 }
@@ -59,11 +54,10 @@ void HGCalTrackExtrapolator::fillDescriptions(edm::ConfigurationDescriptions& de
   desc.add<edm::InputTag>("tracker_tracks", edm::InputTag("generalTracks"));
   desc.add<std::string>("cutTk", "1.48 < abs(eta) < 3.0 && pt > 0.5 && p > 1 && quality(\"highPurity\") && hitPattern().numberOfLostHits(\"MISSING_OUTER_HITS\") < 10");
   desc.add<std::string>("propagator", "PropagatorWithMaterial");
-  desc.add<edm::InputTag>("hgcal_layerclusters", edm::InputTag("hgcalLayerClusters"));
-  desc.add<edm::InputTag>("filtered_layerclusters_mask",
-                          edm::InputTag("FilteredLayerClusters", "iterationLabelGoesHere"));
-  desc.add<edm::InputTag>("original_layerclusters_mask",
-                          edm::InputTag("hgcalLayerClusters", "InitialLayerClustersMask"));
+  desc.add<edm::InputTag>("layer_clusters", edm::InputTag("hgcalLayerClusters"));
+  desc.add<edm::InputTag>("filtered_mask", edm::InputTag("FilteredLayerClusters", "iterationLabelGoesHere"));
+  desc.add<edm::InputTag>("original_mask", edm::InputTag("hgcalLayerClusters", "InitialLayerClustersMask"));
+  desc.add<edm::InputTag>("layer_clusters_tiles", edm::InputTag("TICLLayerTileProducer"));
   desc.add<int>("algo_verbosity", 0);
   desc.add<double>("min_cos_theta", 0.915);
   desc.add<double>("min_cos_pointing", -1.);
@@ -74,7 +68,6 @@ void HGCalTrackExtrapolator::fillDescriptions(edm::ConfigurationDescriptions& de
 
 
 void HGCalTrackExtrapolator::beginRun(edm::Run const& iEvent, edm::EventSetup const& es){
-  //  std::cout << "beginRun" << std::endl;
 
   edm::ESHandle<HGCalDDDConstants> hdc;
   es.get<IdealGeometryRecord>().get(detectorName_, hdc);
@@ -96,8 +89,6 @@ void HGCalTrackExtrapolator::endRun(edm::Run const&, edm::EventSetup const&){
 
 void HGCalTrackExtrapolator::buildFirstLayers(){
 
-  //  std::cout << " HGCalTrackExtrapolator::buildFirstLayers " << std::endl;
-
   float zVal = hgcons_->waferZ(1, true);
   std::pair<double, double> rMinMax = hgcons_->rangeR(zVal, true);
   //  std::cout << " z = " << zVal << " min = " << rMinMax.first << " max = " << rMinMax.second << std::endl;
@@ -107,7 +98,6 @@ void HGCalTrackExtrapolator::buildFirstLayers(){
     firstDisk_[iSide] = new GeomDet(Disk::build(Disk::PositionType(0,0,zSide), Disk::RotationType(),
 						SimpleDiskBounds(rMinMax.first, rMinMax.second, zSide-0.5, zSide+0.5)).get() );
   }
-
 }
 
 
@@ -135,23 +125,25 @@ bool HGCalTrackExtrapolator::propagateToFirstLayers(const reco::TrackRef &tk, Pr
 
 void HGCalTrackExtrapolator::produce(edm::Event& evt, const edm::EventSetup& es) {
 
-  //  std::cout << " \n in HGCalTrackExtrapolator " << std::endl;
   auto result = std::make_unique<std::vector<Trackster>>();
   auto output_mask = std::make_unique<std::vector<float>>();
 
   edm::Handle<reco::TrackCollection> tracks_h;
   edm::Handle<std::vector<reco::CaloCluster>> cluster_h;
-  edm::Handle<std::vector<std::pair<unsigned int, float>>> filtered_layerclusters_mask_h;
+  edm::Handle<std::vector<float>> filtered_layerclusters_mask_h;
   edm::Handle<std::vector<float>> original_layerclusters_mask_h;
+  edm::Handle<ticl::TICLLayerTiles> layer_clusters_tiles_h;
 
   evt.getByToken(trks_token_, tracks_h);
   evt.getByToken(clusters_token_, cluster_h);
   evt.getByToken(filtered_layerclusters_mask_token_, filtered_layerclusters_mask_h);
   evt.getByToken(original_layerclusters_mask_token_, original_layerclusters_mask_h);
+  evt.getByToken(layer_clusters_tiles_token_, layer_clusters_tiles_h);
 
   const auto& layerClusters = *cluster_h;
   const auto& inputClusterMask = *filtered_layerclusters_mask_h;
-  std::unique_ptr<std::vector<std::pair<unsigned int, float>>> filteredLayerClusters;
+  const auto& layer_clusters_tiles = *layer_clusters_tiles_h;
+
 
   //should create a better container also keeping track of the track idx
   std::vector<PropagationSeedingPoint> pointRefDir;
@@ -172,16 +164,28 @@ void HGCalTrackExtrapolator::produce(edm::Event& evt, const edm::EventSetup& es)
     }
   }
 
-  if(pointRefDir.size() != 0)  myAlgo_->makeTracksters(evt, es, layerClusters, inputClusterMask, *result, pointRefDir);
+  if(pointRefDir.size() != 0)  
+    myAlgo_->makeTracksters(evt, es, layerClusters, inputClusterMask, layer_clusters_tiles, *result, pointRefDir);
 
-  // Now update the global mask and put it into the event
+
+  // Now update the global mask and put it into the event                       
   output_mask->reserve(original_layerclusters_mask_h->size());
-  // Copy over the previous state
-  std::copy(std::begin(*original_layerclusters_mask_h), std::end(*original_layerclusters_mask_h),
-	    std::back_inserter(*output_mask));
+  // Copy over the previous state                                               
+  std::copy(std::begin(*original_layerclusters_mask_h),
+            std::end(*original_layerclusters_mask_h),
+            std::back_inserter(*output_mask));
 
-  
-  evt.put(std::move(result), "TrackstersByCA");
+  //RA maybe not 
+  /*
+  // Mask the used elements, accordingly                                        
+  for (auto const& trackster : *result) {
+    for (auto const v : trackster.vertices) {
+      // TODO(rovere): for the moment we mask the layer cluster completely. In  
+      // the future, properly compute the fraction of usage.                    
+      (*output_mask)[v] = 0.;
+    }
+  }
+  */
+  evt.put(std::move(result));
   evt.put(std::move(output_mask));
-  
 }

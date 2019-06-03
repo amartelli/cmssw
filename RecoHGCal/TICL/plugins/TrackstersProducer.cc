@@ -43,7 +43,7 @@ private:
 DEFINE_FWK_MODULE(TrackstersProducer);
 
 TrackstersProducer::TrackstersProducer(const edm::ParameterSet& ps)
-    : myAlgo_(std::make_unique<PatternRecognitionbyCA>(ps)) {
+  : myAlgo_(std::make_unique<PatternRecognitionbyCA>(ps)) {
   clusters_token_ = consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"));
   filtered_layerclusters_mask_token_ = consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("filtered_mask"));
   original_layerclusters_mask_token_ = consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("original_mask"));

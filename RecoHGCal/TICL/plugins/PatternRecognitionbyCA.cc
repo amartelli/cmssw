@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "DataFormats/TICL/interface/TICLLayerTile.h"
 #include "PatternRecognitionbyCA.h"
 #include "HGCGraph.h"
 
@@ -21,14 +22,17 @@ PatternRecognitionbyCA::PatternRecognitionbyCA(const edm::ParameterSet &conf) : 
 
 PatternRecognitionbyCA::~PatternRecognitionbyCA(){};
 
-void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
-                                            const edm::EventSetup &es,
 
-std::vector<SeedingRegion> PatternRecognitionbyCA::createSeedingRegions(std::vector<PropagationSeedingPoint>& points){
+std::vector<SeedingRegion> PatternRecognitionbyCA::createSeedingRegions(std::vector<PropagationSeedingPoint>& points, 
+									const ticl::TICLLayerTiles &tiles){
   std::vector<SeedingRegion> regions;
   for(auto point : points){
-    auto etaBin = getEtaBin(point.p.eta());
-    auto phiBin = getPhiBin(point.p.phi());
+    // 0 for z<0 and rhtools_.lastLayerFH() for z > 0
+    //take values from ticl::constants::nLayers
+    //assuming that coherence is checked elsewhere
+    int firstLayer = (point.p.z() > 0) ? 52 : 0;
+    auto etaBin = tiles[firstLayer].getEtaBin(point.p.eta());
+    auto phiBin = tiles[firstLayer].getPhiBin(point.p.phi());
     regions.emplace_back(etaBin - 2, 5, phiBin - 2, 5, int(point.p.z() > 0));
   }
   return regions;
@@ -51,12 +55,12 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev, const edm::Eve
   point.index = -1;
 
   pointV.emplace_back(point);
-  globalRegion.emplace_back(0, int(nEtaBins_), 0, int(nPhiBins_), 0);
+  globalRegion.emplace_back(0, ticl::constants::nEtaBins, 0, ticl::constants::nPhiBins, 0);
 
   pointV.emplace_back(point);
-  globalRegion.emplace_back(0, int(nEtaBins_), 0, int(nPhiBins_), 1);
+  globalRegion.emplace_back(0, ticl::constants::nEtaBins, 0, ticl::constants::nPhiBins, 1);
 
-  makeTracksters(ev, es, layerClusters, mask, result, pointV, globalRegion);
+  makeTracksters(ev, es, layerClusters, mask, tiles, result, pointV, globalRegion);
   return;
 }
 
@@ -66,9 +70,9 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev, const edm::Eve
                                             const ticl::TICLLayerTiles &tiles,
                                             std::vector<Trackster> &result, std::vector<PropagationSeedingPoint>& points) {
 
-  std::vector<SeedingRegion> regions = createSeedingRegions(points);
+  std::vector<SeedingRegion> regions = createSeedingRegions(points, tiles);
 
-  makeTracksters(ev, es, layerClusters, mask, result, points, regions);
+  makeTracksters(ev, es, layerClusters, mask, tiles, result, points, regions);
   return;
 }
 
