@@ -1031,6 +1031,7 @@ bool BToKstllProducer::getCandX_PackedCand(unsigned int loop_index,
   candX_DzS = candX_Dz/cand.dzError();
 
   if(isLeading){
+    if(lepton1.Pt()<ptMinLeadLep_ || abs(lepton1.Eta()) > etaMaxLeadLep_) return false;
     if(lepton1.Pt() > 5.) return false;  
   }
   else if(isSubleading){
@@ -1073,7 +1074,9 @@ bool BToKstllProducer::getCandX_PackedCand(unsigned int loop_index,
        deltaR(lepton2.Eta(), lepton2.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01 ||
        deltaR(kaonTL.Eta(), kaonTL.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01) return false;
   }
-  
+
+  if(isLeading || isSubleading)
+    checkLeptonsDuplicateTriplet[muonTrg_index][dummyPair] = loop_index;
 
   if(debug) std::cout << " passed pfcandidate subleading = " << isSubleading  << " isKloop = " << isKloop << " - pfCand - " << std::endl;
   return true;
@@ -1138,7 +1141,8 @@ bool BToKstllProducer::getCandX_LostTracks(unsigned int loop_index,
   candX_DzS = candX_Dz/cand.dzError();
 
   if(isLeading){
-    if(lepton1.Pt() > 5.) return false;  
+    if(lepton1.Pt()<ptMinLeadLep_ || abs(lepton1.Eta()) > etaMaxLeadLep_) return false;
+    if(lepton1.Pt() > 5.) return false;
   }  
   else if(isSubleading){
     if(lepton2.Pt()<ptMinSubLeadLep_ || abs(lepton2.Eta()) > etaMaxSubLeadLep_) return false;
@@ -1180,7 +1184,9 @@ bool BToKstllProducer::getCandX_LostTracks(unsigned int loop_index,
        deltaR(kaonTL.Eta(), kaonTL.Phi(), pionTL.Eta(), pionTL.Phi()) < 0.01) return false;
 
   }
-  
+
+  if(isLeading || isSubleading)
+    checkLeptonsDuplicateTriplet[muonTrg_index][dummyPair] = loop_index;
 
   if(debug) std::cout << " passed losttrack subleading = " << isSubleading  << " isKloop = " << isKloop << " - lostTrack - " << std::endl;
   return true;
@@ -1324,10 +1330,10 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
         if(i < leptonNumber)
             objectPassed = getCandLepX_PFmuon(selectedMuons[iTM].at(i), candLep1, lepton1TT,
                                               candLep1Dxy, candLep1Dz, candLep1DxyS, candLep1DzS,false, iTM, PV);
-        else if(i >= leptonNumber && i < (pfCandNumber+leptonNumber))
+        else if(isLep1PFC)
             objectPassed = getCandX_PackedCand(selectedPackedCandidates[iTM].at(i-leptonNumber), candLep1, lepton1TT,
                                                candLep1Dxy, candLep1Dz,candLep1DxyS, candLep1DzS, true, false, false, iTM);
-        else if(i >= (pfCandNumber+leptonNumber))
+        else if(isLep1LT)
             objectPassed = getCandX_LostTracks(selectedLostTracks[iTM].at(i-leptonNumber-pfCandNumber), candLep1, lepton1TT, 
 					       candLep1Dxy, candLep1Dz, candLep1DxyS, candLep1DzS, true, false, false, iTM);
 
@@ -1445,7 +1451,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	for (unsigned int k = 0; k < (pfCandNumber+lostChHadrTrackNumber); ++k) {
 	  if(debug) std::cout << " i = " << i << " leptonNumber = " << leptonNumber << " j = " << j << " k = " << k << std::endl; 
 
-	  if( (isLep1LowPt == false && isLep1PFL == false && (i-leptonNumber) == k)  || (isLep2LowPt == false && isLep2PFL == false && (j-leptonNumber) == k) ) continue;
+	  if( ( (isLep1PFC || isLep1LT) && (i-leptonNumber) == k) ||
+	      ( (isLep2PFC || isLep2LT) && (j-leptonNumber) == k) ) continue;
 	  bool isKPFCand = k<pfCandNumber;
 
 	  const reco::Candidate* kaon;
@@ -1536,8 +1543,12 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  if(debug) std::cout << " before pion " << std::endl;	  
 	  if(isChKst_){
 	    for (unsigned int l = 0; l < (pfCandNumber+lostChHadrTrackNumber); ++l) {
+
 	      candPionIndex = l;
-	      if(k == l || (isLep1LowPt == false &&  isLep1PFL == false && (i-leptonNumber) == l) || (isLep2LowPt == false && isLep2PFL == false && (j-leptonNumber) == l)) continue;
+
+	      if( k == l ||
+		  ( (isLep1PFC || isLep1LT) && (i-leptonNumber) == l) ||
+		  ( (isLep2PFC || isLep2LT) && (j-leptonNumber) == l) ) continue;
 	      
 	      isPionPFCand = l<pfCandNumber;
 
