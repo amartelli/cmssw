@@ -9,6 +9,7 @@ eleFinalState = True
 lowPtEleFinalState = True
 lowPtAndPfEleFinalState = False
 kstarFinalState = False
+useLostLeadMuonTracks = False
 useLostSubLeadLepTracks = False  ## cannot be true if lowPtEleFinalState == true
 useLostChHadrTracks = True
 
@@ -104,6 +105,9 @@ if lowPtAndPfEleFinalState:
 if kstarFinalState:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeKstarFinalState
     process = nanoAOD_customizeKstarFinalState(process)
+if useLostLeadMuonTracks:
+    from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostLeadMuonTracks
+    process = nanoAOD_customizeLostLeadMuonTracks(process)
 if useLostSubLeadLepTracks:
     from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeLostSubLeadLepTracks
     process = nanoAOD_customizeLostSubLeadLepTracks(process)
@@ -120,4 +124,4 @@ process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 # Add early deletion of temporary data products to reduce peak memory need
 from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
 process = customiseEarlyDelete(process)
-# End adding early deletion
+# End adding early deletion 
