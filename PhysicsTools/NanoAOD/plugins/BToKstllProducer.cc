@@ -1712,6 +1712,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  BToKstLLCand.addUserInt("lep2_isPFLep", (int)isLep2PFL);
 	  BToKstLLCand.addUserInt("lep1_isPFCand", (int)isLep1PFC);
 	  BToKstLLCand.addUserInt("lep2_isPFCand", (int)isLep2PFC);
+	  BToKstLLCand.addUserInt("lep1_isLT", (int)isLep1LT);
+	  BToKstLLCand.addUserInt("lep2_isLT", (int)isLep2LT);
 	  BToKstLLCand.addUserInt("kaon_isPFCand", (int)isKPFCand);
 	  
 	  if(debug) std::cout << " before BDT " << std::endl;
