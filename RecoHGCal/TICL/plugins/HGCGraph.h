@@ -8,7 +8,6 @@
 #include "DataFormats/TICL/interface/Common.h"
 #include "DataFormats/TICL/interface/TICLLayerTile.h"
 #include "HGCDoublet.h"
-#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
 #include "RecoHGCal/TICL/interface/SeedingRegion.h"
 
 class HGCGraph {
@@ -24,7 +23,6 @@ public:
                               float maxCosPointing,
                               int missing_layers,
                               int maxNumberOfLayers,
-                              std::vector<PropagationSeedingPoint>& points,
 			      std::vector<SeedingRegion>& regions);
 
   std::vector<HGCDoublet> &getAllDoublets() { return allDoublets_; }

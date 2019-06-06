@@ -12,7 +12,7 @@
 #include "TrackingTools/GeomPropagators/interface/Propagator.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
-#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
+#include "RecoHGCal/TICL/interface/SeedingRegion.h"
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 
@@ -28,7 +28,7 @@ class HGCalTrackExtrapolator : public edm::stream::EDProducer<> {
   void produce(edm::Event &, const edm::EventSetup &) override;
 
   void buildFirstLayers();
-  bool propagateToFirstLayers(const reco::TrackRef &tk, PropagationSeedingPoint& impactP);
+  bool propagateToFirstLayers(const reco::TrackRef &tk, SeedingRegion& impactP);
 
  private:
   edm::EDGetTokenT<reco::TrackCollection> trks_token_;

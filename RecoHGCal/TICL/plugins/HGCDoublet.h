@@ -9,7 +9,7 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
-#include "RecoHGCal/TICL/interface/PropagationSeedingPoint.h"
+#include "RecoHGCal/TICL/interface/SeedingRegion.h"
 
 class HGCDoublet {
 public:

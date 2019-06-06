@@ -96,7 +96,7 @@ void HGCalTrackExtrapolator::buildFirstLayers(){
 }
 
 
-bool HGCalTrackExtrapolator::propagateToFirstLayers(const reco::TrackRef &tk, PropagationSeedingPoint& impactP){
+bool HGCalTrackExtrapolator::propagateToFirstLayers(const reco::TrackRef &tk, SeedingRegion& impactP){
 
   FreeTrajectoryState fts = trajectoryStateTransform::outerFreeState(*tk, bfield_.product());
 
@@ -111,8 +111,9 @@ bool HGCalTrackExtrapolator::propagateToFirstLayers(const reco::TrackRef &tk, Pr
     return false;
   }
 
-  impactP.p = GlobalPoint(tsos.globalPosition());
-  impactP.v = GlobalVector(tsos.globalMomentum().x(), tsos.globalMomentum().y(), tsos.globalMomentum().z());
+  impactP.point = GlobalPoint(tsos.globalPosition());
+  impactP.direction = GlobalVector(tsos.globalMomentum().x(), tsos.globalMomentum().y(), tsos.globalMomentum().z());
+  impactP.zSide = iSide;
 
   return true;
 }
@@ -141,7 +142,7 @@ void HGCalTrackExtrapolator::produce(edm::Event& evt, const edm::EventSetup& es)
 
 
   //should create a better container also keeping track of the track idx
-  std::vector<PropagationSeedingPoint> pointRefDir;
+  std::vector<SeedingRegion> pointRefDir;
   int itrack = -1;
   if(tracks_h->size() == 0) std::cout << " empty trks " << std::endl;
   for (const reco::Track &tk : *tracks_h) {
@@ -150,11 +151,20 @@ void HGCalTrackExtrapolator::produce(edm::Event& evt, const edm::EventSetup& es)
       continue;
     }
 
-    PropagationSeedingPoint point;
+    SeedingRegion point;
     bool keepTrack = propagateToFirstLayers(reco::TrackRef(tracks_h,itrack), point);
 
     if(keepTrack){
+      //FIXME RA                                                                
+      int firstLayer = (point.zSide > 0) ? 52 : 0;
+      point.etaBin = layer_clusters_tiles[firstLayer].getEtaBin(point.point.eta());
+      point.phiBin = layer_clusters_tiles[firstLayer].getPhiBin(point.point.phi());
       point.index = itrack;
+
+      point.etaStart =  point.etaBin - 2;
+      point.etaLength = 5;
+      point.phiStart = point.phiBin - 2;
+      point.phiLength = 5;
       pointRefDir.emplace_back(point);
     }
   }

@@ -13,15 +13,15 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
                                       const std::vector<float> &mask,
                                       int deltaIEta, int deltaIPhi, float minCosTheta,
                                       float minCosPointing, int missing_layers, int maxNumberOfLayers,
-				      std::vector<PropagationSeedingPoint>& points, std::vector<SeedingRegion>& regions) {
+				      std::vector<SeedingRegion>& regions) {
 
   isOuterClusterOfDoublets_.clear();
   isOuterClusterOfDoublets_.resize(layerClusters.size());
   allDoublets_.clear();
   theRootDoublets_.clear();
-  int indexRegion = -1;
+
   for(auto seedR : regions){
-    ++indexRegion;
+
 
     for (int il = 0; il < maxNumberOfLayers - 1; ++il) {
 
@@ -60,7 +60,7 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
                       continue;
                     auto doubletId = allDoublets_.size();
                     allDoublets_.emplace_back(innerClusterId, outerClusterId, doubletId,
-                                              &layerClusters, points[indexRegion].index);
+                                              &layerClusters, seedR.index);
                     if (verbosity_ > Advanced) {
                       LogDebug("HGCGraph")
                           << "Creating doubletsId: " << doubletId << " layerLink in-out: [" << currentInnerLayerId
@@ -77,7 +77,7 @@ void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
                           << std::endl;
                     }
                     bool isRootDoublet = thisDoublet.checkCompatibilityAndTag(
-	                allDoublets_, neigDoublets, points[indexRegion].v,
+	                allDoublets_, neigDoublets, seedR.direction,
 			minCosTheta, minCosPointing, verbosity_ > Advanced);
                     if (isRootDoublet)
                       theRootDoublets_.push_back(doubletId);
