@@ -16,7 +16,7 @@ PatternRecognitionbyCA::PatternRecognitionbyCA(const edm::ParameterSet &conf) : 
   min_cos_pointing_ = (float)conf.getParameter<double>("min_cos_pointing");
   missing_layers_ = conf.getParameter<int>("missing_layers");
   min_clusters_per_ntuplet_ = conf.getParameter<int>("min_clusters_per_ntuplet");
-  max_delta_time_ = conf.getParameter<int>("max_delta_time");
+  max_delta_time_ = conf.getParameter<double>("max_delta_time");
 }
 
 PatternRecognitionbyCA::~PatternRecognitionbyCA(){};
