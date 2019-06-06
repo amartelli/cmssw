@@ -77,7 +77,11 @@ private:
   void selectPatMuons(edm::Event&, const edm::EventSetup&);
   void selectPackedCandidate(edm::Event&, const edm::EventSetup&);
   void selectLostTracks(edm::Event&, const edm::EventSetup&);
-  void selectLowPtGsfTracks(edm::Event&, const edm::EventSetup&);
+  void selectLowPtGsfTracks(edm::Event&, const edm::EventSetup&, 
+			    edm::Handle<std::vector<reco::GsfTrack>>& lowPtGsfTracksHandle,                    
+			    std::vector<edm::Handle<edm::ValueMap<float>>>& mvaSeedsHandle,                    
+			    edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>>& gsfLinkLTHandle, 
+			    edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>>& gsfLinkPCHandle);
 
 
   bool getCandLepX_PFele(unsigned int loop_index,
@@ -95,7 +99,11 @@ private:
 			    float candLepX_Dz,
 			    float candLepX_DxyS,
 			    float candLepX_DzS,
-			    bool isSubleading, unsigned int muonTrg_index);
+			    bool isSubleading, unsigned int muonTrg_index, 
+			    edm::Handle<std::vector<reco::GsfTrack>>& lowPtGsfTracksHandle,                     
+			    std::vector<edm::Handle<edm::ValueMap<float>>>& mvaSeedsHandle,                     
+			    edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>>& gsfLinkLTHandle,  
+			    edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>>& gsfLinkPCHandle); 
     
   bool getCandLepX_PFmuon(unsigned int loop_index,
 			  const reco::Candidate*& candLepX,
@@ -272,10 +280,12 @@ private:
   edm::Handle<std::vector<pat::Muon>> muonForTrgHandle;
 
   edm::Handle<std::vector<pat::Electron>> electronHandle;
+  /*
   edm::Handle<std::vector<reco::GsfTrack>> lowPtGsfTracksHandle;
   std::vector<edm::Handle<edm::ValueMap<float>>> mvaSeedsHandle;
   edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkLTHandle;
   edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkPCHandle;
+  */
 
   edm::Handle<std::vector<pat::Muon>> muonHandle;
   edm::Handle<edm::View<pat::PackedCandidate>> pfCandHandle;
@@ -405,10 +415,12 @@ void BToKstllProducer::Init(){
 
   muonForTrgHandle.clear();
   electronHandle.clear();
+  /*
   lowPtGsfTracksHandle.clear();
   mvaSeedsHandle.clear();
   gsfLinkLTHandle.clear();
   gsfLinkPCHandle.clear();
+  */
   muonHandle.clear();
   pfCandHandle.clear();
   lostSubLeadLepTrackHandle.clear();
@@ -693,7 +705,11 @@ void BToKstllProducer::selectLostTracks(edm::Event& iEvent, const edm::EventSetu
 }
 
 
-void BToKstllProducer::selectLowPtGsfTracks(edm::Event& iEvent, const edm::EventSetup& iSetup){
+void BToKstllProducer::selectLowPtGsfTracks(edm::Event& iEvent, const edm::EventSetup& iSetup, 
+					    edm::Handle<std::vector<reco::GsfTrack>>& lowPtGsfTracksHandle,                    
+					    std::vector<edm::Handle<edm::ValueMap<float>>>& mvaSeedsHandle,                    
+					    edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>>& gsfLinkLTHandle, 
+					    edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>>& gsfLinkPCHandle){
 
   if(debug) std::cout << " BToKstllProducer::selectLowPtGsfTracks " << std::endl;
 
@@ -702,14 +718,14 @@ void BToKstllProducer::selectLowPtGsfTracks(edm::Event& iEvent, const edm::Event
   // edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkLTHandle;
   // edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkPCHandle;
 
-  iEvent.getByToken(lowPtGsfTracksSrc_, lowPtGsfTracksHandle);
-  for (const auto& token : mvaSeeds_){
-    edm::Handle<edm::ValueMap<float> > h;
-    iEvent.getByToken(token, h);
-    mvaSeedsHandle.push_back(h);
-  }
-  iEvent.getByToken(lowPtGsfLinksLT_, gsfLinkLTHandle);
-  iEvent.getByToken(lowPtGsfLinksPC_, gsfLinkPCHandle);
+  // iEvent.getByToken(lowPtGsfTracksSrc_, lowPtGsfTracksHandle);
+  // for (const auto& token : mvaSeeds_){
+  //   edm::Handle<edm::ValueMap<float> > h;
+  //   iEvent.getByToken(token, h);
+  //   mvaSeedsHandle.push_back(h);
+  // }
+  // iEvent.getByToken(lowPtGsfLinksLT_, gsfLinkLTHandle);
+  // iEvent.getByToken(lowPtGsfLinksPC_, gsfLinkPCHandle);
 
 
   //loop over triggering muons                                                      
@@ -845,7 +861,11 @@ bool BToKstllProducer::getCandLepX_LowPtEle(unsigned int loop_index,
 					    float candLepX_Dz,
 					    float candLepX_DxyS,
 					    float candLepX_DzS,
-					    bool isSubleading, unsigned int muonTrg_index){
+					    bool isSubleading, unsigned int muonTrg_index, 
+					    edm::Handle<std::vector<reco::GsfTrack>>& lowPtGsfTracksHandle,                    
+					    std::vector<edm::Handle<edm::ValueMap<float>>>& mvaSeedsHandle,                    
+					    edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>>& gsfLinkLTHandle, 
+					    edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>>& gsfLinkPCHandle){
 
   if(debug) std::cout << " BToKstllProducer::getCandLepX_LowPtEle " << std::endl;
 
@@ -1215,7 +1235,25 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
   if(isLepEle_ && !isLowPtEle_) selectPatElectrons(iEvent, iSetup);
   if(!isLepEle_) selectPatMuons(iEvent, iSetup);
 
-  if(isLowPtEle_ || isLowPtAndPfEle_) selectLowPtGsfTracks(iEvent, iSetup);
+  ///
+  edm::Handle<std::vector<reco::GsfTrack>> lowPtGsfTracksHandle;                    
+  std::vector<edm::Handle<edm::ValueMap<float>>> mvaSeedsHandle;                    
+  edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkLTHandle; 
+  edm::Handle<edm::Association<std::vector<pat::PackedCandidate>>> gsfLinkPCHandle; 
+                                                                                  
+  if(isLowPtEle_ || isLowPtAndPfEle_){                                              
+    iEvent.getByToken(lowPtGsfTracksSrc_, lowPtGsfTracksHandle);                    
+    for (const auto& token : mvaSeeds_){                                            
+      edm::Handle<edm::ValueMap<float> > h;                                         
+      iEvent.getByToken(token, h);                                                  
+      mvaSeedsHandle.push_back(h);                                                  
+    }                                                                               
+    iEvent.getByToken(lowPtGsfLinksLT_, gsfLinkLTHandle);                           
+    iEvent.getByToken(lowPtGsfLinksPC_, gsfLinkPCHandle);                           
+  }                                                                                 
+  ////
+
+  if(isLowPtEle_ || isLowPtAndPfEle_) selectLowPtGsfTracks(iEvent, iSetup, lowPtGsfTracksHandle, mvaSeedsHandle, gsfLinkLTHandle, gsfLinkPCHandle);
   selectPackedCandidate(iEvent, iSetup);
   if(useLostChHadrTracks_) selectLostTracks(iEvent, iSetup);
 
@@ -1312,7 +1350,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	if(isLep1LowPt)
 	  objectPassed = getCandLepX_LowPtEle(selectedLowPtGsfTracks[iTM].at(i-selectedElectrons[iTM].size()), lepton1TT, 
 					      candLep1Dxy, candLep1Dz,candLep1DxyS, candLep1DzS,
-					      false, iTM);
+					      false, iTM, 
+					      lowPtGsfTracksHandle, mvaSeedsHandle, gsfLinkLTHandle, gsfLinkPCHandle);
 	
 	else
 	  objectPassed = getCandLepX_PFele(selectedElectrons[iTM].at(i), candLep1, lepton1TT, 
@@ -1323,7 +1362,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
       else if(isLepEle_ && !isLowPtAndPfEle_ && isLowPtEle_)      
 	objectPassed = getCandLepX_LowPtEle(selectedLowPtGsfTracks[iTM].at(i), lepton1TT, 
 					    candLep1Dxy, candLep1Dz,candLep1DxyS, candLep1DzS,
-					    false, iTM);
+					    false, iTM, 
+					    lowPtGsfTracksHandle, mvaSeedsHandle, gsfLinkLTHandle, gsfLinkPCHandle);
 
       else if(!isLepEle_){
 
@@ -1368,7 +1408,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	    if(isLep2LowPt)
 	      objectPassed = getCandLepX_LowPtEle(selectedLowPtGsfTracks[iTM].at(j-selectedElectrons[iTM].size()), lepton2TT,
 						  candLep2Dxy, candLep2Dz,candLep2DxyS, candLep2DzS,
-						  true, iTM);
+						  true, iTM, 
+						  lowPtGsfTracksHandle, mvaSeedsHandle, gsfLinkLTHandle, gsfLinkPCHandle);
 	    
 	    else
 	      objectPassed = getCandLepX_PFele(selectedElectrons[iTM].at(j), candLep2, lepton2TT,
@@ -1379,7 +1420,8 @@ void BToKstllProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 	  else if(isLepEle_ && !isLowPtAndPfEle_ && isLowPtEle_)
 	    objectPassed = getCandLepX_LowPtEle(selectedLowPtGsfTracks[iTM].at(j), lepton2TT,
 						candLep2Dxy, candLep2Dz,candLep2DxyS, candLep2DzS,
-						true, iTM);
+						true, iTM, 
+						lowPtGsfTracksHandle, mvaSeedsHandle, gsfLinkLTHandle, gsfLinkPCHandle);
 	  
 	  else if(!isLepEle_)
 	    objectPassed = getCandLepX_PFmuon(selectedMuons[iTM].at(j), candLep2, lepton2TT,
