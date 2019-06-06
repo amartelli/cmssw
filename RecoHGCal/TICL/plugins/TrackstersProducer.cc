@@ -37,6 +37,7 @@ private:
   edm::EDGetTokenT<std::vector<float>> filtered_layerclusters_mask_token_;
   edm::EDGetTokenT<std::vector<float>> original_layerclusters_mask_token_;
   edm::EDGetTokenT<ticl::TICLLayerTiles> layer_clusters_tiles_token_;
+  edm::EDGetTokenT<edm::ValueMap<float>> clustersTime_token_;
 
   std::unique_ptr<PatternRecognitionAlgoBase> myAlgo_;
 };
@@ -48,6 +49,7 @@ TrackstersProducer::TrackstersProducer(const edm::ParameterSet& ps)
   filtered_layerclusters_mask_token_ = consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("filtered_mask"));
   original_layerclusters_mask_token_ = consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("original_mask"));
   layer_clusters_tiles_token_ = consumes<ticl::TICLLayerTiles>(ps.getParameter<edm::InputTag>("layer_clusters_tiles"));
+  clustersTime_token_ = consumes<edm::ValueMap<float>>(ps.getParameter<edm::InputTag>("time_layerclusters"));
   produces<std::vector<Trackster>>();
   produces<std::vector<float>>();  // Mask to be applied at the next iteration
 }
@@ -59,11 +61,13 @@ void TrackstersProducer::fillDescriptions(edm::ConfigurationDescriptions& descri
   desc.add<edm::InputTag>("filtered_mask", edm::InputTag("FilteredLayerClusters", "iterationLabelGoesHere"));
   desc.add<edm::InputTag>("original_mask", edm::InputTag("hgcalLayerClusters", "InitialLayerClustersMask"));
   desc.add<edm::InputTag>("layer_clusters_tiles", edm::InputTag("TICLLayerTileProducer"));
+  desc.add<edm::InputTag>("time_layerclusters", edm::InputTag("hgcalLayerClusters","timeLayerCluster"));
   desc.add<int>("algo_verbosity", 0);
   desc.add<double>("min_cos_theta", 0.915);
   desc.add<double>("min_cos_pointing", -1.);
   desc.add<int>("missing_layers", 0);
   desc.add<int>("min_clusters_per_ntuplet", 10);
+  desc.add<double>("max_delta_time_", 0.09);
   descriptions.add("trackstersProducer", desc);
 }
 
@@ -75,16 +79,19 @@ void TrackstersProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
   edm::Handle<std::vector<float>> filtered_layerclusters_mask_h;
   edm::Handle<std::vector<float>> original_layerclusters_mask_h;
   edm::Handle<ticl::TICLLayerTiles> layer_clusters_tiles_h;
+  edm::Handle<edm::ValueMap<float>> time_clusters_h;
 
   evt.getByToken(clusters_token_, cluster_h);
   evt.getByToken(filtered_layerclusters_mask_token_, filtered_layerclusters_mask_h);
   evt.getByToken(original_layerclusters_mask_token_, original_layerclusters_mask_h);
   evt.getByToken(layer_clusters_tiles_token_, layer_clusters_tiles_h);
+  evt.getByToken(clustersTime_token_, time_clusters_h);
 
   const auto& layerClusters = *cluster_h;
   const auto& inputClusterMask = *filtered_layerclusters_mask_h;
   const auto& layer_clusters_tiles = *layer_clusters_tiles_h;
-  myAlgo_->makeTracksters(evt, es, layerClusters, inputClusterMask, layer_clusters_tiles, *result);
+  const auto& layerClustersTimes = *time_clusters_h;
+  myAlgo_->makeTracksters(evt, es, layerClusters, inputClusterMask, layerClustersTimes, layer_clusters_tiles, *result);
 
   // Now update the global mask and put it into the event
   output_mask->reserve(original_layerclusters_mask_h->size());
