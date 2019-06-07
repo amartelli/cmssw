@@ -60,14 +60,8 @@ triggerObjectTable = cms.EDProducer("TriggerObjectTableProducer",
                             "filter('*RelTrkIsoVVLFiltered0p4') + " \
                             "2*filter('hltL3crIso*Filtered0p07') + " \
                             "4*filter('*OverlapFilterIsoMu*PFTau*') + " \
-                            "8*max(filter('hltL3crIsoL1*SingleMu*Filtered0p07'),filter('hltL3crIsoL1sMu*Filtered0p07')) + " \
-                            "16*filter('hltDiMuon*Filtered*') + " \
-                            "32*filter('hltMu*TrkIsoVVL*Ele*CaloIdLTrackIdLIsoVL*Filter*') + " \
-                            "64*filter('hltOverlapFilterIsoMu*PFTau*') + " \
-                            "128*filter('hltL3fL1TripleMu*') + " \
-                            "256*max(filter('hltL3fL1DoubleMu*EG*Filtered*'),filter('hltDiMu*Ele*CaloIdLTrackIdLElectronleg*Filter')) + " \
-                            "512*max(filter('hltL3fL1Mu*DoubleEG*Filtered*'),filter('hltMu*DiEle*CaloIdLTrackIdLElectronleg*Filter'))"),    
-            qualityBitsDoc = cms.string("1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = 1mu, 16 = 2mu, 32 = 1mu-1e, 64 = 1mu-1tau, 128 = 3mu, 256 = 2mu-1e, 512 =1mu-2e"),
+                            "8*filter('hltL3fL1s*Park*')"),    
+            qualityBitsDoc = cms.string("1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = Muon filters for BPH parking"),
             ),
         cms.PSet(
             name = cms.string("Tau"),
