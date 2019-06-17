@@ -128,6 +128,10 @@ void PFCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       pfCandNew.addUserFloat("DCASig", DCABS/DCABSErr);
       pfCandNew.addUserFloat("dEdXStrip", dEdXStrip);
       pfCandNew.addUserFloat("dEdXPixel", dEdXPixel);
+      pfCandNew.addUserFloat("dxy", pfCand.dxy());
+      pfCandNew.addUserFloat("dxyS", pfCand.dxy()/pfCand.dxyError());
+      pfCandNew.addUserFloat("dz", pfCand.dz());
+      pfCandNew.addUserFloat("dzS", pfCand.dz()/pfCand.dzError());
 
       result->push_back(pfCandNew);
 

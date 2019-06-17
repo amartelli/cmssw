@@ -8,7 +8,7 @@ PFCand=cms.EDProducer("PFCandProducer",
                       )
 
 
-PFCandTable=cms.EDProducer("SimpleCandidateFlatTableProducer",
+PFCandTable=cms.EDProducer("SimpleCompositeCandidateFlatTableProducer",
                              src=cms.InputTag("PFCand"),
                              cut=cms.string(""),
                              name=cms.string("PFCand"),
@@ -18,14 +18,18 @@ PFCandTable=cms.EDProducer("SimpleCandidateFlatTableProducer",
                              variables=cms.PSet(pt = Var("daughter(0).pt()",float,doc="pt"),
                                                 eta = Var("daughter(0).eta()",float,doc="eta"),
                                                 phi = Var("daughter(0).phi()",float,doc="phi"),
+                                                charge = Var("daughter(0).charge()",float,doc="charge"),
                                                 mass = Var("daughter(0).mass()",float,doc="mass"),
                                                 pdgId = Var("daughter(0).pdgId()",int,doc="PF pdgID"),
                                                 DCASig=Var("userFloat('DCASig')", float,doc="significance of xy-distance of closest approach PFCand-beamspot"),
                                                 dEdXStrip=Var("userFloat('dEdXStrip')", float,doc="dE/dX from strips of associated isolated track"),
                                                 dEdXPixel=Var("userFloat('dEdXPixel')", float,doc="dE/dX from pixels of associated isolated track"),
-                                                dz = Var("daughter(0).dz()",float,doc="dz (with sign) wrt first PV, in cm",precision=10),
-                                                dxy = Var("daughter(0).dxy()",float,doc="dxy (with sign) wrt first PV, in cm",precision=10),
-                                                ),
+                                                dz = Var("userFloat('dz')",float,doc="dz (with sign) wrt first PV, in cm"),
+                                                dxy = Var("userFloat('dxy')",float,doc="dxy (with sign) wrt first PV, in cm"),
+                                                dzS = Var("userFloat('dzS')", float, doc="dz/err (with sign) wrt first PV, in cm"),
+                                                dxyS = Var("userFloat('dxyS')", float, doc="dxy/err (with sign) wrt first PV, in cm"),
+                                                vz = Var("daughter(0).vz()", float, doc="z coordinate of vertex position, in cm"),
+                                            ),
                              )
 
 

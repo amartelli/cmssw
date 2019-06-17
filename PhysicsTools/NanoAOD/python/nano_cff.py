@@ -17,7 +17,7 @@ from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.NanoAOD.isotracks_cff import *
 from PhysicsTools.NanoAOD.BToKstll_cff import *
 from PhysicsTools.NanoAOD.PFCands_cff import *
-from PhysicsTools.NanoAOD.LowPtGfsTracks_cff import *
+from PhysicsTools.NanoAOD.LowPtGsfTracks_cff import *
 from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
 
 from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
@@ -128,6 +128,7 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False))
 
+######################################################
 nanoSequenceCommon = cms.Sequence(
         nanoMetadata + jetSequence + 
         muonSequence + tauSequence + 
@@ -145,14 +146,30 @@ nanoSequenceCommon = cms.Sequence(
         )
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 
-nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyFullSim)
+nanoSequence = cms.Sequence(nanoMetadata + jetSequence +
+                            muonSequence + tauSequence +
+                            electronSequence + photonSequence+
+                            vertexSequence + isoTrackSequence + # must be after all the leptons
+                            linkedObjects  +
+                            jetTables +
+                            muonTables + tauTables +
+                            electronTables + photonTables +
+                            globalTables + vertexTables + #metTables+
+                            simpleCleanerTable +
+                            isoTrackTables + triggerObjectTables + l1bits)
 
-nanoSequenceFS = cms.Sequence(particleLevelSequence + genParticleSequence + nanoSequenceCommon + #jetMC + 
-                              muonMC + electronMC + photonMC + tauMC + #metMC + ttbarCatMCProducers +  
+nanoSequenceFS = cms.Sequence(particleLevelSequence + genParticleSequence + nanoSequenceCommon + #jetMC +
+                              muonMC + electronMC + photonMC + tauMC + #metMC + ttbarCatMCProducers +
                               globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable)#  + ttbarCategoryTable )
 
-nanoSequenceMC = nanoSequenceFS.copy()
-nanoSequenceMC.insert(nanoSequenceFS.index(nanoSequenceCommon)+1,nanoSequenceOnlyFullSim)
+#nanoSequenceMC = nanoSequenceFS.copy()
+#nanoSequenceMC.insert(nanoSequenceFS.index(nanoSequenceCommon)+1,nanoSequenceOnlyFullSim)
+nanoSequenceMC = cms.Sequence(particleLevelSequence + genParticleSequence + nanoSequence + jetMC +
+                              muonMC + electronMC + photonMC + tauMC + #metMC + ttbarCatMCProducers +
+                              globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable) #+ ttbarCategoryTable )
+
+
+######################################################
 
 # modify extraFlagsTable to store ecalBadCalibFilter decision which is re-run with updated bad crystal list for 2017 and 2018 samples
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:
@@ -300,57 +317,19 @@ def nanoAOD_customizeMC(process):
 
 def nanoAOD_customizeBToKstll(process):
     process = nanoAOD_customizeCommon(process)
-    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable + LowPtGsfTrkTables)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable)
     return process
 
-def nanoAOD_customizeEleFinalState(process):
+def nanoAOD_customizeLowPtGsf(process):
     process = nanoAOD_customizeCommon(process)
-    #process.nanoSequence = cms.Sequence( process.nanoSequence) # + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable)
-    if(hasattr(process,'BToKstll')):
-        process.BToKstll.isLeptonElectron=cms.bool(True)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable + LowPtGsfTrackTable)
     return process
 
-def nanoAOD_customizeLowPtEleFinalState(process):
+def nanoAOD_customizeLostTracks(process):
     process = nanoAOD_customizeCommon(process)
-    #process.nanoSequence = cms.Sequence( process.nanoSequence) # + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable)
-    if(hasattr(process,'BToKstll')):
-        process.BToKstll.isLowPtEle=cms.bool(True)
+    process.nanoSequence = cms.Sequence( process.nanoSequence + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable + LowPtGsfTrackTable + LostTrackSequence + LostTrackTables)
     return process
 
-def nanoAOD_customizeLowPtAndPfEleFinalState(process):
-    process = nanoAOD_customizeCommon(process)
-    #process.nanoSequence = cms.Sequence( process.nanoSequence) # + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable)
-    if(hasattr(process,'BToKstll')):
-        process.BToKstll.isLowPtAndPfEle=cms.bool(True)
-    return process
-
-def nanoAOD_customizeKstarFinalState(process):
-    process = nanoAOD_customizeCommon(process)
-    #process.nanoSequence = cms.Sequence( process.nanoSequence) # + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable)
-    if(hasattr(process,'BToKstll')):
-        process.BToKstll.isChannelKst=cms.bool(True)
-    return process
-
-def nanoAOD_customizeLostLeadMuonTracks(process):
-    process = nanoAOD_customizeCommon(process)
-    #process.nanoSequence = cms.Sequence( process.nanoSequence) # + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable + LostTrackSequence + LostTrackTables )
-    if(hasattr(process,'BToKstll')):
-        process.BToKstll.useLostLeadMuonTracks=cms.bool(True)
-    return process
-
-def nanoAOD_customizeLostSubLeadLepTracks(process):
-    process = nanoAOD_customizeCommon(process)
-    #process.nanoSequence = cms.Sequence( process.nanoSequence) # + BToKstllSequence + BToKstllTables + PFCandSequence + PFCandTable + LostTrackSequence + LostTrackTables )
-    if(hasattr(process,'BToKstll')):
-        process.BToKstll.useLostSubLeadLepTracks=cms.bool(True)
-    return process
-
-def nanoAOD_customizeLostChHadrTracks(process):
-    process = nanoAOD_customizeCommon(process)
-    process.nanoSequence = cms.Sequence( process.nanoSequence + LostTrackSequence + LostTrackTables)
-    if(hasattr(process,'BToKstll')):
-        process.BToKstll.useLostChHadrTracks=cms.bool(True)
-    return process
 
 
 ### Era dependent customization
