@@ -2,13 +2,11 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: test_data_1025 --data -s NANO --data --eventcontent NANOAOD --datatier NANOAOD --filein /store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root --no_exec -n 100 --conditions 102X_dataRun2_Prompt_v11 --era Run2_2018 --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False))) --customise_commands=process.NANOAODoutput.fakeNameForCrab=cms.untracked.bool(True) --customise_commands=process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
-
+# with command line options: test_mc_1025 --mc -s NANO --eventcontent NANOAODSIM --datatier NANOAODSIM --filein /store/mc/RunIIAutumn18MiniAOD/BuToK_ToMuMu_MuFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/PUPoissonAve20_102X_upgrade2018_realistic_v15-v2/00000/035481CF-7C75-1046-B916-72ACA28654DE.root --no_exec --conditions 102X_upgrade2018_realistic_v15 -n 100 --era Run2_2018 --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False))) --customise_commands=process.NANOAODSIMoutput.fakeNameForCrab=cms.untracked.bool(True) --customise_commands=process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 
 runBToKstll = True
 saveLowPtGsf = True
 saveLostTracks = True
-
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
@@ -20,8 +18,9 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.EventContent.EventContent_cff')
+process.load('SimGeneral.MixingModule.mixNoPU_cfi')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
-process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
+process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('PhysicsTools.NanoAOD.nano_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -32,9 +31,10 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    #fileNames = cms.untracked.vstring('/store/data/Run2018D/ParkingBPH1/MINIAOD/PromptReco-v2/000/321/833/00000/A8836E36-73AE-E811-AF6E-FA163E66D13C.root'),
-    fileNames = cms.untracked.vstring('/store/data/Run2018D/ParkingBPH5/MINIAOD/20Mar2019-v1/120000/0071842F-3A26-0D43-92F2-E2376273008E.root'),
-    secondaryFileNames = cms.untracked.vstring()
+#fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18MiniAOD/BuToK_ToMuMu_MuFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/PUPoissonAve20_102X_upgrade2018_realistic_v15-v2/00000/F61219E1-1981-2B4A-B811-274A745C3443.root'),
+fileNames = cms.untracked.vstring('/store/user/bainbrid/lowpteleid/BuToKJpsi_Toee_MuFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/crab_lowpteleid/190328_152903/0000/step3_inMINIAODSIM_99.root'),
+
+       secondaryFileNames = cms.untracked.vstring()
 )
 
 process.options = cms.untracked.PSet(
@@ -43,58 +43,56 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('test_data_10213 nevts:100'),
+    annotation = cms.untracked.string('test_mc_10213 nevts:100'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
 
 # Output definition
 
-process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
+process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
     compressionAlgorithm = cms.untracked.string('LZMA'),
     compressionLevel = cms.untracked.int32(9),
     dataset = cms.untracked.PSet(
-        dataTier = cms.untracked.string('NANOAOD'),
+        dataTier = cms.untracked.string('NANOAODSIM'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('test_data_10213_NANO.root'),
-    outputCommands = process.NANOAODEventContent.outputCommands
+    fileName = cms.untracked.string('test_mc_10213_NANO_Kee.root'),
+    outputCommands = process.NANOAODSIMEventContent.outputCommands
 )
 
 # Additional output definition
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v12', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v15', '')
 
 
 process.load('PhysicsTools.NanoAOD.BToKstll_cff')
-process.BToKstll.isLeptonElectron = cms.vuint32(1, 0)
-process.BToKstll.isLowPtEle = cms.vuint32(0, 0)
-process.BToKstll.isLowPtAndPfEle = cms.vuint32(1, 0)
-process.BToKstll.isChannelKst = cms.vuint32(0, 0)
-process.BToKstll.useLostLeadMuonTracks = cms.vuint32(0, 1)
-process.BToKstll.useLostSubLeadLepTracks = cms.vuint32(0, 1)
-process.BToKstll.useLostChHadrTracks = cms.vuint32(1, 1)
-
+process.BToKstll.isLeptonElectron = cms.vuint32(1)       
+process.BToKstll.isLowPtEle = cms.vuint32(0)             
+process.BToKstll.isLowPtAndPfEle = cms.vuint32(1)        
+process.BToKstll.isChannelKst = cms.vuint32(0)           
+process.BToKstll.useLostLeadMuonTracks = cms.vuint32(0)  
+process.BToKstll.useLostSubLeadLepTracks = cms.vuint32(0)
+process.BToKstll.useLostChHadrTracks = cms.vuint32(1)    
 
 # Path and EndPath definitions
-process.nanoAOD_step = cms.Path(process.nanoSequence)
+process.nanoAOD_step = cms.Path(process.nanoSequenceMC)
 process.endjob_step = cms.EndPath(process.endOfProcess)
-process.NANOAODoutput_step = cms.EndPath(process.NANOAODoutput)
+process.NANOAODSIMoutput_step = cms.EndPath(process.NANOAODSIMoutput)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.nanoAOD_step,process.endjob_step,process.NANOAODoutput_step)
+process.schedule = cms.Schedule(process.nanoAOD_step,process.endjob_step,process.NANOAODSIMoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
 # customisation of the process.
 
 # Automatic addition of the customisation function from PhysicsTools.NanoAOD.nano_cff
-from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeData 
-
-#call to customisation function nanoAOD_customizeData imported from PhysicsTools.NanoAOD.nano_cff
-process = nanoAOD_customizeData(process)
+from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeMC 
+#call to customisation function nanoAOD_customizeMC imported from PhysicsTools.NanoAOD.nano_cff
+process = nanoAOD_customizeMC(process)
 
 ##the following should be enough                                                   
 if runBToKstll:
