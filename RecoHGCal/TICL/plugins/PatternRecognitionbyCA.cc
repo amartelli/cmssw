@@ -24,7 +24,8 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
                                             const edm::EventSetup &es,
                                             const std::vector<reco::CaloCluster> &layerClusters,
                                             const std::vector<float> &mask,
-                                            const ticl::TICLLayerTiles &tiles, const std::vector<ticl::TICLSeedingRegion>& regions,
+                                            const ticl::TICLLayerTiles &tiles,
+					    const std::vector<ticl::TICLSeedingRegion>& regions,
                                             std::vector<Trackster> &result) {
   rhtools_.getEventSetup(es);
 
@@ -46,7 +47,12 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
                                     min_cos_pointing_,
                                     missing_layers_,
                                     rhtools_.lastLayerFH());
+
+  //RAFIX
+  //change passing a vector of index
+  //also will return a vector of reco index of the tracksters
   theGraph_->findNtuplets(foundNtuplets, min_clusters_per_ntuplet_);
+
   //#ifdef FP_DEBUG
   const auto &doublets = theGraph_->getAllDoublets();
   int tracksterId = 0;
