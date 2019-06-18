@@ -1,35 +1,69 @@
 // Author: Felice Pantaleo - felice.pantaleo@cern.ch
 // Date: 11/2018
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
-#include "RecoHGCal/TICL/interface/Common.h"
-
+#include "DataFormats/TICL/interface/Common.h"
 #include "PatternRecognitionbyCA.h"
 #include "HGCDoublet.h"
 #include "HGCGraph.h"
 
-void HGCGraph::makeAndConnectDoublets(const ticl::patternbyca::Tile & histo,
-                                      int nEtaBins, int nPhiBins,
+void HGCGraph::makeAndConnectDoublets(const ticl::TICLLayerTiles &histo,
+                                      const std::vector<ticl::TICLSeedingRegion>& regions,
+                                      int nEtaBins,
+                                      int nPhiBins,
                                       const std::vector<reco::CaloCluster> &layerClusters,
-                                      int deltaIEta, int deltaIPhi, float minCosTheta,
-                                      float minCosPointing, int missing_layers, int maxNumberOfLayers) {
+                                      const std::vector<float> &mask,
+                                      int deltaIEta,
+                                      int deltaIPhi,
+                                      float minCosTheta,
+                                      float minCosPointing,
+                                      int missing_layers,
+                                      int maxNumberOfLayers) {
   isOuterClusterOfDoublets_.clear();
   isOuterClusterOfDoublets_.resize(layerClusters.size());
   allDoublets_.clear();
   theRootDoublets_.clear();
-  for (int zSide = 0; zSide < 2; ++zSide) {
+  for (const auto& r: regions) {
+
+    bool isGlobal = (r.index == -1);
+    auto zSide = r.zSide;
+    auto firstLayerOnZSide =  maxNumberOfLayers * zSide;
+    const auto &firstLayerHisto = histo[firstLayerOnZSide];
+
+    int entryEtaBin = 0; 
+    int entryPhiBin = 0;
+    int startEtaBin, startPhiBin, etaBinLenght, phiBinLenght;
+
+    if(isGlobal)
+    {
+      startEtaBin = 0;
+      startPhiBin = 0;
+      etaBinLenght = nEtaBins;
+      phiBinLenght = nPhiBins;
+    }
+    else
+    {
+      entryEtaBin = firstLayerHisto.getEtaBin(r.origin.eta());
+      entryPhiBin = firstLayerHisto.getPhiBin(r.origin.phi());
+      startEtaBin = std::max(entryEtaBin - 2, 0);
+      startPhiBin = entryPhiBin - 2;
+      endEtaBin = etaBinLenght 5: nEtaBins-startEtaBin;
+      endPhiBin = 5;
+    }
+
     for (int il = 0; il < maxNumberOfLayers - 1; ++il) {
-      for (int outer_layer = 0;
-           outer_layer < std::min(1 + missing_layers, maxNumberOfLayers - 1 - il);
-           ++outer_layer) {
+      for (int outer_layer = 0; outer_layer < std::min(1 + missing_layers, maxNumberOfLayers - 1 - il); ++outer_layer) {
         int currentInnerLayerId = il + maxNumberOfLayers * zSide;
         int currentOuterLayerId = currentInnerLayerId + 1 + outer_layer;
         auto const &outerLayerHisto = histo[currentOuterLayerId];
         auto const &innerLayerHisto = histo[currentInnerLayerId];
 
-        for (int oeta = 0; oeta < nEtaBins; ++oeta) {
+        for (int oeta = startEtaBin; oeta < , nEta; ++oeta) {
           auto offset = oeta * nPhiBins;
           for (int ophi = 0; ophi < nPhiBins; ++ophi) {
             for (auto outerClusterId : outerLayerHisto[offset + ophi]) {
+              // Skip masked clusters
+              if (mask[outerClusterId] == 0.)
+                continue;
               const auto etaRangeMin = std::max(0, oeta - deltaIEta);
               const auto etaRangeMax = std::min(oeta + deltaIEta, nEtaBins);
 
@@ -43,15 +77,16 @@ void HGCGraph::makeAndConnectDoublets(const ticl::patternbyca::Tile & histo,
                   // between a full nPhiBins slot.
                   auto iphi = ((ophi + phiRange - deltaIPhi) % nPhiBins + nPhiBins) % nPhiBins;
                   for (auto innerClusterId : innerLayerHisto[ieta * nPhiBins + iphi]) {
+                    // Skip masked clusters
+                    if (mask[innerClusterId] == 0.)
+                      continue;
                     auto doubletId = allDoublets_.size();
-                    allDoublets_.emplace_back(innerClusterId, outerClusterId, doubletId,
-                                              &layerClusters);
+                    allDoublets_.emplace_back(innerClusterId, outerClusterId, doubletId, &layerClusters);
                     if (verbosity_ > Advanced) {
                       LogDebug("HGCGraph")
-                          << "Creating doubletsId: " << doubletId << " layerLink in-out: ["
-                          << currentInnerLayerId << ", " << currentOuterLayerId
-                          << "] clusterLink in-out: [" << innerClusterId << ", " << outerClusterId
-                          << "]" << std::endl;
+                          << "Creating doubletsId: " << doubletId << " layerLink in-out: [" << currentInnerLayerId
+                          << ", " << currentOuterLayerId << "] clusterLink in-out: [" << innerClusterId << ", "
+                          << outerClusterId << "]" << std::endl;
                     }
                     isOuterClusterOfDoublets_[outerClusterId].push_back(doubletId);
                     auto &neigDoublets = isOuterClusterOfDoublets_[innerClusterId];
@@ -59,13 +94,13 @@ void HGCGraph::makeAndConnectDoublets(const ticl::patternbyca::Tile & histo,
                     if (verbosity_ > Expert) {
                       LogDebug("HGCGraph")
                           << "Checking compatibility of doubletId: " << doubletId
-                          << " with all possible inners doublets link by the innerClusterId: "
-                          << innerClusterId << std::endl;
+                          << " with all possible inners doublets link by the innerClusterId: " << innerClusterId
+                          << std::endl;
                     }
                     bool isRootDoublet = thisDoublet.checkCompatibilityAndTag(
-                        allDoublets_, neigDoublets, minCosTheta, minCosPointing,
-                        verbosity_ > Advanced);
-                    if (isRootDoublet) theRootDoublets_.push_back(doubletId);
+                        allDoublets_, neigDoublets, minCosTheta, minCosPointing, verbosity_ > Advanced);
+                    if (isRootDoublet)
+                      theRootDoublets_.push_back(doubletId);
                   }
                 }
               }
@@ -77,8 +112,8 @@ void HGCGraph::makeAndConnectDoublets(const ticl::patternbyca::Tile & histo,
   }
   // #ifdef FP_DEBUG
   if (verbosity_ > None) {
-    LogDebug("HGCGraph") << "number of Root doublets " << theRootDoublets_.size()
-                         << " over a total number of doublets " << allDoublets_.size() << std::endl;
+    LogDebug("HGCGraph") << "number of Root doublets " << theRootDoublets_.size() << " over a total number of doublets "
+                         << allDoublets_.size() << std::endl;
   }
   // #endif
 }
