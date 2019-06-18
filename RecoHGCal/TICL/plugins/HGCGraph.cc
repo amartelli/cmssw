@@ -26,28 +26,26 @@ void HGCGraph::makeAndConnectDoublets(const TICLLayerTiles &histo,
 
     bool isGlobal = (r.index == -1);
     auto zSide = r.zSide;
-    auto firstLayerOnZSide =  maxNumberOfLayers * zSide;
-    const auto &firstLayerHisto = histo[firstLayerOnZSide];
-
-    int entryEtaBin = 0; 
-    int entryPhiBin = 0;
-    int startEtaBin, startPhiBin, etaBinLenght, phiBinLenght;
+    int startEtaBin, endEtaBin, startPhiBin, endPhiBin;
 
     if(isGlobal)
     {
       startEtaBin = 0;
       startPhiBin = 0;
-      etaBinLenght = nEtaBins;
-      phiBinLenght = nPhiBins;
+      endEtaBin = nEtaBins;
+      endPhiBin = nPhiBins;
     }
     else
     {
-      entryEtaBin = firstLayerHisto.getEtaBin(r.origin.eta());
-      entryPhiBin = firstLayerHisto.getPhiBin(r.origin.phi());
+      auto firstLayerOnZSide =  maxNumberOfLayers * zSide;
+      const auto &firstLayerHisto = histo[firstLayerOnZSide];
+
+      int entryEtaBin = firstLayerHisto.getEtaBin(r.origin.eta());
+      int entryPhiBin = firstLayerHisto.getPhiBin(r.origin.phi());
       startEtaBin = std::max(entryEtaBin - 2, 0);
+      endEtaBin = std::min(startEtaBin + 5, nEtaBins);
       startPhiBin = entryPhiBin - 2;
-      endEtaBin = etaBinLenght 5: nEtaBins-startEtaBin;
-      endPhiBin = 5;
+      endPhiBin = startPhiBin + 5;
     }
 
     for (int il = 0; il < maxNumberOfLayers - 1; ++il) {
@@ -57,9 +55,10 @@ void HGCGraph::makeAndConnectDoublets(const TICLLayerTiles &histo,
         auto const &outerLayerHisto = histo[currentOuterLayerId];
         auto const &innerLayerHisto = histo[currentInnerLayerId];
 
-        for (int oeta = startEtaBin; oeta < , nEta; ++oeta) {
+        for (int oeta = startEtaBin; oeta < endEtaBin; ++oeta) {
           auto offset = oeta * nPhiBins;
-          for (int ophi = 0; ophi < nPhiBins; ++ophi) {
+	  for (int ophi_it = startPhiBin; ophi_it < endPhiBin; ++ophi_it) {
+            int ophi = (( ophi_it % nPhiBins + nPhiBins) % nPhiBins);
             for (auto outerClusterId : outerLayerHisto[offset + ophi]) {
               // Skip masked clusters
               if (mask[outerClusterId] == 0.)
@@ -81,7 +80,7 @@ void HGCGraph::makeAndConnectDoublets(const TICLLayerTiles &histo,
                     if (mask[innerClusterId] == 0.)
                       continue;
                     auto doubletId = allDoublets_.size();
-                    allDoublets_.emplace_back(innerClusterId, outerClusterId, doubletId, &layerClusters);
+                    allDoublets_.emplace_back(innerClusterId, outerClusterId, doubletId, &layerClusters, r.index);
                     if (verbosity_ > Advanced) {
                       LogDebug("HGCGraph")
                           << "Creating doubletsId: " << doubletId << " layerLink in-out: [" << currentInnerLayerId
@@ -98,7 +97,7 @@ void HGCGraph::makeAndConnectDoublets(const TICLLayerTiles &histo,
                           << std::endl;
                     }
                     bool isRootDoublet = thisDoublet.checkCompatibilityAndTag(
-                        allDoublets_, neigDoublets, minCosTheta, minCosPointing, verbosity_ > Advanced);
+		        allDoublets_, neigDoublets, r.directionAtOrigin, minCosTheta, minCosPointing, verbosity_ > Advanced);
                     if (isRootDoublet)
                       theRootDoublets_.push_back(doubletId);
                   }
@@ -118,6 +117,10 @@ void HGCGraph::makeAndConnectDoublets(const TICLLayerTiles &histo,
   // #endif
 }
 
+
+//RA: as argument also give vector with tracks indices
+// return vector of reco tracksters = as done now
+// return also vector of tracks indices of reco tracksters
 void HGCGraph::findNtuplets(std::vector<HGCDoublet::HGCntuplet> &foundNtuplets,
                             const unsigned int minClustersPerNtuplet) {
   HGCDoublet::HGCntuplet tmpNtuplet;
