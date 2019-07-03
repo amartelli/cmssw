@@ -28,7 +28,7 @@ public:
                               int maxNumberOfLayers);
 
   std::vector<HGCDoublet> &getAllDoublets() { return allDoublets_; }
-  void findNtuplets(std::vector<HGCDoublet::HGCntuplet> &foundNtuplets, const unsigned int minClustersPerNtuplet);
+  void findNtuplets(std::vector<HGCDoublet::HGCntuplet> &foundNtuplets, std::vector<int> &seedIndices, const unsigned int minClustersPerNtuplet);
   void clear() {
     allDoublets_.clear();
     theRootDoublets_.clear();
