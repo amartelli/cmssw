@@ -49,11 +49,9 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
                                     missing_layers_,
                                     rhtools_.lastLayerFH());
 
-  //RAFIX
-  //change passing a vector of index
-  //also will return a vector of reco index of the tracksters
+
   theGraph_->findNtuplets(foundNtuplets, seedIndices, min_clusters_per_ntuplet_);
-  edm::ProductID seedCollectionId = regions[0].collectionID; 
+  edm::ProductID seedCollectionId = regions[0].collectionID;
 
   //#ifdef FP_DEBUG
   const auto &doublets = theGraph_->getAllDoublets();
