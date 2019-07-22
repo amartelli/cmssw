@@ -27,6 +27,7 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
                                             const std::vector<float> &mask,
                                             const edm::ValueMap<float> &layerClustersTime,
                                             const TICLLayerTiles &tiles,
+                                            const std::vector<ticl::TICLSeedingRegion> &regions,
                                             std::vector<Trackster> &result) {
   rhtools_.getEventSetup(es);
 
@@ -36,8 +37,10 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
     LogDebug("HGCPatterRecoByCA") << "Making Tracksters with CA" << std::endl;
   }
   std::vector<HGCDoublet::HGCntuplet> foundNtuplets;
+  std::vector<int> seedIndices;
   std::vector<uint8_t> layer_cluster_usage(layerClusters.size(), 0);
   theGraph_->makeAndConnectDoublets(tiles,
+                                    regions,
                                     ticl::constants::nEtaBins,
                                     ticl::constants::nPhiBins,
                                     layerClusters,
@@ -50,7 +53,8 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
                                     missing_layers_,
                                     rhtools_.lastLayerFH(),
                                     max_delta_time_);
-  theGraph_->findNtuplets(foundNtuplets, min_clusters_per_ntuplet_);
+
+  theGraph_->findNtuplets(foundNtuplets, seedIndices, min_clusters_per_ntuplet_);
   //#ifdef FP_DEBUG
   const auto &doublets = theGraph_->getAllDoublets();
   int tracksterId = 0;
@@ -78,10 +82,15 @@ void PatternRecognitionbyCA::makeTracksters(const edm::Event &ev,
     Trackster tmp;
     tmp.vertices.reserve(effective_cluster_idx.size());
     tmp.vertex_multiplicity.resize(effective_cluster_idx.size(), 0);
+    //regions and seedIndices can have different size
+    //if a seeding region does not lead to any trackster
+    tmp.seedID = regions[0].collectionID;
+    tmp.seedIndex = seedIndices[tracksterId];
     std::copy(std::begin(effective_cluster_idx), std::end(effective_cluster_idx), std::back_inserter(tmp.vertices));
     result.push_back(tmp);
     tracksterId++;
   }
+
   for (auto &trackster : result) {
     assert(trackster.vertices.size() <= trackster.vertex_multiplicity.size());
     for (size_t i = 0; i < trackster.vertices.size(); ++i) {
