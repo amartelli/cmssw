@@ -11,13 +11,16 @@
 #include "DataFormats/HGCalReco/interface/Trackster.h"
 #include "DataFormats/HGCalReco/interface/TICLSeedingRegion.h"
 #include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "RecoHGCal/TICL/plugins/GlobalCache.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
 
 #include "TrackstersPCA.h"
+#include "TrackstersTOF.h"
 
+typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<float>> XYZPointF;
 using namespace ticl;
 
 class TrackstersMergeProducer : public edm::stream::EDProducer<edm::GlobalCache<TrackstersCache>> {
@@ -27,6 +30,8 @@ public:
   void produce(edm::Event &, const edm::EventSetup &) override;
   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
   void energyRegressionAndID(const std::vector<reco::CaloCluster> &layerClusters, std::vector<Trackster> &result) const;
+
+  void beginRun(edm::Run const& iEvent, edm::EventSetup const& es) override;
 
   // static methods for handling the global cache
   static std::unique_ptr<TrackstersCache> initializeGlobalCache(const edm::ParameterSet &);
@@ -48,6 +53,9 @@ private:
   const edm::EDGetTokenT<std::vector<reco::CaloCluster>> clusters_token_;
   const edm::EDGetTokenT<edm::ValueMap<std::pair<float, float>>> clustersTime_token_;
   const edm::EDGetTokenT<std::vector<reco::Track>> tracks_token_;
+  const edm::EDGetTokenT<std::vector<reco::Vertex>> vtxs_token_;
+  const edm::EDGetTokenT<XYZPointF> genVtxPosition_token_;
+  const edm::EDGetTokenT<float> genVtxTime_token_;
   const edm::ESGetToken<CaloGeometry, CaloGeometryRecord> geometry_token_;
   const bool optimiseAcrossTracksters_;
   const int eta_bin_window_;
@@ -77,6 +85,8 @@ private:
   tensorflow::Session *eidSession_;
   hgcal::RecHitTools rhtools_;
 
+  TrackstersTOF tofCorrector_;
+
   static constexpr int eidNFeatures_ = 3;
 };
 
@@ -89,6 +99,9 @@ TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps, co
       clusters_token_(consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"))),
       clustersTime_token_(consumes<edm::ValueMap<std::pair<float, float>>>(ps.getParameter<edm::InputTag>("layer_clustersTime"))),
       tracks_token_(consumes<std::vector<reco::Track>>(ps.getParameter<edm::InputTag>("tracks"))),
+      vtxs_token_(consumes<std::vector<reco::Vertex>>(ps.getParameter<edm::InputTag>("vertices"))),
+      genVtxPosition_token_(consumes<XYZPointF>(ps.getParameter<edm::InputTag>("genVtxPos"))),
+      genVtxTime_token_(consumes<float>(ps.getParameter<edm::InputTag>("genVtxTime"))),
       geometry_token_(esConsumes<CaloGeometry, CaloGeometryRecord>()),
       optimiseAcrossTracksters_(ps.getParameter<bool>("optimiseAcrossTracksters")),
       eta_bin_window_(ps.getParameter<int>("eta_bin_window")),
@@ -125,6 +138,10 @@ TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps, co
 
   produces<std::vector<Trackster>>();
   produces<std::vector<TICLCandidate>>();
+
+  auto sumes = consumesCollector();
+  tofCorrector_.setParameters(sumes);
+
 }
 
 void TrackstersMergeProducer::fillTile(TICLTracksterTiles &tracksterTile,
@@ -164,6 +181,9 @@ void TrackstersMergeProducer::dumpTrackster(const Trackster &t) const {
   LogDebug("TrackstersMergeProducer") << std::endl;
 }
 
+void TrackstersMergeProducer::beginRun(edm::Run const& iEvent, edm::EventSetup const& es) {
+  tofCorrector_.initialize(es); }
+
 void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es) {
   edm::ESHandle<CaloGeometry> geom = es.getHandle(geometry_token_);
   rhtools_.setGeometry(*geom);
@@ -184,6 +204,17 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   edm::Handle<std::vector<reco::Track>> track_h;
   evt.getByToken(tracks_token_, track_h);
   const auto &tracks = *track_h;
+
+  //reco vtx
+  edm::Handle<std::vector<reco::Vertex>> vtx_h;
+  evt.getByToken(vtxs_token_, vtx_h);
+  const auto &vtxs = *vtx_h;
+  //gen vtx t
+  const auto& genVtxPosition_h = evt.getHandle(genVtxPosition_token_);
+  const auto &genVtxPos = *genVtxPosition_h;
+  //gen vtx pos
+  const auto& genVtxTime_h = evt.getHandle(genVtxTime_token_);
+  const auto &genVtxTime = *genVtxTime_h;
 
   edm::Handle<std::vector<reco::CaloCluster>> cluster_h;
   evt.getByToken(clusters_token_, cluster_h);
@@ -267,10 +298,66 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
 
   printTrackstersDebug(*resultTrackstersMerged, "TrackstersMergeProducer");
 
+  std::vector<Trackster> mergedTracksters = *resultTrackstersMerged;
   auto trackstersMergedHandle = evt.put(std::move(resultTrackstersMerged));
 
   // TICL Candidate creation
   // We start from neutrals first
+
+  //for timing tof correction: retrieve vtx position
+  reco::Vertex hipPV;
+  std::cout << "\n recoVtx size = " << vtxs.size() << std::endl;
+  if(vtxs.size()!=0){
+    hipPV = vtxs[0];
+    // float vx = vtxs[0].position().x();
+    // float vy = vtxs[0].position().y();
+    // float vz = vtxs[0].position().z();
+    // float vt = vtxs[0].position().t() * 1.e9;
+    std::cout << " recoVtxTime = " << hipPV.t() << " recoVtxPos = " << hipPV.position() << std::endl;                                                     
+    //    std::cout <<"\n  vt (ns) = " << " valore dummy "  << " pos = " << hipPV.position() << std::endl;
+    //  std::cout << " vtx bunchCrossing() = " << hipPV.eventId().bunchCrossing() << " event = " << hipPV.eventId().event() << std::endl;
+  }
+  std::cout << " genVtxTime = " << genVtxTime << " genVtxPos = " << genVtxPos.x() << " " << genVtxPos.y() << " " << genVtxPos.z() << std::endl;
+
+
+  std::cout << " (*resultTrackstersMerged).size() = " << mergedTracksters.size() << std::endl;
+  for (unsigned i = 0; i < mergedTracksters.size(); ++i) {
+    const auto &t = mergedTracksters[i];  //trackster
+
+    std::cout << " >>> t.vertices().size() = " << t.vertices().size() << std::endl;
+
+    if(t.vertices().size() == 0) continue;
+    int seedLC = -1;
+    float maxE = 0.;
+    int minL = 100;
+    int firstLC = -1;
+      size_t N = t.vertices().size();
+      for (size_t i = 0; i < N; ++i) {
+        const reco::CaloCluster &cluster = layerClusters[t.vertices(i)];
+        int j = rhtools_.getLayerWithOffset(cluster.hitsAndFractions()[0].first) - 1;
+        if(j < minL){
+          minL = j;
+          firstLC = i;
+        }
+	float energyLC = cluster.energy();
+	if(energyLC > maxE){
+	  maxE = energyLC;
+	  seedLC = i;
+	}
+      }
+
+
+      const reco::CaloCluster &firstcl = layerClusters[t.vertices(firstLC)];
+      const reco::CaloCluster &seedcl = layerClusters[t.vertices(seedLC)];
+      //float trkacksterTime = tofCorrector_.correctTOFforTracksters(evt, t, tracks, vtxs, rhtools_.getPosition(firstcl.seed()), genVtxPos, genVtxTime);
+      float trkacksterTime = tofCorrector_.correctTOFforTracksters(evt, t, tracks, vtxs, rhtools_.getPosition(firstcl.seed()),
+								   GlobalPoint(firstcl.x(), firstcl.y(), firstcl.z()),
+								   GlobalPoint(seedcl.x(), seedcl.y(), seedcl.z()), seedcl.energy(),
+								   layerClustersTimes.get(t.vertices(seedLC)).first, layerClustersTimes.get(t.vertices(seedLC)).second,
+								   genVtxPos, genVtxTime);
+      //std::cout << " post correctTOFforTracksters t = " << trkTime << " pre = " << t.time() << " err = " << t.timeError() << std::endl;
+  }
+
 
   // Photons
   for (unsigned i = 0; i < trackstersEM.size(); ++i) {
@@ -317,6 +404,7 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
       const auto &t = trackstersTRKEM[i];  //trackster
       auto trackIdx = t.seedIndex();
       auto const &track = tracks[trackIdx];
+
       if (!usedSeeds[trackIdx] and t.raw_energy() > 0) {
         usedSeeds[trackIdx] = true;
         usedTrackstersMerged[mergedIdx] = true;
@@ -733,6 +821,10 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<edm::InputTag>("layer_clusters", edm::InputTag("hgcalLayerClusters"));
   desc.add<edm::InputTag>("layer_clustersTime", edm::InputTag("hgcalLayerClusters", "timeLayerCluster"));
   desc.add<edm::InputTag>("tracks", edm::InputTag("generalTracks"));
+  desc.add<edm::InputTag>("vertices", edm::InputTag("offlinePrimaryVertices4DWithBS"));
+  //desc.add<edm::InputTag>("vertices", edm::InputTag("offlinePrimaryVerticesWithBS"));
+  desc.add<edm::InputTag>("genVtxPos", edm::InputTag("genParticles:xyz0"));
+  desc.add<edm::InputTag>("genVtxTime", edm::InputTag("genParticles:t0"));
   desc.add<bool>("optimiseAcrossTracksters", true);
   desc.add<int>("eta_bin_window", 1);
   desc.add<int>("phi_bin_window", 1);

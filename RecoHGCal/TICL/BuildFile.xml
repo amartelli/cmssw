@@ -2,6 +2,8 @@
 <use name="DataFormats/HGCalReco"/>
 <use name="DataFormats/VertexReco"/>
 <use name="FWCore/PluginManager"/>
+<use name="TrackingTools/TrajectoryState"/>
+<use name="TrackPropagation/SteppingHelixPropagator"/>
 <export>
   <lib name="1"/>
 </export>
